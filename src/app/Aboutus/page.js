@@ -1,6 +1,6 @@
 import Footer from "../Footer";
 import Image from "next/image";
-
+import Link from "next/link";
 export default function Aboutus() {
   return (
     <main>
@@ -16,14 +16,18 @@ export default function Aboutus() {
           <a href="#">MealPlans</a>
           <a href="/Aboutus">About us</a>
         </nav>
-
+        
         <div className="actions flex gap-3">
-          <button className="border border-green-600 text-green-600 px-4 py-2 rounded-full hover:bg-green-600 hover:text-white transition">
+        <Link href="/Signin">
+          <button className="  border border-[#7ab530] text-[#7ab530] px-4 py-2 rounded-full hover:bg-[#7ab530] hover:text-white transition">
             Sign In
           </button>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">
+          </Link>
+          <Link href="/Signup">
+          <button className="bg-[#7ab530] text-white px-4 py-2 rounded-full hover:bg-[#7ab530]-900 transition">
             Sign Up
           </button>
+          </Link>
         </div>
       </header>
 

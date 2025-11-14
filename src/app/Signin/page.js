@@ -1,52 +1,127 @@
-import link from "next/link"
-export default function Signin(){
+"use client";
+import Link from "next/link";
+import Image from "next/image";
 
+export default function Signin() {
+  return (
+    <main className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
+      {/* 🍏 Floating Fruits / Decorations */}
+      <Image
+        src="/apple.png"
+        alt="Apple"
+        width={100}
+        height={100}
+        className="floating absolute top-24 left-10 opacity-80 drop-shadow-md"
+      />
+      <Image
+        src="/strawberry.png"
+        alt="Strawberry"
+        width={110}
+        height={110}
+        className="floating absolute bottom-28 left-24 opacity-80 drop-shadow-md"
+      />
+      <Image
+        src="/carrot.png"
+        alt="Carrot"
+        width={100}
+        height={100}
+        className="floating absolute top-32 right-20 opacity-80 drop-shadow-md"
+      />
+      <Image
+        src="/broccoli.png"
+        alt="Broccoli"
+        width={90}
+        height={90}
+        className="floating absolute bottom-12 right-16 opacity-80 drop-shadow-md"
+      />
 
-    return( 
-        <main>
-               {/* Navbar */}
-      <header className="navbar flex items-center justify-between p-6">
+      {/* 🌿 Soft translucent overlay */}
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
+
+      {/* 🧭 Navbar */}
+      <header className="navbar flex items-center justify-between p-6 bg-white/90 shadow-sm relative z-10">
         <div className="logo">
-          <h2 id="logotx" className="text-1xl ">FitMeal</h2>
+          <h2 id="logotx" className="text-1xl font-bold text-[#7ab530]">FitMeal</h2>
         </div>
 
-        <nav className="nav-links flex gap-6">
-          <a href="/">Home</a>
-          <a href="#PopularMeals">Products</a>
-          <a href="#">MealPlans</a>
-          <a href="/Aboutus">About us</a>
+        <nav className="nav-links flex gap-6 text-gray-700 font-medium">
+          <Link href="/">Home</Link>
+          <Link href="#PopularMeals">Products</Link>
+          <Link href="#">Meal Plans</Link>
+          <Link href="/Aboutus">About Us</Link>
         </nav>
-
+        
         <div className="actions flex gap-3">
-          <button className="border border-green-600 text-green-600 px-4 py-2 rounded-full hover:bg-green-600 hover:text-white transition">
-            Sign In
-          </button>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">
-            Sign Up
-          </button>
+          <Link href="/Signin">
+            <button className="border border-[#7ab530] text-[#7ab530] px-4 py-2 rounded-full hover:bg-[#7ab530] hover:text-white transition">
+              Sign In
+            </button>
+          </Link>
+
+          <Link href="/Signup">
+            <button className="bg-[#7ab530] text-white px-4 py-2 rounded-full hover:bg-[#6aa02b] transition">
+              Sign Up
+            </button>
+          </Link>
         </div>
       </header>
-            
-            {/* Banner */}
-      <section className="relative h-[80vh] flex items-center justify-center text-center text-white bg-cover bg-center bg-[url('/banner.jpg')]">
-        <div className="absolute inset-0 bg-black/50"></div>
 
-        <div className="relative z-10 max-w-2xl px-6">
-          <h1 className="text-5xl font-Poppins mb-4">
-            Eat <span className="font-quicksand" style={{ color: "#7ab530" }}>Healthy</span>, Feel{" "}
-            <span style={{ color: "#7ab530" }}>Great</span>
-          </h1>
-
-          <p className="text-lg mb-6 text-gray-200">
-            Discover personalized meal plans crafted just for your goals — powered by smart nutrition.
+      {/* ✨ Sign-In Form Section */}
+      <section className="flex-grow flex items-center justify-center py-16 relative z-10">
+        <div className="bg-white/90 backdrop-blur-md shadow-xl rounded-2xl p-10 w-full max-w-md border border-gray-100">
+          <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
+            Welcome Back 👋
+          </h2>
+          <p className="text-center text-gray-500 mb-8">
+            Sign in to continue your healthy journey
           </p>
 
-          <button className="px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-700 hover:bg-transparent hover:text-[#7ab530]">
-            Get Started
-          </button>
+          <form className="space-y-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Email</label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7ab530]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7ab530]"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="accent-[#7ab530]" /> Remember me
+              </label>
+              <Link href="#" className="text-[#7ab530] hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-[#7ab530] text-white py-3 rounded-full font-semibold hover:bg-[#6aa02b] transition"
+            >
+              Sign In
+            </button>
+
+            <p className="text-center text-gray-600 mt-6">
+              Don’t have an account?{" "}
+              <Link href="/Signup" className="text-[#7ab530] font-semibold hover:underline">
+                Sign Up
+              </Link>
+            </p>
+          </form>
         </div>
       </section>
 
-        </main>
-    )
+    
+    </main>
+  );
 }
