@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Header from "../Header";
+
 import Link from "next/link";
 
 export default function Signup() {
@@ -40,33 +42,9 @@ export default function Signup() {
       <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
 
       {/* 🧭 Navbar */}
-      <header className="navbar flex items-center justify-between p-6 bg-white/90 shadow-sm relative z-10">
-        <div className="logo">
-          <h2 id="logotx" className="text-1xl font-bold text-[#7ab530]">FitMeal</h2>
-        </div>
-
-        <nav className="nav-links flex gap-6 text-gray-700 font-medium">
-          <Link href="/">Home</Link>
-          <Link href="#PopularMeals">Products</Link>
-          <Link href="#">Meal Plans</Link>
-          <Link href="/Aboutus">About Us</Link>
-        </nav>
-        
-        <div className="actions flex gap-3">
-          <Link href="/Signin">
-            <button className="border border-[#7ab530] text-[#7ab530] px-4 py-2 rounded-full hover:bg-[#7ab530] hover:text-white transition">
-              Sign In
-            </button>
-          </Link>
-
-          <Link href="/">
-            <button className="bg-[#7ab530] text-white px-4 py-2 rounded-full hover:bg-[#6aa02b] transition">
-              Sign Up
-            </button>
-            </Link>
-      
-        </div>
-      </header>
+      <div className="relative z-10">
+  <Header />
+</div>
 
       {/* ✨ Sign-Up Form Section */}
 

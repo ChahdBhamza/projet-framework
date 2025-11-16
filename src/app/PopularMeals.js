@@ -1,32 +1,54 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { meals as allMeals } from "./Utils/meals";
+import { AddPurchase } from "./Utils/purchases";
+import { ShoppingCart } from "lucide-react";
+
+// Map popular meals to their IDs based on image paths
+const mealIdMap = {
+  "/rainbow vegbowl.jpg": 1,
+  "/citrusquinoa.jpg": 5,
+  "/chickenherbed.jpg": 4,
+  "/spicelentil.jpg": 6,
+};
 
 const meals = [
   {
     title: "Rainbow Veg Bowl",
     description: "Wholesome veggies, protein-packed, ready in 15 minutes.",
-    price: "$9.99",
-    image: "/rainbow vegbowl.jpg",},
+    price: "18 TND",
+    image: "/rainbow vegbowl.jpg",
+  },
   {
     title: "Citrus Quinoa Salad",
     description: "Zesty, fresh, and fiber-rich for lasting energy.",
-    price: "$8.49",
+    price: "20 TND",
     image: "/citrusquinoa.jpg",
   },
   {
     title: "Herbed Chicken Plate",
     description: "Lean protein with seasonal greens and grains.",
-    price: "$11.50",
+    price: "22 TND",
     image: "/chickenherbed.jpg",
   },
   {
     title: "Spiced Lentil Bowl",
     description: "Comforting plant power with bold flavor.",
-    price: "$8.99",
+    price: "25 TND",
     image: "/spicelentil.jpg",
   },
 ];
 
 export default function PopularMeals() {
+  const handleAddToCart = (mealId) => {
+    const meal = allMeals.find(m => m.id === mealId);
+    if (meal) {
+      AddPurchase(mealId, meal);
+     
+    }
+  };
   return (
     <section  id="PopularMeals" className="relative py-16 px-6">
       <div className="absolute inset-0 bg-gradient-to-br from-[#f0fdf4] via-white to-[#ecfeff]" />
@@ -44,28 +66,41 @@ export default function PopularMeals() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {meals.map((meal, idx) => (
-            <div
-              key={idx}
-              className="group bg-white rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-100 hover:-translate-y-1 transition-transform"
-            >
-              <div className="relative h-40">
-                <Image src={meal.image} alt={meal.title} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
+          {meals.map((meal, idx) => {
+            const mealId = mealIdMap[meal.image];
+            return (
+              <div
+                key={idx}
+                className="group bg-white rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-100 hover:-translate-y-1 transition-transform"
+              >
+                <Link href={`/Products/${mealId}`} className="block">
+                  <div className="relative h-40 cursor-pointer">
+                    <Image src={meal.image} alt={meal.title} fill className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  </div>
+                </Link>
 
-              <div className="p-5">
-                <h3 className="text-lg font-semibold mb-1">{meal.title}</h3>
-                <p className="text-sm text-gray-600 mb-4">{meal.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#7ab530] font-semibold">{meal.price}</span>
-                  <button className="px-4 py-2 rounded-full bg-[#7ab530] text-white hover:bg-[#6aa42a] transition-colors">
-                    Add to cart
-                  </button>
+                <div className="p-5">
+                  <Link href={`/Products/${mealId}`}>
+                    <h3 className="text-lg font-semibold mb-1 hover:text-[#7ab530] transition-colors cursor-pointer">
+                      {meal.title}
+                    </h3>
+                  </Link>
+                  <p className="text-sm text-gray-600 mb-4">{meal.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#7ab530] font-semibold">{meal.price}</span>
+                    <button 
+                      onClick={() => handleAddToCart(mealId)}
+                      className="px-4 py-2 rounded-full bg-[#7ab530] text-white hover:bg-[#6aa42a] transition-colors flex items-center gap-1.5"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Add to Cart
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

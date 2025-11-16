@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function MealPlanCTA() {
   const [isHovered, setIsHovered] = useState(false);
@@ -84,22 +85,26 @@ export default function MealPlanCTA() {
 
             {/* CTA Button */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className="group relative px-8 py-4 bg-gradient-to-r from-[#7ab530] to-[#6aa02a] text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-pulse-slow"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Generate My Meal Plan
-                  <span className={`inline-block transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}>
-                    →
+              <Link href="/MealPlans">
+                <button
+                  onMouseEnter={() => setIsHovered(true)}
+                  onMouseLeave={() => setIsHovered(false)}
+                  className="group relative px-8 py-4 bg-gradient-to-r from-[#7ab530] to-[#6aa02a] text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-pulse-slow"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Generate My Meal Plan
+                    <span className={`inline-block transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}>
+                      →
+                    </span>
                   </span>
-                </span>
-                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6aa02a] to-[#7ab530] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </button>
-              <button className="px-8 py-4 border-2 border-[#7ab530] text-[#7ab530] rounded-full font-semibold hover:bg-[#7ab530] hover:text-white transition-all duration-300">
-                View Sample Plans
-              </button>
+                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6aa02a] to-[#7ab530] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                </button>
+              </Link>
+              <Link href="/MealPlans">
+                <button className="px-8 py-4 border-2 border-[#7ab530] text-[#7ab530] rounded-full font-semibold hover:bg-[#7ab530] hover:text-white transition-all duration-300">
+                  View Sample Plans
+                </button>
+              </Link>
             </div>
           </div>
 

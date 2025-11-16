@@ -3,24 +3,32 @@
         import Link from "next/link";
         import Image from "next/image";
         import Footer from "../Footer";
-        import { AddFavorites } from "../Utils/favorites";
+        import Header from "../Header";
+
+        import { AddFavorites, GetFavorites } from "../Utils/favorites";
         import { AddPurchase, GetPurchasesCount } from "../Utils/purchases";
         import { meals } from "../Utils/meals";
-        import { useState, useEffect } from "react";
-        import { ShoppingCart, Heart, Eye, Star, Filter } from "lucide-react";
+        import { useState, useEffect, useMemo } from "react";
+        import { ShoppingCart, Heart, Star, Filter, Search, Sparkles } from "lucide-react";
 
 
         export default function Products() {
             const [purchasesCount, setPurchasesCount] = useState(0);
-            const [priceRange, setPriceRange] = useState(30);
+            const [favoritesCount, setFavoritesCount] = useState(0);
+            const [priceRange, setPriceRange] = useState(90);
+            const [searchQuery, setSearchQuery] = useState("");
+            const [selectedCategory, setSelectedCategory] = useState("All Categories");
+            const [selectedCalories, setSelectedCalories] = useState("Any Calories");
+            const [sortBy, setSortBy] = useState("default");
 
             useEffect(() => {
-                const updateCount = () => {
+                const updateCounts = () => {
                     setPurchasesCount(GetPurchasesCount());
+                    setFavoritesCount(GetFavorites().length);
                 };
-                updateCount();
-                window.addEventListener("storage", updateCount);
-                return () => window.removeEventListener("storage", updateCount);
+                updateCounts();
+                window.addEventListener("storage", updateCounts);
+                return () => window.removeEventListener("storage", updateCounts);
             }, []);
 
             const handleAddToCart = (meal) => {
@@ -28,9 +36,64 @@
                 setPurchasesCount(GetPurchasesCount());
             };
 
+            const handleAddFavorite = (mealId) => {
+                AddFavorites(mealId);
+                setFavoritesCount(GetFavorites().length);
+            };
+
             const handlePriceChange = (e) => {
                 setPriceRange(Number(e.target.value));
             };
+
+            // Filter and sort meals
+            const filteredAndSortedMeals = useMemo(() => {
+                let filtered = [...meals];
+
+                // Search filter
+                if (searchQuery) {
+                    filtered = filtered.filter(meal =>
+                        meal.name.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+                }
+
+                // Category filter
+                if (selectedCategory !== "All Categories") {
+                    // For now, all meals pass since we don't have category data
+                    // You can add category to meals data later
+                }
+
+                // Calories filter
+                if (selectedCalories !== "Any Calories") {
+                    filtered = filtered.filter(meal => {
+                        const calories = parseInt(meal.calories);
+                        if (selectedCalories === "< 400 kcal") return calories < 400;
+                        if (selectedCalories === "400 - 500 kcal") return calories >= 400 && calories <= 500;
+                        if (selectedCalories === "> 500 kcal") return calories > 500;
+                        return true;
+                    });
+                }
+
+                // Price filter
+                filtered = filtered.filter(meal => {
+                    const price = meal.price || 15; // Use meal price
+                    return price <= priceRange;
+                });
+
+                // Sort
+                if (sortBy === "price-low") {
+                    filtered.sort((a, b) => (a.price || 15) - (b.price || 15));
+                } else if (sortBy === "price-high") {
+                    filtered.sort((a, b) => (b.price || 15) - (a.price || 15));
+                } else if (sortBy === "name") {
+                    filtered.sort((a, b) => a.name.localeCompare(b.name));
+                } else if (sortBy === "calories-low") {
+                    filtered.sort((a, b) => parseInt(a.calories) - parseInt(b.calories));
+                } else if (sortBy === "calories-high") {
+                    filtered.sort((a, b) => parseInt(b.calories) - parseInt(a.calories));
+                }
+
+                return filtered;
+            }, [searchQuery, selectedCategory, selectedCalories, priceRange, sortBy]);
 
         return (
             <main>
@@ -69,56 +132,45 @@
                 <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-0"></div>
 
                 {/* Navbar */}
-            <header className="navbar flex items-center justify-between p-6 bg-white/95 backdrop-blur-md shadow-lg relative z-10 border-b border-green-100/50">
-                <div className="logo">
-                <h2 id="logotx" className="text-1xl ">FitMeal</h2>
-                </div>
-
-                <nav className="nav-links flex gap-6 items-center">
-                <a href="/" className="hover:text-[#7ab530] transition-colors font-medium">Home</a>
-                <a href="/Products" className="hover:text-[#7ab530] transition-colors font-medium text-[#7ab530]">Products</a>
-                <a href="#" className="hover:text-[#7ab530] transition-colors font-medium">MealPlans</a>
-                <a href="/Aboutus" className="hover:text-[#7ab530] transition-colors font-medium">About us</a>
-                <Link href="/Purchases" className="relative flex items-center gap-1.5 text-green-600 font-semibold hover:text-[#6aa02b] transition-colors px-3 py-1.5 rounded-lg hover:bg-green-50">
-                    <ShoppingCart className="w-5 h-5" />
-                    <span>Cart</span>
-                    {purchasesCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                            {purchasesCount}
-                        </span>
-                    )}
-                </Link>
-                </nav>
-                <div className="actions flex gap-3">
-        <Link href="/Signin">
-          <button className="border-2 border-[#7ab530] text-[#7ab530] px-5 py-2 rounded-full hover:bg-[#7ab530] hover:text-white transition-all font-semibold hover:shadow-md">
-            Sign In
-          </button>
-          </Link>
-          <Link href="/Signup">
-          <button className="bg-gradient-to-r from-[#7ab530] to-[#8bc63e] text-white px-5 py-2 rounded-full hover:from-[#6aa02b] hover:to-[#7ab530] transition-all font-semibold shadow-md hover:shadow-lg">
-            Sign Up
-          </button>
-          </Link>
-        </div>
-            </header>
+                <div className="relative z-10">
+  <Header />
+</div>
             
-            <section className="text-center py-20 mb-16 relative z-10 px-4">
-                <div className="max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#7ab530] via-[#8bc63e] to-[#97d45b]">
-                        Explore Healthy Meals 🍽️
-                    </h1>
-                    <p className="mt-4 text-gray-600 text-lg md:text-xl mb-8">
-                        Delicious, nutritious meals tailored for you
+            <section className="text-center py-16 mb-12 relative z-10 px-4">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <Sparkles className="w-6 h-6 text-[#7ab530]" />
+                        <h1 className="text-4xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#7ab530] via-[#8bc63e] to-[#97d45b]">
+                            Explore Healthy Meals
+                        </h1>
+                        <Sparkles className="w-6 h-6 text-[#7ab530]" />
+                    </div>
+                    <p className="mt-2 text-gray-600 text-lg md:text-xl mb-8">
+                        Discover delicious, nutritious meals tailored for you
                     </p>
-                    {purchasesCount > 0 && (
-                        <Link href="/Purchases">
-                            <button className="bg-[#7ab530] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6aa02b] transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto">
-                                <ShoppingCart className="w-5 h-5" />
-                                View Cart ({purchasesCount} items)
+                    
+                    {/* Search Bar */}
+                    <div className="relative max-w-2xl mx-auto mb-6">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+                            <Search className="w-6 h-6 text-[#7ab530] drop-shadow-sm" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search for meals..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-14 pr-12 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#7ab530] focus:ring-2 focus:ring-[#7ab530]/20 outline-none transition-all bg-white/90 backdrop-blur-sm shadow-lg text-gray-700 placeholder-gray-400 font-medium"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#7ab530] transition-colors font-bold text-lg"
+                            >
+                                ✕
                             </button>
-                        </Link>
-                    )}
+                        )}
+                    </div>
+
                 </div>
             </section>
 
@@ -139,7 +191,7 @@
                             <div className="space-y-2">
                                 <Link href="/Favorites" className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/80 transition text-green-700 font-medium text-sm">
                                     <Heart className="w-4 h-4" />
-                                    My Favorites
+                                    My Favorites ({favoritesCount})
                                 </Link>
                                 <Link href="/Purchases" className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/80 transition text-green-700 font-medium text-sm">
                                     <ShoppingCart className="w-4 h-4" />
@@ -151,7 +203,11 @@
                         {/* Category */}
                         <div>
                             <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Category</h3>
-                            <select className="w-full p-3 border-2 border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition text-sm font-medium">
+                            <select 
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="w-full p-3 border-2 border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition text-sm font-medium cursor-pointer"
+                            >
                                 <option>All Categories</option>
                                 <option>Vegan</option>
                                 <option>Protein</option>
@@ -163,7 +219,11 @@
                         {/* Calories */}
                         <div>
                             <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Calories</h3>
-                            <select className="w-full p-3 border-2 border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition text-sm font-medium">
+                            <select 
+                                value={selectedCalories}
+                                onChange={(e) => setSelectedCalories(e.target.value)}
+                                className="w-full p-3 border-2 border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition text-sm font-medium cursor-pointer"
+                            >
                                 <option>Any Calories</option>
                                 <option>&lt; 400 kcal</option>
                                 <option>400 - 500 kcal</option>
@@ -176,7 +236,7 @@
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Price Range</h3>
                                 <div className="bg-[#7ab530] text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                                    ${priceRange}
+                                    {priceRange} TND
                                 </div>
                             </div>
                             
@@ -184,14 +244,14 @@
                             <div className="relative py-3">
                                 <input
                                     type="range"
-                                    min="5"
-                                    max="30"
+                                    min="15"
+                                    max="90"
                                     step="1"
                                     value={priceRange}
                                     onChange={handlePriceChange}
                                     className="w-full h-3 rounded-lg appearance-none cursor-pointer price-slider"
                                     style={{
-                                        background: `linear-gradient(to right, #7ab530 0%, #7ab530 ${((priceRange - 5) / (30 - 5)) * 100}%, #e5e7eb ${((priceRange - 5) / (30 - 5)) * 100}%, #e5e7eb 100%)`
+                                        background: `linear-gradient(to right, #7ab530 0%, #7ab530 ${((priceRange - 15) / (90 - 15)) * 100}%, #e5e7eb ${((priceRange - 15) / (90 - 15)) * 100}%, #e5e7eb 100%)`
                                     }}
                                 />
                             </div>
@@ -201,92 +261,92 @@
 
                 {/* ✅ Meals Cards */}
                 <section className="lg:col-span-3">
+                {filteredAndSortedMeals.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-xl max-w-md mx-auto">
+                            <Search className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">No meals found</h3>
+                            <p className="text-gray-500 mb-6">Try adjusting your filters or search query</p>
+                            <button
+                                onClick={() => {
+                                    setSearchQuery("");
+                                    setSelectedCategory("All Categories");
+                                    setSelectedCalories("Any Calories");
+                                    setPriceRange(90);
+                                }}
+                                className="px-6 py-2 bg-[#7ab530] text-white rounded-xl font-semibold hover:bg-[#6aa02b] transition"
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {meals.map((meal) => (
+                {filteredAndSortedMeals.map((meal, index) => (
                     <div
                     key={meal.id}
-                    className="group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 transform"
+                    className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                     >
-                   {/* Clickable Image with Overlay */}
-                   <div className="relative h-64 w-full overflow-hidden">
+                   {/* Image Section */}
+                   <div className="relative h-56 w-full overflow-hidden bg-gray-100">
                         <Link href={`/Products/${meal.id}`} className="block h-full">
                             <Image
                                 src={meal.img}
                                 alt={meal.name}
                                 fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
-                                    <Eye className="w-5 h-5 text-[#7ab530]" />
-                                </div>
-                            </div>
-                            <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
-                                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                    <span className="text-sm font-semibold text-gray-800">4.8</span>
-                                </div>
-                            </div>
                         </Link>
+                        {/* Rating Badge - Top Left */}
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-md flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                            <span className="text-xs font-semibold text-gray-800">4.8</span>
+                        </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-5">
+                    {/* Content Section */}
+                    <div className="p-4">
+                        {/* Title and Price */}
                         <div className="mb-3">
                             <Link href={`/Products/${meal.id}`}>
-                                <h3 className="text-xl font-bold text-gray-800 hover:text-[#7ab530] transition-colors mb-1">
+                                <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-1">
                                     {meal.name}
                                 </h3>
                             </Link>
                             <div className="flex items-center justify-between">
-                                <p className="text-gray-500 text-sm font-medium">{meal.calories}</p>
-                                <p className="text-[#7ab530] font-bold text-lg">$15</p>
+                                <p className="text-sm text-gray-500">{meal.calories}</p>
+                                <p className="text-lg font-bold text-[#7ab530]">{meal.price || 15} TND</p>
                             </div>
                         </div>
 
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full border border-green-200">
+                        {/* Single Tag */}
+                        <div className="mb-4">
+                            <span className="inline-block px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md">
                                 Healthy
-                            </span>
-                            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
-                                Popular
-                            </span>
-                            <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full border border-purple-200">
-                                Fresh
                             </span>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="space-y-2">
+                        <div className="flex gap-2">
                             <button 
-                                onClick={() => handleAddToCart(meal)} 
-                                className="w-full bg-gradient-to-r from-[#7ab530] to-[#8bc63e] text-white py-3 rounded-xl font-semibold hover:from-[#6aa02b] hover:to-[#7ab530] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                                onClick={() => handleAddToCart(meal)}
+                                className="flex-1 bg-[#7ab530] text-white py-2.5 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-sm hover:shadow-md"
                             >
                                 <ShoppingCart className="w-4 h-4" />
                                 Add to Cart
                             </button>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Link href={`/Products/${meal.id}`} className="flex-1">
-                                    <button className="w-full border-2 border-[#7ab530] text-[#7ab530] py-2.5 rounded-xl font-semibold hover:bg-[#7ab530] hover:text-white active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
-                                        <Eye className="w-4 h-4" />
-                                        View
-                                    </button>
-                                </Link>
-                                <button  
-                                    onClick={() => AddFavorites(meal.id)}  
-                                    className="flex-1 border-2 border-pink-300 text-pink-600 py-2.5 rounded-xl font-semibold hover:bg-pink-500 hover:text-white active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
-                                >
-                                    <Heart className="w-4 h-4" />
-                                    Favorite
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => handleAddFavorite(meal.id)}
+                                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-red-400 hover:text-red-500 active:scale-95 transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
+                            >
+                                <Heart className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                     </div>
                 ))}
                 </div>
+                )}
                 </section>
            
               

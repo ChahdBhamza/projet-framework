@@ -1,38 +1,18 @@
 import Footer from "../Footer";
+import Header from "../Header";
+
 import Image from "next/image";
 import Link from "next/link";
+import { CheckCircle2, Zap, ShoppingCart, TrendingUp } from 'lucide-react';
+
 export default function Aboutus() {
   return (
     <main>
       {/* Navbar */}
-      <header className="navbar flex items-center justify-between p-6">
-        <div className="logo">
-          <h2 id="logotx" className="text-1xl">FitMeal</h2>
-        </div>
-
-        <nav className="nav-links flex gap-6">
-          <a href="/">Home</a>
-          <a href="#PopularMeals">Products</a>
-          <a href="#">MealPlans</a>
-          <a href="/Aboutus">About us</a>
-        </nav>
-        
-        <div className="actions flex gap-3">
-        <Link href="/Signin">
-          <button className="  border border-[#7ab530] text-[#7ab530] px-4 py-2 rounded-full hover:bg-[#7ab530] hover:text-white transition">
-            Sign In
-          </button>
-          </Link>
-          <Link href="/Signup">
-          <button className="bg-[#7ab530] text-white px-4 py-2 rounded-full hover:bg-[#7ab530]-900 transition">
-            Sign Up
-          </button>
-          </Link>
-        </div>
-      </header>
+      <Header/>
 
       {/* Banner */}
-      <section className="relative h-[50vh] flex items-center justify-center text-center text-white bg-cover bg-center bg-[url('/banner.jpg')]">
+       <section className="relative h-[50vh] flex items-center justify-center text-center text-white bg-cover bg-center bg-[url('/banner.jpg')]">
         <div className="absolute inset-0 bg-black/60"></div>
 
         <div className="relative z-10 max-w-2xl px-6">
@@ -49,147 +29,151 @@ export default function Aboutus() {
           </button>
         </div>
       </section>
-
       {/* Founder's Story */}
-      <section className="py-16 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-start">
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           {/* Left: Image */}
-          <div className="relative rounded-2xl overflow-hidden shadow ring-1 ring-gray-100 h-[500px]">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[500px] group">
             <Image
               src="/happyperson.jpg"
               alt="Founder story"
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
 
           {/* Right: Copy */}
-          <div>
-            <div className="text-[#7ab530] font-semibold mb-2">
-              It’s about being you, only better!
+          <div className="space-y-6">
+            <div className="inline-block px-4 py-2 rounded-full bg-[#e8f7d6] text-[#6aa42a] text-sm font-semibold">
+              Our Story
             </div>
-            <h2 className="text-3xl md:text-4xl font-semibold leading-snug mb-4">
-              Fast forward to today, and we’ve helped people around the world
-              feel confident about eating well and living fully.
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight text-[#1f2937]">
+              Fast forward to today, and we've helped people around the world feel confident about eating well and living fully.
             </h2>
-            <p className="text-gray-600 mb-4">
-              Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet
-              adipiscing sem neque sed ipsum. Nunc quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem.
+            <p className="text-gray-600 leading-relaxed text-lg">
+              Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum.
             </p>
-            <p className="text-gray-600 mb-4">
-              Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in,
-              viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum.
+            <p className="text-gray-600 leading-relaxed text-lg">
+              Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis.
             </p>
-            <p className="text-gray-600">
-              Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin, lorem quis bibendum auctor, nisi elit
-              consequat ipsum, nec sagittis sem nibh id elit. Duis sed odio sit amet nibh vulputate cursus a sit amet mauris.
-            </p>
+            <button className="inline-flex items-center gap-2 text-[#7ab530] font-semibold hover:gap-3 transition-all">
+              Learn more <span>→</span>
+            </button>
           </div>
         </div>
-          {/* Emphasis quote */}
-      <section className="py-10 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-2xl md:text-3xl font-medium text-[#3f6212]">
-            Eating kale doesn’t matter when so many other elements of your life aren’t working! 
-            When I started approaching my wellbeing as self-care in a really holistic way, everything changed.
-          </h3>
+      </section>
+
+      {/* Emphasis quote */}
+      <section className="py-16 px-6 bg-gradient-to-br from-[#f0fdf4] via-white to-[#e8f7d6]">
+        <div className="max-w-4xl mx-auto text-center">
+          <blockquote className="text-2xl md:text-3xl font-semibold text-[#1f2937] leading-relaxed italic">
+            "Eating kale doesn't matter when so many other elements of your life aren't working! When I started approaching my wellbeing as self-care in a really holistic way, everything changed."
+          </blockquote>
         </div>
       </section>
 
-      </section>
-
-      {/* 💚 NEW SECTION: Left Text + 4 Images */}
-      <section className="py-16 px-6 bg-[#e8f7d6]">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center ">
-          {/* Left: Text block with light green background */}
-          <div className=" p-10 rounded-2xl h-full flex flex-col justify-center">
-            <h3 className="text-3xl font-semibold mb-4 text-[#1f2937]">
+      {/* Nourish your body section */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+          {/* Left: Text block */}
+          <div className="space-y-6">
+            <h3 className="text-4xl md:text-5xl font-bold text-[#1f2937] leading-tight">
               Nourish your body, fuel your goals
             </h3>
-            <p className="text-gray-700 mb-4">
-              At FitMeal, we believe eating healthy should be enjoyable, accessible, 
-              and tailored to your lifestyle. Our mission is to inspire people to 
-              live better through mindful nutrition and smart planning.
+            <p className="text-gray-600 text-lg leading-relaxed">
+              At FitMeal, we believe eating healthy should be enjoyable, accessible, and tailored to your lifestyle. Our mission is to inspire people to live better through mindful nutrition and smart planning.
             </p>
-            <p className="text-gray-700">
-              Every plan is crafted to balance flavor and nutrition — so you can eat 
-              what you love while achieving your wellness goals.
+            <p className="text-gray-600 text-lg leading-relaxed">
+              Every plan is crafted to balance flavor and nutrition — so you can eat what you love while achieving your wellness goals.
             </p>
+            <div className="flex items-center gap-3 pt-4">
+              <CheckCircle2 className="w-5 h-5 text-[#7ab530] flex-shrink-0" />
+              <span className="text-gray-700 font-medium">Science-backed nutrition plans</span>
+            </div>
           </div>
 
           {/* Right: 4-Image Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-md">
-              <Image src="/meal1.jpg" alt="Healthy meal 1" fill className="object-cover" />
-            </div>
-            <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-md">
-              <Image src="/meal2.jpg" alt="Healthy meal 2" fill className="object-cover" />
-            </div>
-            <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-md">
-              <Image src="/meal3.jpg" alt="Healthy meal 3" fill className="object-cover" />
-            </div>
-            <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-md">
-              <Image src="/meal4.jpg" alt="Healthy meal 4" fill className="object-cover" />
-            </div>
+            {[
+              "/rainbow vegbowl.jpg",
+               "/salmon.jpg",
+              
+              "/chickenherbed.jpg",
+              "/citrusquinoa.jpg",
+             
+            ].map((imageSrc, i) => (
+              <div key={i} className="relative w-full h-48 rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
+                <Image 
+                  src={imageSrc} 
+                  alt={`Healthy meal ${i + 1}`} 
+                  fill 
+                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-    
       {/* Highlights */}
-      <section className="relative py-16 px-6">
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#f0fdf4] via-white to-[#ecfeff]"></div>
+      <section className="relative py-20 px-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f9fafb] to-[#f0fdf4]"></div>
         <div className="relative max-w-6xl mx-auto">
-          <h3 className="text-2xl font-semibold mb-8 text-center text-[#7ab530]">Highlights</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl md:text-5xl font-bold text-[#1f2937] mb-4">What Makes Us Different</h3>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Explore the core features that set FitMeal apart</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { icon: "🥗", title: "Balanced", desc: "Macros made simple", color: "bg-[#e8f7d6]" },
-              { icon: "⏱️", title: "Fast", desc: "15-min recipes", color: "bg-[#cffafe]" },
-              { icon: "🛒", title: "Smart lists", desc: "Zero food waste", color: "bg-[#fde68a]" },
-              { icon: "📈", title: "Habits", desc: "Track what matters", color: "bg-[#e9d5ff]" },
-            ].map((item) => (
-              <div key={item.title} className={`rounded-2xl p-5 ${item.color} text-[#1f2937] shadow-sm`}>
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="font-semibold">{item.title}</div>
-                <div className="text-sm text-gray-700">{item.desc}</div>
-              </div>
-            ))}
+              { icon: CheckCircle2, title: "Balanced", desc: "Macros made simple", color: "from-[#e8f7d6] to-[#d1fae5]" },
+              { icon: Zap, title: "Fast", desc: "15-min recipes", color: "from-[#cffafe] to-[#a5f3fc]" },
+              { icon: ShoppingCart, title: "Smart lists", desc: "Zero food waste", color: "from-[#fef3c7] to-[#fde68a]" },
+              { icon: TrendingUp, title: "Habits", desc: "Track what matters", color: "from-[#f3e8ff] to-[#e9d5ff]" },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className={`rounded-2xl p-6 bg-gradient-to-br ${item.color} shadow-sm hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1`}>
+                  <Icon className="w-8 h-8 text-[#7ab530] mb-3 group-hover:scale-110 transition-transform" />
+                  <div className="font-semibold text-[#1f2937] text-lg">{item.title}</div>
+                  <div className="text-sm text-gray-600 mt-1">{item.desc}</div>
+                </div>
+              );
+            })}
           </div>
 
           {/* FAQ */}
-          <div className="mt-10 max-w-3xl mx-auto">
-            <details className="group rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-100 mb-3">
-              <summary className="cursor-pointer list-none font-semibold flex items-center justify-between">
-                How does FitMeal personalize plans?
-                <span className="text-[#7ab530]">+</span>
-              </summary>
-              <p className="text-gray-600 mt-3">
-                We adapt to your goals, preferences, and schedule—then let you swap, resize, and save meals.
-              </p>
-            </details>
-            <details className="group rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-              <summary className="cursor-pointer list-none font-semibold flex items-center justify-between">
-                Do I need special ingredients?
-                <span className="text-[#7ab530]">+</span>
-              </summary>
-              <p className="text-gray-600 mt-3">
-                Nope. We keep grocery lists practical and flexible with easy substitutions.
-              </p>
-            </details>
+          <div className="max-w-3xl mx-auto space-y-3">
+            <h3 className="text-2xl font-bold text-[#1f2937] mb-6">Frequently asked questions</h3>
+            {[
+              { q: "How does FitMeal personalize plans?", a: "We adapt to your goals, preferences, and schedule—then let you swap, resize, and save meals." },
+              { q: "Do I need special ingredients?", a: "Nope. We keep grocery lists practical and flexible with easy substitutions." },
+            ].map((item, idx) => (
+              <details key={idx} className="group rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 hover:ring-[#7ab530]/30 transition-all">
+                <summary className="cursor-pointer list-none font-semibold text-[#1f2937] flex items-center justify-between">
+                  {item.q}
+                  <span className="text-[#7ab530] text-xl group-open:rotate-45 transition-transform">+</span>
+                </summary>
+                <p className="text-gray-600 mt-4 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center rounded-2xl bg-gradient-to-tr from-[#d1fae5] to-[#cffafe] p-10">
-          <h3 className="text-3xl font-semibold mb-3 text-[#1f2937]">Start your first plan today</h3>
-          <p className="text-gray-700 mb-6">
-            Pick your preferences, set your goals, and we’ll do the planning.
-          </p>
-          <a href="#" className="px-6 py-3 rounded-full bg-[#7ab530] text-white hover:bg-[#6aa42a] transition-colors">
-            Get started
-          </a>
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-[#7ab530] to-[#6aa42a] p-12 md:p-16 text-white shadow-2xl">
+          <div className="text-center">
+            <h3 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">Start your first plan today</h3>
+            <p className="text-lg text-green-50 mb-8 leading-relaxed">
+              Pick your preferences, set your goals, and we'll do the planning.
+            </p>
+            <button className="px-8 py-4 rounded-full bg-white text-[#7ab530] font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+              Get started
+            </button>
+          </div>
         </div>
       </section>
 

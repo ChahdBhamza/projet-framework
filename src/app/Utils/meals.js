@@ -5,20 +5,23 @@ export const meals = [
         name: "Avocado Chicken Salad", 
         calories: "420 kcal", 
         img: "/rainbow vegbowl.jpg",
+        price: 18,
         description: "Fresh avocado chunks paired with tender grilled chicken, mixed greens, and a zesty lemon vinaigrette. A perfect balance of protein and healthy fats."
     },
     { 
         id: 2, 
         name: "Vegan Buddha Bowl", 
         calories: "380 kcal", 
-        img: "/banner.jpg",
+        img: "/buddha.jpg",
+        price: 15,
         description: "A colorful medley of roasted vegetables, quinoa, chickpeas, and tahini dressing. Packed with plant-based protein and nutrients."
     },
     { 
         id: 3, 
         name: "Grilled Salmon Plate", 
         calories: "520 kcal", 
-        img: "/apple.png",
+        img: "/salmon.jpg",
+        price: 28,
         description: "Perfectly grilled salmon fillet served with steamed broccoli and sweet potato. Rich in omega-3 fatty acids and high-quality protein."
     },
     { 
@@ -26,6 +29,7 @@ export const meals = [
         name: "Mediterranean Pasta", 
         calories: "450 kcal", 
         img: "/chickenherbed.jpg",
+        price: 22,
         description: "Whole wheat pasta tossed with olives, tomatoes, feta cheese, and fresh basil. A delicious Mediterranean twist on a classic dish."
     },
     { 
@@ -33,6 +37,7 @@ export const meals = [
         name: "Chicken Protein Bowl", 
         calories: "480 kcal", 
         img: "/citrusquinoa.jpg",
+        price: 20,
         description: "Lean grilled chicken breast with citrus-infused quinoa, black beans, and avocado. High in protein and fiber for sustained energy."
     },
     { 
@@ -40,6 +45,7 @@ export const meals = [
         name: "Shrimp & Veggie Plate", 
         calories: "430 kcal", 
         img: "/spicelentil.jpg",
+        price: 25,
         description: "Succulent shrimp sautéed with seasonal vegetables and served over brown rice. Light, flavorful, and protein-packed."
     },
 ];

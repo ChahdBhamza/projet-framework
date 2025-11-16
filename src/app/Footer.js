@@ -5,7 +5,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="footer-brand">
-            <h2 id="footer-logo" className="text-3xl mb-4">FitMeal</h2>
+            <h2 id="footer-logo" className="text-3xl mb-4">Dietopia</h2>
             <p className="text-gray-400 mb-4">
               Your trusted partner in healthy eating. Discover personalized meal plans that fit your lifestyle.
             </p>
@@ -54,23 +54,19 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4 text-[#7ab530]">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                <a href="/" className="text-gray-400 hover:text-[#7ab530] transition-colors">
                   Home
                 </a>
               </li>
+              
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                <a href="/Products" className="text-gray-400 hover:text-[#7ab530] transition-colors">
                   Products
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Blog
+                <a href="/Aboutus" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                  About Us
                 </a>
               </li>
               <li>
@@ -102,14 +98,12 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Recipe Collection
+                  Meals Purchase
                 </a>
               </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Fitness Programs
-                </a>
-              </li>
+              
+             
+             
             </ul>
           </div>
 
@@ -139,7 +133,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} FitMeal. All rights reserved.
+            Dietopia © {new Date().getFullYear()} . All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">

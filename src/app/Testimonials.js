@@ -1,74 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 const testimonials = [
   {
-    text: "FitMeal reset my routine. Tasty plans, zero overthinking—I'm finally consistent.",
-    author: "Sarah M.",
-    role: "Busy mom of 2",
+    text: "This app completely transformed my eating habits. The meal plans are delicious and easy to follow, making healthy eating effortless.",
+    author: "Conrad F.",
+    role: "Actor",
     rating: 5,
-    image: "/test1.jpg",
+    image: "/conrad.jpg",
   },
   {
-    text: "Down 15 lbs in 8 weeks without giving up flavor. Grocery lists are clutch.",
+    text: "I lost 15 pounds in just 8 weeks without feeling deprived. The recipes are flavorful and the grocery lists save me so much time.",
     author: "John D.",
     role: "Sales manager",
     rating: 5,
-    image: "/test1.jpg",
+    image: "/test5.jpg",
   },
   {
-    text: "The 15‑min recipes fit my schedule. I cook more, spend less, feel better.",
+    text: "Perfect for my busy schedule! The quick recipes help me eat better without spending hours cooking. I recommend to everyone.",
     author: "Emily R.",
     role: "Grad student",
     rating: 4,
-    image: "/test1.jpg",
+    image: "/test3.jpg",
   },
   {
-    text: "I finally enjoy healthy food. The plan adapts when my week gets hectic.",
+    text: "Finally found a meal plan that works for my family. The variety keeps everyone happy and the nutritional balance is exactly what we needed.",
     author: "Michael B.",
     role: "New parent",
     rating: 5,
-    image: "/test1.jpg",
+    image: "/test8.jpg",
   },
   {
-    text: "Tons of variety. The habit tracker nudges me without pressure—love it.",
+    text: "Love the variety and how the app adapts to my preferences. The habit tracker keeps me motivated without being overwhelming at all.",
     author: "Sophia L.",
     role: "Designer",
     rating: 4,
-    image: "/test1.jpg",
+    image: "/test5.jpg",
   },
 ];
 
 export default function Testimonials() {
   const [startIndex, setStartIndex] = useState(0);
   const visibleCount = 3; // number of cards visible at a time
+  const maxIndex = Math.max(0, testimonials.length - visibleCount);
 
   const prev = () => {
     setStartIndex((prevIndex) =>
-      prevIndex === 0 ? testimonials.length - visibleCount : prevIndex - 1
+      prevIndex === 0 ? maxIndex : prevIndex - 1
     );
   };
 
   const next = () => {
     setStartIndex((prevIndex) =>
-      prevIndex >= testimonials.length - visibleCount ? 0 : prevIndex + 1
+      prevIndex >= maxIndex ? 0 : prevIndex + 1
     );
   };
 
-  // Auto‑advance carousel
-  useEffect(() => {
-    const id = setInterval(() => {
-      setStartIndex((prevIndex) =>
-        prevIndex >= testimonials.length - visibleCount ? 0 : prevIndex + 1
-      );
-    }, 4000);
-    return () => clearInterval(id);
-  }, []);
-
   return (
-    <section className="relative py-20 px-6">
+    <section className="relative pt-20 pb-32 px-6">
       <div className="absolute inset-0 bg-gradient-to-br from-[#f0fdf4] via-white to-[#eff6ff]" />
 
       <div className="relative max-w-6xl mx-auto text-center">
@@ -86,19 +77,19 @@ export default function Testimonials() {
           {/* Left Arrow */}
           <button
             onClick={prev}
-            className="absolute left-0 z-10 bg-white rounded-full p-3 shadow hover:bg-green-50 transition"
+            className="absolute -left-4 md:-left-8 z-10 bg-white rounded-full p-3 shadow hover:bg-green-50 transition"
           >
             &#8592;
           </button>
 
           {/* Cards Container */}
-          <div className="flex overflow-hidden w-full mx-8">
+          <div className="flex overflow-hidden w-full mx-4 md:mx-8">
             {testimonials
               .slice(startIndex, startIndex + visibleCount)
               .map((t, i) => (
                 <div
-                  key={i}
-                  className="flex-shrink-0 w-1/3 mx-2 bg-white rounded-xl shadow-lg ring-1 ring-gray-100 p-6 flex flex-col items-center text-left transition-transform duration-500 hover:-translate-y-1"
+                  key={`${startIndex}-${i}`}
+                  className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 mx-2 bg-white rounded-xl shadow-lg ring-1 ring-gray-100 p-6 flex flex-col items-center text-center transition-transform duration-500 hover:-translate-y-1"
                 >
                   <div className="w-24 h-24 mb-4 relative rounded-full overflow-hidden ring-2 ring-[#e8f7d6]">
                     <Image
@@ -125,23 +116,13 @@ export default function Testimonials() {
           {/* Right Arrow */}
           <button
             onClick={next}
-            className="absolute right-0 z-10 bg-white rounded-full p-3 shadow hover:bg-green-50 transition"
+            className="absolute -right-4 md:-right-8 z-10 bg-white rounded-full p-3 shadow hover:bg-green-50 transition"
           >
             &#8594;
           </button>
         </div>
 
-        {/* Dots */}
-        <div className="mt-6 flex justify-center gap-2">
-          {testimonials.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setStartIndex(idx % testimonials.length)}
-              aria-label={`Go to slide ${idx + 1}`}
-              className={(idx === startIndex ? "bg-[#7ab530]" : "bg-gray-300") + " h-2 w-2 rounded-full transition-colors"}
-            />
-          ))}
-        </div>
+        
       </div>
     </section>
   );

@@ -57,7 +57,7 @@ export default function WhyChooseUs() {
             </div>
             <h3 className="text-xl font-bold mb-3 text-gray-900">Convenience at Your Fingertips</h3>
             <p className="text-gray-700 leading-relaxed">
-              We know your time is valuable. With our easy-to-use platform and personalized meal planning service, FitMeal makes it simple to manage your nutrition from the comfort of your home, helping you stay on track with your wellness journey.
+              We know your time is valuable. With our easy-to-use platform and personalized meal planning service, Dietopia makes it simple to manage your nutrition from the comfort of your home, helping you stay on track with your wellness journey.
             </p>
           </div>
 
