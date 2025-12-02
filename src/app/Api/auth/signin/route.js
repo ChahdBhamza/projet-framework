@@ -2,6 +2,7 @@
 import Users from "../../../../../models/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 export async function POST(req) {
   try {
@@ -113,15 +114,21 @@ export async function POST(req) {
       );
     }
 
+
+
+      const token=jwt.sign({id:user._id.toString(),email:user.email},process.env.JWT_SECRET,{ expiresIn: "2m" }  );
     // Success response
     const responseData = {
       message: "Signed in successfully",
+      token,
       user: {
         id: user._id?.toString() || "",
         email: user.email || "",
         name: user.name || "",
       },
     };
+
+
 
     return NextResponse.json(
       responseData,

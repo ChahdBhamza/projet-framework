@@ -2,6 +2,8 @@ import { connectDB } from "../../../../../db";
 import Users from "../../../../../models/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
 
 export async function POST(req) {
   try {
@@ -116,10 +118,17 @@ export async function POST(req) {
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
+     // Create JWT token for the new user
+   const token = jwt.sign(
+  { id: newUser._id.toString(), email: newUser.email },
+  process.env.JWT_SECRET,
+  { expiresIn: "2m" } // token expires in 2 minutes
+);
 
     // Success response
     const responseData = {
       message: "User created successfully",
+      token,
       user: {
         id: newUser._id?.toString() || "",
         email: newUser.email || "",

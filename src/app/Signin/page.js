@@ -68,7 +68,7 @@ export default function Signin() {
         setError(data?.message || "Sign-in failed");
       } else {
         console.log("Signed in user:", data?.user);
-        // Redirect after login
+        localStorage.setItem("token", data.token);
         window.location.href = "/Aboutus";
       }
     } catch (err) {

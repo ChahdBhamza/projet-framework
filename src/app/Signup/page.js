@@ -82,6 +82,7 @@ export default function Signup() {
         setError(data?.message || "Sign-up failed");
       } else {
         console.log("User signed up:", data?.user);
+        localStorage.setItem("token", data.token);
         window.location.href = "/Signin"; // redirect after signup
       }
     } catch (err) {
