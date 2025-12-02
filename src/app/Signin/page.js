@@ -2,13 +2,30 @@
 import Link from "next/link";
 import Header from "../Header";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function Signin() {
+  const { login } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  // Show session-related messages inline in the form
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    if (reason === "sessionExpired") {
+      setError("Your session has expired. Please sign in again.");
+    } else if (reason === "invalidSession") {
+      setError("Invalid session. Please sign in again.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,17 +45,17 @@ export default function Signin() {
 
       // Clone the response before reading it to avoid consuming it
       const responseClone = res.clone();
-      
+
       if (contentType && contentType.includes("application/json")) {
         // Response claims to be JSON
         try {
           const text = await res.text();
-          
+
           // Check if response is empty
           if (!text || text.trim().length === 0) {
             throw new Error("Server returned empty response");
           }
-          
+
           // Try to parse JSON
           data = JSON.parse(text);
         } catch (jsonError) {
@@ -66,16 +83,55 @@ export default function Signin() {
 
       if (!res.ok) {
         setError(data?.message || "Sign-in failed");
+        // Check if user needs email verification
+        if (data?.requiresVerification) {
+          setNeedsVerification(true);
+        }
       } else {
         console.log("Signed in user:", data?.user);
-        localStorage.setItem("token", data.token);
-        window.location.href = "/Aboutus";
+        login(data.token, data.user);
+
+        // Redirect based on user role
+        const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()?.trim();
+        const userEmail = data?.user?.email?.toLowerCase()?.trim();
+
+        if (userEmail === ADMIN_EMAIL) {
+          router.push("/Dashboard");
+        } else {
+          router.push("/");
+        }
       }
     } catch (err) {
       console.error("Fetch error:", err);
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setError("");
+        alert(data.message || "Verification email sent! Please check your inbox.");
+      } else {
+        setError(data.message || "Failed to resend verification email");
+      }
+    } catch (err) {
+      setError("Failed to resend verification email. Please try again.");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -97,7 +153,21 @@ export default function Signin() {
           <p className="text-center text-gray-500 mb-8">Sign in to continue your healthy journey</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {error && (
+              <div className="text-red-500 text-center">
+                <p>{error}</p>
+                {needsVerification && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="mt-2 text-sm text-[#7ab530] hover:underline disabled:opacity-50"
+                  >
+                    {resendLoading ? "Sending..." : "Resend verification email"}
+                  </button>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-gray-700 font-medium mb-2">Email</label>
@@ -125,7 +195,7 @@ export default function Signin() {
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="accent-[#7ab530]" /> Remember me
               </label>
-              <Link href="#" className="text-[#7ab530] hover:underline">Forgot password?</Link>
+              <Link href="/reset-password" className="text-[#7ab530] hover:underline">Forgot password?</Link>
             </div>
 
             <button
@@ -137,7 +207,7 @@ export default function Signin() {
             </button>
 
             <p className="text-center text-gray-600 mt-6">
-              Don’t have an account? <Link href="/Signup" className="text-[#7ab530] font-semibold hover:underline">Sign Up</Link>
+              Don't have an account? <Link href="/Signup" className="text-[#7ab530] font-semibold hover:underline">Sign Up</Link>
             </p>
           </form>
         </div>

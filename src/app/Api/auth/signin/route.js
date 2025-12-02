@@ -55,7 +55,7 @@ export async function POST(req) {
     const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     let user;
     try {
-      user = await Users.findOne({ 
+      user = await Users.findOne({
         email: { $regex: new RegExp(`^${escapedEmail}$`, "i") }
       });
     } catch (dbQueryError) {
@@ -83,12 +83,12 @@ export async function POST(req) {
     }
 
     // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-    const isHashed = user.password.startsWith("$2a$") || 
-                     user.password.startsWith("$2b$") || 
-                     user.password.startsWith("$2y$");
+    const isHashed = user.password.startsWith("$2a$") ||
+      user.password.startsWith("$2b$") ||
+      user.password.startsWith("$2y$");
 
     let isMatch = false;
-    
+
     try {
       if (isHashed) {
         // Password is hashed, use bcrypt.compare
@@ -114,9 +114,20 @@ export async function POST(req) {
       );
     }
 
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      return NextResponse.json(
+        {
+          message: "Please verify your email before signing in. Check your inbox for the verification link.",
+          requiresVerification: true,
+          email: user.email
+        },
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
 
-      const token=jwt.sign({id:user._id.toString(),email:user.email},process.env.JWT_SECRET,{ expiresIn: "2m" }  );
+    const token = jwt.sign({ id: user._id.toString(), email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "24h" });
     // Success response
     const responseData = {
       message: "Signed in successfully",

@@ -2,7 +2,8 @@ import { connectDB } from "../../../../../db";
 import Users from "../../../../../models/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { generateSecureToken, generateTokenExpiration } from "../../../../../lib/tokens.js";
+import { sendVerificationEmail } from "../../../../../lib/email.js";
 
 
 export async function POST(req) {
@@ -65,7 +66,7 @@ export async function POST(req) {
     const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     let existingUser;
     try {
-      existingUser = await Users.findOne({ 
+      existingUser = await Users.findOne({
         email: { $regex: new RegExp(`^${escapedEmail}$`, "i") }
       });
     } catch (dbQueryError) {
@@ -95,6 +96,10 @@ export async function POST(req) {
       );
     }
 
+    // Generate email verification token
+    const verificationToken = generateSecureToken();
+    const tokenExpiration = generateTokenExpiration(24); // 24 hours
+
     // Create new user
     let newUser;
     try {
@@ -102,6 +107,9 @@ export async function POST(req) {
         name: trimmedName,
         email: normalizedEmail,
         password: hashedPassword,
+        isEmailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: tokenExpiration,
       });
       await newUser.save();
     } catch (saveError) {
@@ -118,22 +126,28 @@ export async function POST(req) {
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
-     // Create JWT token for the new user
-   const token = jwt.sign(
-  { id: newUser._id.toString(), email: newUser.email },
-  process.env.JWT_SECRET,
-  { expiresIn: "2m" } // token expires in 2 minutes
-);
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(newUser.email, verificationToken);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // User is created but email failed - still return success
+      return NextResponse.json(
+        {
+          message: "Account created! However, we couldn't send the verification email. Please use the resend option.",
+          requiresVerification: true,
+          email: newUser.email
+        },
+        { status: 201, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     // Success response
     const responseData = {
-      message: "User created successfully",
-      token,
-      user: {
-        id: newUser._id?.toString() || "",
-        email: newUser.email || "",
-        name: newUser.name || "",
-      },
+      message: "Account created successfully! Please check your email to verify your account.",
+      requiresVerification: true,
+      email: newUser.email,
     };
 
     return NextResponse.json(
