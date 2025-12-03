@@ -17,26 +17,33 @@ export default function Favorites() {
   const [favoriteMeals, setFavoriteMeals] = useState([]);
 
   useEffect(() => {
-    const loadFavorites = () => {
-      const ids = GetFavorites();
+    const loadFavorites = async () => {
+      const ids = await GetFavorites();
       setFavoriteIds(ids);
-      const favorites = allMeals.filter(meal => ids.includes(meal.id));
+      // Fetch meals from API instead of using static data
+      try {
+        const res = await fetch('/api/meals');
+        const data = await res.json();
+        if (data.success) {
+          const favorites = data.meals.filter(meal => ids.includes(meal._id));
       setFavoriteMeals(favorites);
+        }
+      } catch (error) {
+        console.error('Error loading meals:', error);
+      }
     };
 
     loadFavorites();
-    window.addEventListener("storage", loadFavorites);
-    return () => window.removeEventListener("storage", loadFavorites);
   }, []);
 
-  const handleRemoveFavorite = (id) => {
-    RemoveFavorites(id);
+  const handleRemoveFavorite = async (id) => {
+    await RemoveFavorites(id);
     setFavoriteIds(favoriteIds.filter(favId => favId !== id));
-    setFavoriteMeals(favoriteMeals.filter(meal => meal.id !== id));
+    setFavoriteMeals(favoriteMeals.filter(meal => meal._id !== id));
   };
 
-  const handleAddToCart = (meal) => {
-    AddPurchase(meal.id, meal);
+  const handleAddToCart = async (meal) => {
+    await AddPurchase(meal._id, meal);
     router.push("/Purchases");
   };
 
@@ -138,19 +145,16 @@ export default function Favorites() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {favoriteMeals.map((meal) => (
                 <div
-                  key={meal.id}
+                  key={meal._id}
                   className="group bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                 >
-                  {/* Clickable Image */}
-                  <div className="relative h-56 w-full overflow-hidden">
-                    <Link href={`/Products/${meal.id}`} className="block h-full">
-                      <Image
-                        src={meal.img}
-                        alt={meal.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        priority
-                      />
+                  {/* Image Section */}
+                  <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+                    <Link href={`/Products/${meal._id}`} className="block h-full w-full flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <span className="text-4xl mb-2 block">🥗</span>
+                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                      </div>
                       <div className="absolute top-3 left-3">
                         <div className="bg-red-500 rounded-full p-1.5 shadow-md">
                           <Heart className="w-4 h-4 text-white fill-white" />
@@ -162,13 +166,13 @@ export default function Favorites() {
                   {/* Content */}
                   <div className="p-4">
                     <div className="mb-3">
-                      <Link href={`/Products/${meal.id}`}>
+                      <Link href={`/Products/${meal._id}`}>
                         <h3 className="text-lg font-bold text-gray-800 hover:text-[#7ab530] transition-colors mb-1">
-                          {meal.name}
+                          {meal.mealName}
                         </h3>
                       </Link>
                       <div className="flex items-center justify-between">
-                        <p className="text-gray-500 text-xs font-medium">{meal.calories}</p>
+                        <p className="text-gray-500 text-xs font-medium">{meal.calories} kcal</p>
                         <p className="text-[#7ab530] font-bold">{meal.price || 15} TND</p>
                       </div>
                     </div>
@@ -188,7 +192,7 @@ export default function Favorites() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRemoveFavorite(meal.id);
+                          handleRemoveFavorite(meal._id);
                         }}
                         className="flex-1 border border-red-300 text-red-600 py-2 rounded-lg font-semibold hover:bg-red-500 hover:text-white active:scale-95 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm"
                       >

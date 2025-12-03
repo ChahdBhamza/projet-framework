@@ -13,33 +13,68 @@ import Footer from "../../Footer";
 
 export default function ProductDetail() {
   const params = useParams();
-  const id = parseInt(params.id);
+  const id = params.id;
   const [isFavorite, setIsFavorite] = useState(false);
-
-  // Find the meal by id
-  const meal = meals.find(m => m.id === id);
+  const [meal, setMeal] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const favorites = GetFavorites();
-    setIsFavorite(favorites.includes(id));
+    const fetchMeal = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/meals/${id}`);
+        const data = await res.json();
+        if (data.success) {
+          setMeal(data.meal);
+        }
+      } catch (error) {
+        console.error("Failed to fetch meal:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchMeal();
+    }
   }, [id]);
 
-  const handleFavoriteToggle = () => {
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (meal) {
+        const favorites = await GetFavorites();
+        setIsFavorite(favorites.includes(meal._id));
+      }
+    };
+    checkFavorite();
+  }, [meal]);
+
+  const handleFavoriteToggle = async () => {
+    if (!meal) return;
+
     if (isFavorite) {
-      RemoveFavorites(id);
+      await RemoveFavorites(meal._id);
       setIsFavorite(false);
     } else {
-      AddFavorites(id);
+      await AddFavorites(meal._id);
       setIsFavorite(true);
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (meal) {
-      AddPurchase(meal.id, meal);
-      alert(`${meal.name} added to cart!`);
+      await AddPurchase(meal._id, meal);
+      alert(`${meal.mealName} added to cart!`);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7ab530]"></div>
+      </main>
+    );
+  }
 
   if (!meal) {
     return (
@@ -75,28 +110,24 @@ export default function ProductDetail() {
       {/* Product Details */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Left: Image */}
+          {/* Left: Image Placeholder */}
           <div className="relative">
-            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-xl">
-              <Image
-                src={meal.img}
-                alt={meal.name}
-                fill
-                className="object-cover"
-                priority
-              />
+            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 shadow-xl flex items-center justify-center">
+              <div className="text-center p-8">
+                <span className="text-8xl mb-4 block">🥗</span>
+                <span className="text-2xl font-medium text-green-800 opacity-75">{meal.mealType}</span>
+              </div>
             </div>
             {/* Favorite Badge */}
             <button
               onClick={handleFavoriteToggle}
               className="absolute top-4 right-4 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
             >
-              <Heart 
-                className={`w-6 h-6 transition-colors ${
-                  isFavorite 
-                    ? "text-red-500 fill-red-500" 
-                    : "text-gray-400 hover:text-red-400"
-                }`}
+              <Heart
+                className={`w-6 h-6 transition-colors ${isFavorite
+                  ? "text-red-500 fill-red-500"
+                  : "text-gray-400 hover:text-red-400"
+                  }`}
               />
             </button>
           </div>
@@ -106,11 +137,11 @@ export default function ProductDetail() {
             {/* Title & Calories */}
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
-                {meal.name}
+                {meal.mealName}
               </h1>
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-xl font-semibold text-[#7ab530]">{meal.price || 15} TND</span>
-                <span className="text-gray-500 text-lg">{meal.calories}</span>
+                <span className="text-gray-500 text-lg">{meal.calories} kcal</span>
               </div>
             </div>
 
@@ -140,6 +171,36 @@ export default function ProductDetail() {
               </p>
             </div>
 
+            {/* Recipe Details & Instructions */}
+            {(meal.instructions || meal.readyInMinutes) && (
+              <div className="pt-6 border-t border-gray-200 space-y-4">
+                <div className="flex gap-6 text-sm text-gray-600">
+                  {meal.readyInMinutes && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">Ready in:</span>
+                      {meal.readyInMinutes} mins
+                    </div>
+                  )}
+                  {meal.servings && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">Servings:</span>
+                      {meal.servings}
+                    </div>
+                  )}
+                </div>
+
+                {meal.instructions && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-3">Preparation</h2>
+                    <div
+                      className="text-gray-600 leading-relaxed text-base space-y-2 prose prose-green"
+                      dangerouslySetInnerHTML={{ __html: meal.instructions }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Features */}
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-gray-700">
@@ -158,20 +219,19 @@ export default function ProductDetail() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button 
+              <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-[#7ab530] text-white px-8 py-4 rounded-xl font-semibold hover:bg-[#6aa02b] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-5 h-5" />
                 Add to Cart
               </button>
-              <button 
+              <button
                 onClick={handleFavoriteToggle}
-                className={`px-8 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 ${
-                  isFavorite 
-                    ? "bg-red-500 text-white hover:bg-red-600" 
-                    : "bg-white border-2 border-gray-300 text-gray-700 hover:border-red-400 hover:text-red-500"
-                }`}
+                className={`px-8 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 ${isFavorite
+                  ? "bg-red-500 text-white hover:bg-red-600"
+                  : "bg-white border-2 border-gray-300 text-gray-700 hover:border-red-400 hover:text-red-500"
+                  }`}
               >
                 <Heart className={`w-5 h-5 ${isFavorite ? "fill-white" : ""}`} />
                 {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
@@ -181,39 +241,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Related Meals */}
-      <section className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">You might also like</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {meals.filter(m => m.id !== meal.id).slice(0, 4).map(m => (
-              <Link 
-                key={m.id} 
-                href={`/Products/${m.id}`}
-                className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-                  <Image
-                    src={m.img}
-                    alt={m.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-[#7ab530] transition-colors">
-                    {m.name}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">{m.calories}</p>
-                    <p className="text-lg font-bold text-[#7ab530]">{m.price || 15} TND</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Related Meals - Removed for now as we need to implement API fetching for related meals */}
 
       <Footer />
     </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
@@ -37,6 +37,12 @@ import {
   Home,
   Menu,
   X,
+  ShoppingCart,
+  Repeat,
+  CheckCircle,
+  XCircle,
+  BarChart3,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 
 const COLORS = ["#7ab530", "#34d399", "#60a5fa", "#f97316", "#a78bfa"];
@@ -106,12 +112,14 @@ export default function Dashboard() {
     ],
   };
 
-  const ADMIN_EMAIL =
-    typeof window !== "undefined"
-      ? process.env.NEXT_PUBLIC_ADMIN_EMAIL
-      : undefined;
-
-  const isAdmin = user && ADMIN_EMAIL && user.email?.toLowerCase()?.trim() === ADMIN_EMAIL?.toLowerCase()?.trim();
+  const isAdmin = useMemo(() => {
+    if (typeof window === "undefined" || !user) return false;
+    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    if (!ADMIN_EMAIL) return false;
+    const userEmail = user.email?.toLowerCase()?.trim();
+    const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+    return userEmail === adminEmail;
+  }, [user]);
 
   useEffect(() => {
     if (loading) return;
@@ -123,10 +131,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchSummary = async () => {
+      if (!user || !isAdmin) return;
+      
       setLoadingSummary(true);
       setError("");
       try {
-        const res = await fetch("/api/admin/summary");
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (!token) {
+          throw new Error("Not authenticated");
+        }
+
+        const res = await fetch("/api/admin/summary", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.message || "Failed to load dashboard data");
@@ -139,8 +159,11 @@ export default function Dashboard() {
         setLoadingSummary(false);
       }
     };
-    fetchSummary();
-  }, []);
+    
+    if (user && isAdmin) {
+      fetchSummary();
+    }
+  }, [user, isAdmin]);
 
   if (loading) {
     return (
@@ -169,7 +192,34 @@ export default function Dashboard() {
     );
   }
 
-  const displayTotalUsers = loadingSummary ? "…" : (summary?.totalUsers ?? fakeData.totalUsers);
+  // Use real data from summary, fallback to defaults if loading or undefined
+  const displayData = loadingSummary || !summary
+    ? { 
+        totalUsers: "…", 
+        activeUsersToday: "…", 
+        activePlans: "…", 
+        revenue: "…",
+        userGrowth: [],
+        popularPlans: [],
+        orderTrends: [],
+        popularTags: [],
+        recentOrders: []
+      }
+    : {
+        totalUsers: summary.totalUsers ?? 0,
+        activeUsersToday: summary.activeUsersToday ?? 0,
+        activePlans: summary.totalMeals ?? 0,
+        revenue: summary.totalRevenue ?? 0,
+        userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
+        popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
+        orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
+        popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
+        recentOrders: Array.isArray(summary.recentOrders) ? summary.recentOrders : [],
+        revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
+        topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
+        priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
+        calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
+      };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -244,29 +294,29 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard
                 title="Total Users"
-                value={displayTotalUsers}
-                change="+12.5%"
+                value={displayData.totalUsers}
+                change={summary?.usersCreatedLast7Days > 0 ? `+${summary.usersCreatedLast7Days} this week` : "No new users"}
                 icon={Users}
                 color="bg-blue-500"
               />
               <StatCard
                 title="Active Today"
-                value={fakeData.activeUsersToday}
-                change="+8.2%"
+                value={displayData.activeUsersToday}
+                change={summary?.ordersToday > 0 ? `${summary.ordersToday} orders today` : "No activity"}
                 icon={UserCheck}
                 color="bg-green-500"
               />
               <StatCard
-                title="Active Plans"
-                value={fakeData.activePlans}
-                change="+5.1%"
-                icon={Calendar}
+                title="Total Meals"
+                value={displayData.activePlans}
+                change={summary && summary.popularPlans && summary.popularPlans.length > 0 ? `${summary.popularPlans.length} categories` : "No meals"}
+                icon={UtensilsCrossed}
                 color="bg-purple-500"
               />
               <StatCard
-                title="Revenue"
-                value={`$${(fakeData.revenue / 1000).toFixed(1)}k`}
-                change="+18.3%"
+                title="Total Revenue"
+                value={typeof displayData.revenue === 'number' ? `${displayData.revenue.toFixed(0)} TND` : displayData.revenue}
+                change={summary?.totalOrders > 0 ? `${summary.totalOrders} orders` : "No orders"}
                 icon={DollarSign}
                 color="bg-orange-500"
               />
@@ -285,7 +335,7 @@ export default function Dashboard() {
                   </select>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={fakeData.userGrowth}>
+                  <LineChart data={displayData.userGrowth && displayData.userGrowth.length > 0 ? displayData.userGrowth : [{ day: "No data", users: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                     <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
                     <YAxis stroke="#9ca3af" fontSize={12} />
@@ -315,7 +365,7 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie
-                      data={fakeData.popularPlans}
+                      data={displayData.popularPlans && displayData.popularPlans.length > 0 ? displayData.popularPlans : [{ name: "No data", value: 1 }]}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -324,7 +374,7 @@ export default function Dashboard() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {fakeData.popularPlans.map((entry, index) => (
+                      {(displayData.popularPlans && displayData.popularPlans.length > 0 ? displayData.popularPlans : [{ name: "No data", value: 1 }]).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -336,11 +386,40 @@ export default function Dashboard() {
 
             {/* Charts Row 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Feedback Trends */}
+              {/* Revenue Trends */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Feedback Trends</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Revenue Trends (Last 7 Days)</h3>
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={fakeData.feedbackTrends}>
+                  <LineChart data={displayData.revenueData && displayData.revenueData.length > 0 ? displayData.revenueData : [{ day: "No data", revenue: 0 }]}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
+                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      }}
+                      formatter={(value) => [`${Number(value).toFixed(2)} TND`, "Revenue"]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#f97316"
+                      strokeWidth={2}
+                      dot={{ fill: "#f97316", r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Order Trends */}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Order Trends (Last 7 Days)</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={displayData.orderTrends && displayData.orderTrends.length > 0 ? displayData.orderTrends : [{ day: "No data", orders: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                     <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
                     <YAxis stroke="#9ca3af" fontSize={12} />
@@ -352,16 +431,19 @@ export default function Dashboard() {
                         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                       }}
                     />
-                    <Bar dataKey="feedback" fill="#7ab530" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="orders" fill="#7ab530" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
 
-              {/* Popular Ingredients */}
+            {/* Charts Row 3 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Popular Tags */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Popular Ingredients</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Popular Meal Tags</h3>
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={fakeData.popularIngredients} layout="vertical">
+                  <BarChart data={displayData.popularTags && displayData.popularTags.length > 0 ? displayData.popularTags : [{ name: "No data", usage: 0 }]} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                     <XAxis type="number" stroke="#9ca3af" fontSize={12} />
                     <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={12} width={100} />
@@ -377,114 +459,200 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+
+              {/* Price Distribution */}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Meal Price Distribution</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={displayData.priceDistribution && displayData.priceDistribution.length > 0 ? displayData.priceDistribution : [{ range: "No data", count: 0 }]}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} angle={-45} textAnchor="end" height={80} />
+                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#a78bfa" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Charts Row 4 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Calorie Distribution */}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Calorie Distribution</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={displayData.calorieDistribution && displayData.calorieDistribution.length > 0 ? displayData.calorieDistribution : [{ range: "No data", count: 0 }]}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} />
+                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#60a5fa" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* User Verification Status */}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">User Verification Status</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={summary && summary.totalUsers > 0 ? [
+                        { name: "Verified", value: summary.verifiedUsers || 0 },
+                        { name: "Unverified", value: (summary.totalUsers - (summary.verifiedUsers || 0)) }
+                      ] : [{ name: "No data", value: 1 }]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={90}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {summary && summary.totalUsers > 0 ? [
+                        <Cell key="verified" fill="#34d399" />,
+                        <Cell key="unverified" fill="#f87171" />
+                      ] : <Cell key="no-data" fill="#9ca3af" />}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Selling Meals */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-[#7ab530]" />
+                Top Selling Meals
+              </h3>
+              <div className="space-y-4">
+                {displayData.topSellingMeals && displayData.topSellingMeals.length > 0 ? (
+                  displayData.topSellingMeals.map((meal, idx) => (
+                    <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        #{idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
+                        <p className="text-sm text-gray-600">{meal.totalQuantity} units sold • {meal.orderCount} orders</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-[#7ab530]">{Number(meal.totalRevenue || 0).toFixed(2)} TND</p>
+                        <p className="text-xs text-gray-600">Revenue</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No sales data yet</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Tables Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Pending Approvals */}
+              {/* Recent Orders */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-[#7ab530]" />
-                  Pending Approvals
+                  Recent Orders
                 </h3>
                 <div className="space-y-4">
-                  {fakeData.pendingApprovals.map((item) => (
-                    <div key={item.id} className="p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 mb-1">{item.plan}</h4>
-                          <p className="text-sm text-gray-600">by {item.author}</p>
+                  {displayData.recentOrders && displayData.recentOrders.length > 0 ? (
+                    displayData.recentOrders.map((order) => (
+                      <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900 mb-1">{order.userName || order.userEmail || "Unknown User"}</h4>
+                            <p className="text-sm text-gray-600">{order.itemsCount} items • {new Date(order.orderDate).toLocaleDateString()}</p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            order.paymentStatus === "completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {order.paymentStatus}
+                          </span>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          item.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"
-                        }`}>
-                          {item.status}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-[#7ab530]">{(order.totalAmount || 0).toFixed(2)} TND</span>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button className="flex-1 px-4 py-2 bg-[#7ab530] text-white rounded-lg text-sm hover:bg-[#6aa02b] transition font-medium">
-                          Approve
-                        </button>
-                        <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition font-medium">
-                          Review
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No recent orders</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
-              {/* Top Contributors */}
+              {/* Most Favorited Meals */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Award className="w-5 h-5 text-[#7ab530]" />
-                  Top Contributors
+                  Most Favorited Meals
                 </h3>
                 <div className="space-y-4">
-                  {fakeData.topContributors.map((contributor, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {contributor.avatar}
+                  {summary?.favoriteMeals && summary.favoriteMeals.length > 0 ? (
+                    summary.favoriteMeals.map((meal, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {meal.mealName?.charAt(0) || "?"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
+                          <p className="text-sm text-gray-600">Meal ID: {meal.mealId}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-gray-900">{meal.favorites}</p>
+                          <p className="text-xs text-red-600">❤️ favorites</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">{contributor.name}</h4>
-                        <p className="text-sm text-gray-600">{contributor.role}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">{contributor.plans}</p>
-                        <p className="text-xs text-yellow-600">★ {contributor.rating}</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No favorites yet</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Support Tickets */}
+            {/* Order Statistics Table */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-[#7ab530]" />
-                Support Tickets
+                Order Statistics
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Ticket</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Subject</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Priority</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fakeData.supportTickets.map((ticket) => (
-                      <tr key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900">{ticket.id}</td>
-                        <td className="py-3 px-4 text-sm text-gray-700">{ticket.subject}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            ticket.status === "open" ? "bg-red-100 text-red-800" :
-                            ticket.status === "in-progress" ? "bg-yellow-100 text-yellow-800" :
-                            "bg-green-100 text-green-800"
-                          }`}>
-                            {ticket.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            ticket.priority === "high" ? "bg-red-100 text-red-800" :
-                            ticket.priority === "medium" ? "bg-yellow-100 text-yellow-800" :
-                            "bg-gray-100 text-gray-800"
-                          }`}>
-                            {ticket.priority}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{ticket.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Total Orders</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary?.totalOrders || 0}</p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Orders Today</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary?.ordersToday || 0}</p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
+                  <p className="text-2xl font-bold text-[#7ab530]">{summary?.averageOrderValue || 0} TND</p>
+                </div>
               </div>
             </div>
 

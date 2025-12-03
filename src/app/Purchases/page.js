@@ -12,44 +12,48 @@ export default function Purchases() {
     const [purchases, setPurchases] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
 
-    useEffect(() => {
-        const loadPurchases = () => {
-            const purchaseList = GetPurchases();
-            setPurchases(purchaseList);
-            const total = purchaseList.reduce((sum, p) => sum + (p.quantity * (p.price || 15)), 0);
-            setTotalAmount(total);
-        };
+    const loadPurchases = async () => {
+        const purchaseList = await GetPurchases();
+        setPurchases(purchaseList);
+        const total = purchaseList.reduce((sum, p) => sum + (p.quantity * (p.price || 15)), 0);
+        setTotalAmount(total);
+    };
 
+    useEffect(() => {
         loadPurchases();
-        window.addEventListener("storage", loadPurchases);
-        return () => window.removeEventListener("storage", loadPurchases);
+        
+        // Listen for cart changes (localStorage events from other tabs)
+        const handleStorageChange = (e) => {
+            if (e.key === 'cart') {
+                loadPurchases();
+            }
+        };
+        
+        window.addEventListener("storage", handleStorageChange);
+        
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
     }, []);
 
-    const handleRemovePurchase = (id) => {
-        RemovePurchase(id);
-        const updated = purchases.filter(p => p.id !== id);
-        setPurchases(updated);
-        setTotalAmount(updated.reduce((sum, p) => sum + (p.quantity * (p.price || 15)), 0));
+    const handleRemovePurchase = async (id) => {
+        await RemovePurchase(id);
+        await loadPurchases(); // Reload from localStorage
     };
 
-    const handleUpdateQuantity = (id, newQuantity) => {
+    const handleUpdateQuantity = async (id, newQuantity) => {
         if (newQuantity < 1) {
-            handleRemovePurchase(id);
+            await handleRemovePurchase(id);
             return;
         }
-        UpdatePurchaseQuantity(id, newQuantity);
-        const updated = purchases.map(p => 
-            p.id === id ? { ...p, quantity: newQuantity } : p
-        );
-        setPurchases(updated);
-        setTotalAmount(updated.reduce((sum, p) => sum + (p.quantity * (p.price || 15)), 0));
+        await UpdatePurchaseQuantity(id, newQuantity);
+        await loadPurchases(); // Reload from localStorage
     };
 
-    const handleClearAll = () => {
+    const handleClearAll = async () => {
         if (confirm("Are you sure you want to clear all purchases?")) {
-            ClearPurchases();
-            setPurchases([]);
-            setTotalAmount(0);
+            await ClearPurchases();
+            await loadPurchases(); // Reload from localStorage
         }
     };
 
@@ -112,15 +116,10 @@ export default function Purchases() {
                                         <div key={purchase.id} className="p-6 hover:bg-gray-50 transition-colors">
                                             <div className="flex gap-4">
                                                 {/* Product Image */}
+                                                {/* Product Image Placeholder */}
                                                 <Link href={`/Products/${purchase.id}`} className="flex-shrink-0">
-                                                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                                                        <Image
-                                                            src={purchase.img}
-                                                            alt={purchase.name}
-                                                            width={96}
-                                                            height={96}
-                                                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                                                        />
+                                                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+                                                        <span className="text-3xl">🥗</span>
                                                     </div>
                                                 </Link>
 
@@ -130,10 +129,10 @@ export default function Purchases() {
                                                         <div className="flex-1">
                                                             <Link href={`/Products/${purchase.id}`}>
                                                                 <h3 className="text-lg font-semibold text-gray-900 hover:text-[#7ab530] transition-colors mb-1">
-                                                                    {purchase.name}
+                                                                    {purchase.mealName || purchase.name}
                                                                 </h3>
                                                             </Link>
-                                                            <p className="text-sm text-gray-500 mb-2">{purchase.calories}</p>
+                                                            <p className="text-sm text-gray-500 mb-2">{purchase.calories} kcal</p>
                                                             <p className="text-lg font-bold text-[#7ab530]">
                                                                 {((purchase.price || 15) * purchase.quantity).toFixed(2)} TND
                                                             </p>
@@ -211,10 +210,12 @@ export default function Purchases() {
                                     </div>
 
                                     {/* Checkout Button */}
-                                    <button className="w-full bg-[#7ab530] text-white py-4 rounded-lg font-bold hover:bg-[#6aa02b] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 mt-6">
-                                        <CreditCard className="w-5 h-5" />
-                                        Proceed to Checkout
-                                    </button>
+                                    <Link href="/Checkout">
+                                        <button className="w-full bg-[#7ab530] text-white py-4 rounded-lg font-bold hover:bg-[#6aa02b] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 mt-6">
+                                            <CreditCard className="w-5 h-5" />
+                                            Proceed to Checkout
+                                        </button>
+                                    </Link>
 
                                     {/* Continue Shopping Link */}
                                     <Link href="/Products" className="block">
@@ -230,6 +231,6 @@ export default function Purchases() {
             </div>
 
             <Footer />
-        </main>
+        </main >
     );
 }

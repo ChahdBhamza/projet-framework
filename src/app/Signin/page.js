@@ -4,6 +4,7 @@ import Header from "../Header";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function Signin() {
@@ -90,16 +91,8 @@ export default function Signin() {
       } else {
         console.log("Signed in user:", data?.user);
         login(data.token, data.user);
-
-        // Redirect based on user role
-        const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()?.trim();
-        const userEmail = data?.user?.email?.toLowerCase()?.trim();
-
-        if (userEmail === ADMIN_EMAIL) {
-          router.push("/Dashboard");
-        } else {
-          router.push("/");
-        }
+        // Redirect to home page after successful login
+        router.push("/");
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -207,7 +200,7 @@ export default function Signin() {
             </button>
 
             <p className="text-center text-gray-600 mt-6">
-              Don't have an account? <Link href="/Signup" className="text-[#7ab530] font-semibold hover:underline">Sign Up</Link>
+              Don’t have an account? <Link href="/Signup" className="text-[#7ab530] font-semibold hover:underline">Sign Up</Link>
             </p>
           </form>
         </div>

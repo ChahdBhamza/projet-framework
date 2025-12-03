@@ -1,56 +1,73 @@
-// Purchases utility functions
-export function GetPurchases(){
-    if(typeof window === "undefined") return [];
-    return JSON.parse(localStorage.getItem("purchases") || "[]");
+// Import cart functions for temporary storage
+import { GetCart, AddToCart, RemoveFromCart, UpdateCartQuantity, ClearCart, GetCartCount } from './cart.js';
+
+// Get authentication token
+function getToken() {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("token");
 }
 
-export function AddPurchase(mealId, mealData){
-    if(typeof window === "undefined") return;
-    const purchases = GetPurchases();
+// Get all cart items (from localStorage - temporary cart)
+export async function GetPurchases() {
+    return GetCart();
+}
+
+// Add item to cart (localStorage only, not DB)
+export async function AddPurchase(mealId, mealData) {
+    AddToCart(mealId, mealData);
+}
+
+// Remove item from cart
+export async function RemovePurchase(mealId) {
+    RemoveFromCart(mealId);
+}
+
+// Update cart item quantity
+export async function UpdatePurchaseQuantity(mealId, quantity) {
+    UpdateCartQuantity(mealId, quantity);
+}
+
+// Clear cart
+export async function ClearPurchases() {
+    ClearCart();
+}
+
+// Get total cart count
+export async function GetPurchasesCount() {
+    return GetCartCount();
+}
+
+// Create order after payment (saves to DB)
+export async function CreateOrder(items, totalAmount) {
+    if (typeof window === "undefined") return null;
     
-    // Check if meal already exists in purchases
-    const existingIndex = purchases.findIndex(p => p.id === mealId);
-    
-    if(existingIndex >= 0){
-        // If exists, increase quantity
-        purchases[existingIndex].quantity += 1;
-    } else {
-        // If new, add with quantity 1
-        purchases.push({
-            id: mealId,
-            ...mealData,
-            quantity: 1,
-            purchaseDate: new Date().toISOString()
-        });
+    const token = getToken();
+    if (!token) {
+        console.error("No authentication token found");
+        return null;
     }
-    
-    localStorage.setItem("purchases", JSON.stringify(purchases));
-}
 
-export function RemovePurchase(mealId){
-    if(typeof window === "undefined") return;
-    const purchases = GetPurchases();
-    const updated = purchases.filter(p => p.id !== mealId);
-    localStorage.setItem("purchases", JSON.stringify(updated));
-}
+    try {
+        const res = await fetch("/api/orders", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ items, totalAmount })
+        });
 
-export function UpdatePurchaseQuantity(mealId, quantity){
-    if(typeof window === "undefined") return;
-    const purchases = GetPurchases();
-    const updated = purchases.map(p => 
-        p.id === mealId ? { ...p, quantity: Math.max(1, quantity) } : p
-    );
-    localStorage.setItem("purchases", JSON.stringify(updated));
-}
-
-export function ClearPurchases(){
-    if(typeof window === "undefined") return;
-    localStorage.setItem("purchases", "[]");
-}
-
-export function GetPurchasesCount(){
-    if(typeof window === "undefined") return 0;
-    const purchases = GetPurchases();
-    return purchases.reduce((total, p) => total + p.quantity, 0);
+        if (res.ok) {
+            const data = await res.json();
+            return data.success ? data.order : null;
+        } else {
+            const data = await res.json();
+            console.error("Error creating order:", data.error);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error creating order:", error);
+        return null;
+    }
 }
 

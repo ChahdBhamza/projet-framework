@@ -1,0 +1,53 @@
+Meal Name,Meal Type,Tags,Calories,Protein (g),Carbs (g),Fats (g),Fiber (g),Sugar (g),price
+Blueberry Almond Cloud Oats,Breakfast,"gluten-free, low-fat",340,10,54,11,8,19,20
+Savory Herb Egg-White Cups,Breakfast,"gluten-free, low-fat, high-protein",220,20,8,10,2,3,15
+Tropical Sunrise Smoothie Bowl,Breakfast,gluten-free,360,12,58,12,7,28,17
+Apple-Cinnamon Quinoa Porridge,Breakfast,"gluten-free, low-fat",390,13,59,12,6,15,18
+Matcha Coconut Protein Pancakes,Breakfast,"gluten-free, high-protein",390,24,38,16,5,10,14
+Savory Sweet Potato Waffle Stack,Breakfast,"gluten-free, low-fat",430,13,57,18,9,12,12
+Mango-Chia Overnight Bircher,Breakfast,"gluten-free, low-fat",320,10,52,9,8,17,13
+Mediterranean Egg Skillet Mini-Bake,Breakfast,"gluten-free, high-protein",350,21,9,25,2,3,16
+Ginger-Lime Quinoa Citrus Bowl,Breakfast,"gluten-free, low-fat",410,14,78,6,9,18,12
+Tomato Basil Egg-White Shakshuka,Breakfast,"gluten-free, low-fat, high-protein",260,21,24,5,4,7,17
+Spiced Lentil Soup with Lemon Foam,Lunch,"gluten-free, low-fat, high-protein",320,19,54,4,11,5,22
+Cajun Turkey Power Skillet,Lunch,"gluten-free, high-protein",480,41,29,18,5,6,24
+Miso-Garlic Salmon & Wild Rice Medley,Lunch,"gluten-free, high-protein",560,38,46,24,6,7,27
+Harissa Chicken & Beet Hummus Plate,Lunch,"gluten-free, high-protein",520,44,35,20,7,5,25
+Coffee-Rubbed Steak & Zucchini Ribbons,Lunch,"gluten-free, high-protein, low-carb",610,48,18,33,3,3,29
+Mediterranean Lemon-Tahini Chicken Bowl,Lunch,gluten-free,510,36,48,22,7,6,24
+Spicy Avocado Shrimp Bowl,Lunch,"gluten-free, low-carb",540,31,52,22,8,7,22
+Roasted Veggie Cashew Curry Plate,Lunch,"gluten-free, low-fat, vegan",600,18,72,24,10,9,26
+Lime-Garlic Turkey Lettuce Wraps,Lunch,"gluten-free, low-carb, high-protein",420,33,16,24,3,4,28
+Japanese Eggplant Miso Bowl,Lunch,"gluten-free, vegan, low-fat",530,16,66,22,10,12,18
+Honey-Ginger Glazed Salmon with Broccolini,Dinner,"gluten-free, high-protein",610,42,28,38,4,10,16
+Coconut-Roasted Vegetable Stir Fry,Dinner,"gluten-free, vegan, low-carb",450,14,32,30,8,10,17
+Lemon Herb Chicken & Sweet Potato Smash,Dinner,"gluten-free, high-protein",560,39,43,24,6,11,18
+Turmeric Vegetable Quinoa Risotto,Dinner,"gluten-free, vegan, low-fat",500,17,62,18,9,8,22
+Pomegranate Grilled Salmon Plate,Dinner,"gluten-free, high-protein",580,42,21,34,3,10,27
+Turmeric Coconut Lentil Stew,Dinner,"gluten-free, vegan, high-protein",490,22,55,22,14,8,26
+Lemon-Herb Seared Cod with Pumpkin Purée,Dinner,"gluten-free, high-protein",510,36,29,26,4,7,23
+Thai Basil Turkey Lettuce Boats,Dinner,"gluten-free, high-protein, low-carb",430,30,18,26,2,6,30
+Creamy Cashew-Curry Veggie Pasta,Dinner,"gluten-free, vegan",640,20,78,27,10,9,33
+Chimichurri Steak with Sweet Corn Relish,Dinner,"gluten-free, high-protein",680,42,34,40,4,8,32
+Coconut-Lime Chicken with Mango Salsa,Dinner,"gluten-free, high-protein",520,40,33,26,5,17,35
+Roasted Beet Buddha Bowl,Lunch,"gluten-free, vegan, low-fat",460,17,58,18,10,12,27
+Chili-Lime Shrimp Lettuce Tacos,Lunch,"gluten-free, low-carb, high-protein",380,28,14,22,3,5,24
+Sweet Potato & Black Bean Harvest Hash,Lunch,"gluten-free, vegan, low-fat",410,15,62,10,12,11,26
+Creamy Cashew Zoodle Alfredo,Dinner,"gluten-free, vegan",450,14,20,34,4,5,27
+Blueberry Protein Matcha Pancakes,Breakfast,"gluten-free, high-protein",390,24,38,16,5,10,35
+Savory Spinach & Mushroom Quinoa Muffins,Breakfast,"gluten-free, vegan, low-fat",320,12,50,8,6,9,22
+Pineapple Mint Chia Smoothie,Breakfast,"gluten-free, low-fat",230,8,42,4,6,25,27
+Avocado Lime Shrimp Salad,Lunch,"gluten-free, low-carb, high-protein",370,29,16,21,6,5,18
+Sesame Tofu Steak with Bok Choy,Lunch,"gluten-free, vegan, low-carb",340,25,14,18,4,6,16
+Lemon Herb Cod with Garlic Zoodle Nest,Dinner,"gluten-free, high-protein, low-carb",440,36,12,28,3,4,29
+Creamy Spinach Frittata Cups,Breakfast,"gluten-free, high-protein, low-carb",300,22,8,20,2,3,24
+Pineapple-Coconut Quinoa Bowl,Breakfast,"gluten-free, vegan, low-fat",350,11,52,10,6,19,26
+Harissa Chicken & Roasted Veggie Plate,Lunch,"gluten-free, high-protein",520,38,35,20,7,5,24
+Turmeric Coconut Veggie Curry,Dinner,"gluten-free, vegan",500,18,60,22,12,8,30
+Lemon Garlic Grilled Salmon,Dinner,"gluten-free, high-protein",600,42,25,36,4,10,23
+Quinoa & Black Bean Power Bowl,Lunch,"gluten-free, vegan, high-protein",480,25,58,14,12,7,20
+Coconut Mango Smoothie Bowl,Breakfast,"gluten-free, vegan, low-fat",330,10,56,9,6,24,24
+Matcha Green Protein Smoothie,Breakfast,"gluten-free, high-protein",290,22,18,10,4,8,21
+Thai Peanut Chicken Bowl,Lunch,"gluten-free, high-protein",540,38,48,20,7,10,15
+Roasted Veggie Zoodle Bowl,Lunch,"gluten-free, vegan, low-carb",410,14,22,20,8,6,22
+Feta & semi-dried tomato omelette,Breakfast,gluten  free,266,18,5,20,1,1.8,19
