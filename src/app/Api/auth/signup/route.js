@@ -62,7 +62,7 @@ export async function POST(req) {
       );
     }
 
-    // Check if user already exists (case-insensitive)
+    // Check if user already exists (case-insensitive) - check both email and OAuth accounts
     const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     let existingUser;
     try {
@@ -78,8 +78,16 @@ export async function POST(req) {
     }
 
     if (existingUser) {
+      // Check if account was created with Google OAuth
+      if (existingUser.provider === 'google' || existingUser.googleId) {
+        return NextResponse.json(
+          { message: "An account with this email already exists using Google sign-in. Please sign in with Google instead." },
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      // Regular account exists
       return NextResponse.json(
-        { message: "User already exists with this email" },
+        { message: "An account with this email already exists. Please sign in instead." },
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

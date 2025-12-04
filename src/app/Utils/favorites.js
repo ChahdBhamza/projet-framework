@@ -1,30 +1,22 @@
-// Get authentication token
-function getToken() {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("token");
-}
+import { apiJson } from './api.js';
 
 // Get all favorites from API
 export async function GetFavorites() {
     if (typeof window === "undefined") return [];
     
-    const token = getToken();
+    const token = localStorage.getItem("token");
     if (!token) return [];
 
     try {
-        const res = await fetch("/api/favorites", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
+        const data = await apiJson("/api/favorites");
 
-        if (res.ok) {
-            const data = await res.json();
-            return data.success ? data.favorites : [];
-        }
-        return [];
+        return data.success ? data.favorites : [];
     } catch (error) {
         console.error("Error fetching favorites:", error);
+        // If session expired, return empty array (redirect handled by apiJson)
+        if (error.message && error.message.includes("Session expired")) {
+            return [];
+        }
         return [];
     }
 }
@@ -33,28 +25,20 @@ export async function GetFavorites() {
 export async function AddFavorites(id) {
     if (typeof window === "undefined") return;
     
-    const token = getToken();
+    const token = localStorage.getItem("token");
     if (!token) {
         console.error("No authentication token found");
         return;
     }
 
     try {
-        const res = await fetch("/api/favorites", {
+        await apiJson("/api/favorites", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
             body: JSON.stringify({ mealId: id })
         });
-
-        if (!res.ok) {
-            const data = await res.json();
-            console.error("Error adding favorite:", data.error);
-        }
     } catch (error) {
         console.error("Error adding favorite:", error);
+        throw error;
     }
 }
 
@@ -62,25 +46,18 @@ export async function AddFavorites(id) {
 export async function RemoveFavorites(id) {
     if (typeof window === "undefined") return;
     
-    const token = getToken();
+    const token = localStorage.getItem("token");
     if (!token) {
         console.error("No authentication token found");
         return;
     }
 
     try {
-        const res = await fetch(`/api/favorites?mealId=${id}`, {
-            method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+        await apiJson(`/api/favorites?mealId=${id}`, {
+            method: "DELETE"
         });
-
-        if (!res.ok) {
-            const data = await res.json();
-            console.error("Error removing favorite:", data.error);
-        }
     } catch (error) {
         console.error("Error removing favorite:", error);
+        throw error;
     }
 }

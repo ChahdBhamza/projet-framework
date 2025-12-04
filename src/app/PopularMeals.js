@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AddPurchase } from "./Utils/purchases";
@@ -69,35 +70,64 @@ export default function PopularMeals() {
             {meals.map((meal) => (
               <div
                 key={meal._id}
-                className="group bg-white rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-100 hover:-translate-y-1 transition-transform"
+                className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
-                <Link href={`/Products/${meal._id}`} className="block">
-                  <div className="relative h-40 cursor-pointer bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-                    <div className="text-center">
-                      <span className="text-4xl mb-1 block">🥗</span>
-                      <span className="text-xs font-medium text-green-800 opacity-80">
-                        {meal.mealType || "Healthy Meal"}
-                      </span>
+                {/* Product Image */}
+                <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
+                  <Link href={`/Products/${meal._id}`} className="block h-full w-full relative">
+                    <Image
+                      src={`/${meal.mealName}.jpg`}
+                      alt={meal.mealName}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                      onError={(e) => {
+                        const img = e.target;
+                        img.style.display = 'none';
+                        const container = img.parentElement;
+                        const fallback = container.querySelector('.image-fallback');
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                    {/* Fallback placeholder */}
+                    <div className="image-fallback hidden h-full w-full items-center justify-center text-center absolute inset-0">
+                      <div className="text-center">
+                        <span className="text-4xl mb-2 block">🥗</span>
+                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                    {/* Hover Overlay - Transparent Green */}
+                    <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
+                  </Link>
+                </div>
 
-                <div className="p-5">
+                {/* White Content Section */}
+                <div className="p-5 flex flex-col">
+                  {/* Product Title */}
                   <Link href={`/Products/${meal._id}`}>
-                    <h3 className="text-lg font-semibold mb-1 hover:text-[#7ab530] transition-colors cursor-pointer">
+                    <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-2">
                       {meal.mealName}
                     </h3>
                   </Link>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {meal.description || "Balanced, fresh, and ready in minutes."}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#7ab530] font-semibold">
+                  
+                  {/* Tags */}
+                  {meal.tags && meal.tags.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {meal.tags.slice(0, 2).map((tag, i) => (
+                        <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                   
+                  {/* Price and Add to Cart */}
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <span className="text-base font-semibold text-gray-900">
                       {meal.price || 15} TND
                     </span>
                     <button
                       onClick={() => handleAddToCart(meal)}
-                      className="px-4 py-2 rounded-full bg-[#7ab530] text-white hover:bg-[#6aa42a] transition-colors flex items-center gap-1.5"
+                      className="bg-[#7ab530] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow-md"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Add to Cart

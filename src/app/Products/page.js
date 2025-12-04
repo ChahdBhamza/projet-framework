@@ -24,6 +24,7 @@ export default function Products() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
+    const [priceRangeDebounced, setPriceRangeDebounced] = useState(90);
 
     useEffect(() => {
         const updateCounts = async () => {
@@ -39,6 +40,9 @@ export default function Products() {
     useEffect(() => {
         const fetchMeals = async () => {
             try {
+                // Save scroll position before loading
+                const scrollY = window.scrollY;
+                
                 setLoading(true);
                 
                 // Build query parameters
@@ -52,8 +56,8 @@ export default function Products() {
                 if (selectedCalories !== 'Any Calories') {
                     params.append('calories', selectedCalories);
                 }
-                if (priceRange < 90) {
-                    params.append('price', priceRange.toString());
+                if (priceRangeDebounced < 90) {
+                    params.append('price', priceRangeDebounced.toString());
                 }
 
                 const queryString = params.toString();
@@ -64,6 +68,11 @@ export default function Products() {
                 if (data.success) {
                     setMeals(data.meals);
                 }
+                
+                // Restore scroll position after a brief delay to allow DOM update
+                setTimeout(() => {
+                    window.scrollTo({ top: scrollY, behavior: 'instant' });
+                }, 0);
             } catch (error) {
                 console.error('Failed to fetch meals:', error);
             } finally {
@@ -71,7 +80,7 @@ export default function Products() {
             }
         };
         fetchMeals();
-    }, [searchQuery, selectedCategory, selectedCalories, priceRange]);
+    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced]);
 
     const handleAddToCart = async (meal) => {
         await AddPurchase(meal._id, meal);
@@ -86,8 +95,18 @@ export default function Products() {
     };
 
     const handlePriceChange = (e) => {
-        setPriceRange(Number(e.target.value));
+        const newValue = Number(e.target.value);
+        setPriceRange(newValue);
     };
+
+    // Debounce price range changes to prevent constant re-fetching
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setPriceRangeDebounced(priceRange);
+        }, 300); // Wait 300ms after user stops adjusting slider
+
+        return () => clearTimeout(timer);
+    }, [priceRange]);
 
     // Sort meals (filtering is done server-side)
     const sortedMeals = useMemo(() => {
@@ -118,7 +137,7 @@ export default function Products() {
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, selectedCategory, selectedCalories, priceRange]);
+    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced]);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(1, prev - 1));
@@ -127,6 +146,7 @@ export default function Products() {
     const handleNextPage = () => {
         setCurrentPage(prev => Math.min(totalPages, prev + 1));
     };
+
 
     return (
         <main>
@@ -211,7 +231,7 @@ export default function Products() {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-16 relative z-10 px-4">
 
                     {/* ✅ Sidebar Filters */}
-                    <aside className="bg-white/95 p-6 rounded-2xl shadow-2xl lg:col-span-1 backdrop-blur-md border-2 border-green-100/50 h-fit sticky top-24">
+                    <aside className="bg-white/95 p-6 rounded-2xl shadow-2xl lg:col-span-1 backdrop-blur-md border-2 border-green-100/50 h-fit lg:sticky lg:top-24 self-start">
                         <div className="flex items-center gap-2 mb-6">
                             <Filter className="w-5 h-5 text-[#7ab530]" />
                             <h2 className="text-2xl font-bold text-[#7ab530]">Filters</h2>
@@ -315,6 +335,7 @@ export default function Products() {
                                             setSelectedCategory("All Categories");
                                             setSelectedCalories("Any Calories");
                                             setPriceRange(90);
+                                            setPriceRangeDebounced(90);
                                         }}
                                         className="px-6 py-2 bg-[#7ab530] text-white rounded-xl font-semibold hover:bg-[#6aa02b] transition"
                                     >
@@ -324,66 +345,71 @@ export default function Products() {
                             </div>
                         ) : (
                             <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" style={{ gridAutoRows: '1fr' }}>
                                 {paginatedMeals.map((meal, index) => (
                                     <div
                                         key={meal._id}
-                                        className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                                        className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
                                     >
-                                        {/* Image Section - Replaced with colored placeholder */}
-                                        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-                                            <Link href={`/Products/${meal._id}`} className="block h-full w-full flex items-center justify-center">
-                                                <div className="text-center p-4">
-                                                    <span className="text-4xl mb-2 block">🥗</span>
-                                                    <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                                        {/* Product Image */}
+                                        <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
+                                            <Link href={`/Products/${meal._id}`} className="block h-full w-full relative">
+                                                <Image
+                                                    src={`/${meal.mealName}.jpg`}
+                                                    alt={meal.mealName}
+                                                    fill
+                                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                                    onError={(e) => {
+                                                        const img = e.target;
+                                                        img.style.display = 'none';
+                                                        const container = img.parentElement;
+                                                        const fallback = container.querySelector('.image-fallback');
+                                                        if (fallback) fallback.style.display = 'flex';
+                                                    }}
+                                                />
+                                                {/* Fallback placeholder */}
+                                                <div className="image-fallback hidden h-full w-full items-center justify-center text-center absolute inset-0">
+                                                    <div className="text-center">
+                                                        <span className="text-4xl mb-2 block">🥗</span>
+                                                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                                                    </div>
                                                 </div>
+                                                {/* Hover Overlay - Transparent Green */}
+                                                <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
                                             </Link>
-                                            {/* Rating Badge - Top Left */}
-                                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-md flex items-center gap-1">
-                                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                                                <span className="text-xs font-semibold text-gray-800">4.8</span>
-                                            </div>
                                         </div>
 
-                                        {/* Content Section */}
-                                        <div className="p-4">
-                                            {/* Title and Price */}
-                                            <div className="mb-3">
-                                                <Link href={`/Products/${meal._id}`}>
-                                                    <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-1">
-                                                        {meal.mealName}
-                                                    </h3>
-                                                </Link>
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-sm text-gray-500">{meal.calories} kcal</p>
-                                                    <p className="text-lg font-bold text-[#7ab530]">{meal.price || 15} TND</p>
-                                                </div>
-                                            </div>
-
-                                            {/* Single Tag */}
+                                        {/* White Content Section */}
+                                        <div className="p-5 flex flex-col">
+                                            {/* Product Title */}
+                                            <Link href={`/Products/${meal._id}`}>
+                                                <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-2">
+                                                    {meal.mealName}
+                                                </h3>
+                                            </Link>
+                                            
                                             {/* Tags */}
-                                            <div className="mb-4 flex flex-wrap gap-1">
-                                                {meal.tags && meal.tags.slice(0, 2).map((tag, i) => (
-                                                    <span key={i} className="inline-block px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-
-                                            {/* Action Buttons */}
-                                            <div className="flex gap-2">
+                                            {meal.tags && meal.tags.length > 0 && (
+                                                <div className="mb-3 flex flex-wrap gap-2">
+                                                    {meal.tags.slice(0, 2).map((tag, i) => (
+                                                        <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                             
+                                            {/* Price and Add to Cart */}
+                                            <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                                                <span className="text-base font-semibold text-gray-900">
+                                                    {meal.price || 15} TND
+                                                </span>
                                                 <button
                                                     onClick={() => handleAddToCart(meal)}
-                                                    className="flex-1 bg-[#7ab530] text-white py-2.5 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-sm hover:shadow-md"
+                                                    className="bg-[#7ab530] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow-md"
                                                 >
                                                     <ShoppingCart className="w-4 h-4" />
                                                     Add to Cart
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAddFavorite(meal._id)}
-                                                    className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-red-400 hover:text-red-500 active:scale-95 transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
-                                                >
-                                                    <Heart className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>

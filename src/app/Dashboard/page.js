@@ -3,49 +3,22 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import Link from "next/link";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 import {
   Users,
   UserCheck,
-  Calendar,
   DollarSign,
   TrendingUp,
   Clock,
-  Award,
-  MessageSquare,
   UtensilsCrossed,
   Target,
-  Settings,
   Send,
-  AlertCircle,
-  LogOut,
-  Home,
-  Menu,
-  X,
-  ShoppingCart,
   Repeat,
   CheckCircle,
   XCircle,
-  BarChart3,
-  PieChart as PieChartIcon,
+  Award,
 } from "lucide-react";
-
-const COLORS = ["#7ab530", "#34d399", "#60a5fa", "#f97316", "#a78bfa"];
 
 export default function Dashboard() {
   const { user, loading, logout } = useAuth();
@@ -55,6 +28,8 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Fake data for demonstration
   const fakeData = {
@@ -130,40 +105,18 @@ export default function Dashboard() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      if (!user || !isAdmin) return;
-      
-      setLoadingSummary(true);
-      setError("");
-      try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) {
-          throw new Error("Not authenticated");
-        }
-
-        const res = await fetch("/api/admin/summary", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || "Failed to load dashboard data");
-        }
-        const data = await res.json();
-        setSummary(data);
-      } catch (err) {
-        setError(err.message || "Failed to load dashboard data");
-      } finally {
-        setLoadingSummary(false);
-      }
-    };
-    
     if (user && isAdmin) {
       fetchSummary();
+      
+      if (autoRefresh) {
+        const interval = setInterval(() => {
+          fetchSummary();
+        }, 30000);
+        
+        return () => clearInterval(interval);
+      }
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, autoRefresh]);
 
   if (loading) {
     return (
@@ -221,85 +174,52 @@ export default function Dashboard() {
         calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
       };
 
+  const fetchSummary = async () => {
+    if (!user || !isAdmin) return;
+    
+    setLoadingSummary(true);
+    setError("");
+    try {
+      const { apiJson } = await import("../Utils/api");
+      const data = await apiJson("/api/admin/summary");
+      setSummary(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message || "Failed to load dashboard data");
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform duration-300`}>
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Dietopia</h1>
-            <p className="text-sm text-gray-500 mt-1">Admin Dashboard</p>
-          </div>
-          
-          <nav className="flex-1 p-4 space-y-2">
-            <Link href="/Dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#7ab530] text-white font-medium">
-              <Home className="w-5 h-5" />
-              Dashboard
-            </Link>
-            <Link href="/admin/products" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-              <UtensilsCrossed className="w-5 h-5" />
-              Products
-            </Link>
-            <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-              <Home className="w-5 h-5" />
-              Home
-            </Link>
-          </nav>
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center gap-3 mb-4 px-4 py-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0) || user?.email?.charAt(0) || "A"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{user?.name || "Admin"}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-            <button
-              onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-            >
-              <LogOut className="w-5 h-5" />
-              Logout
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
-          >
-            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold text-gray-900">Dashboard Overview</h2>
-            <p className="text-sm text-gray-500">Welcome back, {user?.name || "Admin"}</p>
-          </div>
-        </header>
+        <Header
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          user={user}
+          lastUpdated={lastUpdated}
+          autoRefresh={autoRefresh}
+          setAutoRefresh={setAutoRefresh}
+          onRefresh={fetchSummary}
+        />
 
-        {/* Dashboard Content */}
         <main className="flex-1 p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+              <p className="text-gray-600 mt-1">Quick insights and recent activity</p>
+            </div>
+
             {/* Quick Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard
                 title="Total Users"
                 value={displayData.totalUsers}
                 change={summary?.usersCreatedLast7Days > 0 ? `+${summary.usersCreatedLast7Days} this week` : "No new users"}
+                growth={summary?.usersGrowth ? `${summary.usersGrowth > 0 ? '+' : ''}${summary.usersGrowth}%` : null}
                 icon={Users}
                 color="bg-blue-500"
               />
@@ -313,7 +233,7 @@ export default function Dashboard() {
               <StatCard
                 title="Total Meals"
                 value={displayData.activePlans}
-                change={summary && summary.popularPlans && summary.popularPlans.length > 0 ? `${summary.popularPlans.length} categories` : "No meals"}
+                change={summary?.mealTypeDistribution ? `${summary.mealTypeDistribution.length} types` : "No meals"}
                 icon={UtensilsCrossed}
                 color="bg-purple-500"
               />
@@ -321,378 +241,132 @@ export default function Dashboard() {
                 title="Total Revenue"
                 value={typeof displayData.revenue === 'number' ? `${displayData.revenue.toFixed(0)} TND` : displayData.revenue}
                 change={summary?.totalOrders > 0 ? `${summary.totalOrders} orders` : "No orders"}
+                growth={summary?.revenueGrowth ? `${summary.revenueGrowth > 0 ? '+' : ''}${summary.revenueGrowth}%` : null}
                 icon={DollarSign}
                 color="bg-orange-500"
               />
             </div>
 
-            {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* User Growth Line Chart */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">User Growth</h3>
-                  <select className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ab530]">
-                    <option>Last 7 Days</option>
-                    <option>Last 30 Days</option>
-                    <option>Last 3 Months</option>
-                  </select>
-                </div>
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={displayData.userGrowth && displayData.userGrowth.length > 0 ? displayData.userGrowth : [{ day: "No data", users: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
+            {/* Secondary Metrics Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+              <MetricCard
+                label="Conversion Rate"
+                value={summary?.conversionRate ? `${summary.conversionRate}%` : "0%"}
+                icon={Target}
+              />
+              <MetricCard
+                label="Avg Order Value"
+                value={summary?.averageOrderValue ? `${summary.averageOrderValue} TND` : "0 TND"}
+                icon={DollarSign}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="users"
-                      stroke="#7ab530"
-                      strokeWidth={2}
-                      dot={{ fill: "#7ab530", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Popular Plans Pie Chart */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Popular Diet Plans</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie
-                      data={displayData.popularPlans && displayData.popularPlans.length > 0 ? displayData.popularPlans : [{ name: "No data", value: 1 }]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {(displayData.popularPlans && displayData.popularPlans.length > 0 ? displayData.popularPlans : [{ name: "No data", value: 1 }]).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <MetricCard
+                label="Repeat Customers"
+                value={summary?.repeatCustomersCount || 0}
+                subtitle={`${summary?.repeatCustomerRate || 0}% rate`}
+                icon={Repeat}
+              />
+              <MetricCard
+                label="Total Favorites"
+                value={summary?.totalFavorites || 0}
+                subtitle={`${summary?.avgFavoritesPerUser || 0} per user`}
+                icon={Award}
+              />
+              <MetricCard
+                label="Verified Users"
+                value={summary?.verifiedUsers || 0}
+                subtitle={`${summary?.totalUsers > 0 ? Math.round((summary.verifiedUsers / summary.totalUsers) * 100) : 0}%`}
+                icon={CheckCircle}
+              />
+              <MetricCard
+                label="Orders Growth"
+                value={summary?.ordersGrowth ? `${summary.ordersGrowth > 0 ? '+' : ''}${summary.ordersGrowth}%` : "0%"}
+                icon={TrendingUp}
+              />
             </div>
 
-            {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Revenue Trends */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Revenue Trends (Last 7 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={displayData.revenueData && displayData.revenueData.length > 0 ? displayData.revenueData : [{ day: "No data", revenue: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                      formatter={(value) => [`${Number(value).toFixed(2)} TND`, "Revenue"]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      dot={{ fill: "#f97316", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Order Trends */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Order Trends (Last 7 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={displayData.orderTrends && displayData.orderTrends.length > 0 ? displayData.orderTrends : [{ day: "No data", orders: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar dataKey="orders" fill="#7ab530" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Charts Row 3 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Popular Tags */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Popular Meal Tags</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={displayData.popularTags && displayData.popularTags.length > 0 ? displayData.popularTags : [{ name: "No data", usage: 0 }]} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis type="number" stroke="#9ca3af" fontSize={12} />
-                    <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={12} width={100} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar dataKey="usage" fill="#34d399" radius={[0, 8, 8, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Price Distribution */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Meal Price Distribution</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={displayData.priceDistribution && displayData.priceDistribution.length > 0 ? displayData.priceDistribution : [{ range: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} angle={-45} textAnchor="end" height={80} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#a78bfa" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Charts Row 4 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Calorie Distribution */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Calorie Distribution</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={displayData.calorieDistribution && displayData.calorieDistribution.length > 0 ? displayData.calorieDistribution : [{ range: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#60a5fa" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* User Verification Status */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">User Verification Status</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie
-                      data={summary && summary.totalUsers > 0 ? [
-                        { name: "Verified", value: summary.verifiedUsers || 0 },
-                        { name: "Unverified", value: (summary.totalUsers - (summary.verifiedUsers || 0)) }
-                      ] : [{ name: "No data", value: 1 }]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {summary && summary.totalUsers > 0 ? [
-                        <Cell key="verified" fill="#34d399" />,
-                        <Cell key="unverified" fill="#f87171" />
-                      ] : <Cell key="no-data" fill="#9ca3af" />}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Top Selling Meals */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-[#7ab530]" />
-                Top Selling Meals
-              </h3>
-              <div className="space-y-4">
-                {displayData.topSellingMeals && displayData.topSellingMeals.length > 0 ? (
-                  displayData.topSellingMeals.map((meal, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        #{idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
-                        <p className="text-sm text-gray-600">{meal.totalQuantity} units sold • {meal.orderCount} orders</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-[#7ab530]">{Number(meal.totalRevenue || 0).toFixed(2)} TND</p>
-                        <p className="text-xs text-gray-600">Revenue</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No sales data yet</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Tables Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Recent Activity Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Recent Orders */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-[#7ab530]" />
                   Recent Orders
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3 max-h-64 overflow-y-auto">
                   {displayData.recentOrders && displayData.recentOrders.length > 0 ? (
-                    displayData.recentOrders.map((order) => (
-                      <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900 mb-1">{order.userName || order.userEmail || "Unknown User"}</h4>
-                            <p className="text-sm text-gray-600">{order.itemsCount} items • {new Date(order.orderDate).toLocaleDateString()}</p>
+                    displayData.recentOrders.slice(0, 5).map((order) => (
+                      <div key={order.id} className="p-3 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">{order.userName || order.userEmail || "Unknown User"}</h4>
+                            <p className="text-xs text-gray-600">{order.itemsCount} items • {new Date(order.orderDate).toLocaleDateString()}</p>
                           </div>
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            order.paymentStatus === "completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                          }`}>
-                            {order.paymentStatus}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-[#7ab530]">{(order.totalAmount || 0).toFixed(2)} TND</span>
+                          <span className="text-sm font-bold text-[#7ab530] ml-2">{(order.totalAmount || 0).toFixed(2)} TND</span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No recent orders</p>
-                    </div>
+                    <div className="text-center py-8 text-gray-500 text-sm">No recent orders</div>
                   )}
                 </div>
               </div>
 
-              {/* Most Favorited Meals */}
+              {/* Recent Users */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#7ab530]" />
-                  Most Favorited Meals
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  Recent Signups
                 </h3>
-                <div className="space-y-4">
-                  {summary?.favoriteMeals && summary.favoriteMeals.length > 0 ? (
-                    summary.favoriteMeals.map((meal, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {meal.mealName?.charAt(0) || "?"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
-                          <p className="text-sm text-gray-600">Meal ID: {meal.mealId}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{meal.favorites}</p>
-                          <p className="text-xs text-red-600">❤️ favorites</p>
-                        </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {summary?.recentUsers && summary.recentUsers.length > 0 ? (
+                    summary.recentUsers.map((user, idx) => (
+                      <div key={idx} className="p-3 border border-gray-200 rounded-lg hover:border-blue-500 transition">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">{user.name}</h4>
+                            <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                            <p className="text-xs text-gray-500 mt-1">{new Date(user.createdAt).toLocaleDateString()}</p>
+                      </div>
+                          {user.isEmailVerified ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-gray-400" />
+                          )}
+                      </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No favorites yet</p>
-                    </div>
+                    <div className="text-center py-8 text-gray-500 text-sm">No recent signups</div>
+                  )}
+              </div>
+            </div>
+
+              {/* Recent Uploads */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-purple-500" />
+                  Recent Uploads
+              </h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {summary?.recentUploads && summary.recentUploads.length > 0 ? (
+                    summary.recentUploads.map((upload, idx) => (
+                      <div key={idx} className="p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">{upload.fileName}</h4>
+                            <p className="text-xs text-gray-600">{upload.importedCount}/{upload.totalRows} imported</p>
+                            <p className="text-xs text-gray-500 mt-1">{new Date(upload.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                  </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm">No recent uploads</div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Order Statistics Table */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#7ab530]" />
-                Order Statistics
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Total Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{summary?.totalOrders || 0}</p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Orders Today</p>
-                  <p className="text-2xl font-bold text-gray-900">{summary?.ordersToday || 0}</p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
-                  <p className="text-2xl font-bold text-[#7ab530]">{summary?.averageOrderValue || 0} TND</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Admin Controls */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-[#7ab530]" />
-                Admin Controls
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-4">Role Management</h4>
-                  <div className="space-y-2">
-                    <button className="w-full px-4 py-2.5 bg-[#7ab530] text-white rounded-lg hover:bg-[#6aa02b] transition font-medium text-sm">
-                      Manage User Roles
-                    </button>
-                    <button className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
-                      Assign Permissions
-                    </button>
-                  </div>
-                </div>
-                <div className="p-5 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-4">Notifications</h4>
-                  <div className="space-y-2">
-                    <button className="w-full px-4 py-2.5 bg-[#7ab530] text-white rounded-lg hover:bg-[#6aa02b] transition font-medium text-sm flex items-center justify-center gap-2">
-                      <Send className="w-4 h-4" />
-                      Send Announcement
-                    </button>
-                    <button className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm flex items-center justify-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Push Notification
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {error && (
               <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-center">
@@ -706,20 +380,40 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, change, icon: Icon, color }) {
+function StatCard({ title, value, change, growth, icon: Icon, color }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-lg ${color} bg-opacity-10`}>
           <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
         </div>
-        <span className="text-xs font-semibold text-green-600 flex items-center gap-1">
-          <TrendingUp className="w-3 h-3" />
-          {change}
+        {growth && (
+          <span className={`text-xs font-semibold flex items-center gap-1 ${
+            parseFloat(growth) > 0 ? 'text-green-600' : parseFloat(growth) < 0 ? 'text-red-600' : 'text-gray-600'
+          }`}>
+            <TrendingUp className={`w-3 h-3 ${parseFloat(growth) < 0 ? 'rotate-180' : ''}`} />
+            {growth}
         </span>
+        )}
       </div>
       <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
       <p className="text-3xl font-bold text-gray-900">{value}</p>
+      {change && (
+        <p className="text-xs text-gray-500 mt-2">{change}</p>
+      )}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, subtitle, icon: Icon }) {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-2 mb-2">
+        {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+        <p className="text-xs font-medium text-gray-600">{label}</p>
+      </div>
+      <p className="text-xl font-bold text-gray-900">{value}</p>
+      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
     </div>
   );
 }

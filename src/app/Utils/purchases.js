@@ -1,11 +1,6 @@
 // Import cart functions for temporary storage
 import { GetCart, AddToCart, RemoveFromCart, UpdateCartQuantity, ClearCart, GetCartCount } from './cart.js';
-
-// Get authentication token
-function getToken() {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("token");
-}
+import { apiJson } from './api.js';
 
 // Get all cart items (from localStorage - temporary cart)
 export async function GetPurchases() {
@@ -41,32 +36,22 @@ export async function GetPurchasesCount() {
 export async function CreateOrder(items, totalAmount) {
     if (typeof window === "undefined") return null;
     
-    const token = getToken();
+    const token = localStorage.getItem("token");
     if (!token) {
         console.error("No authentication token found");
         return null;
     }
 
     try {
-        const res = await fetch("/api/orders", {
+        const data = await apiJson("/api/orders", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
             body: JSON.stringify({ items, totalAmount })
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            return data.success ? data.order : null;
-        } else {
-            const data = await res.json();
-            console.error("Error creating order:", data.error);
-            return null;
-        }
+        return data.success ? data.order : null;
     } catch (error) {
         console.error("Error creating order:", error);
+        // If session expired, redirect is handled by apiJson
         return null;
     }
 }

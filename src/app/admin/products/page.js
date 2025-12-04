@@ -54,22 +54,8 @@ export default function AdminProducts() {
   const fetchUploadHistory = async () => {
     try {
       setLoadingUploads(true);
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
-      const res = await fetch("/api/admin/uploads?limit=10", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch upload history");
-      }
-
-      const data = await res.json();
+      const { apiJson } = await import("../../Utils/api");
+      const data = await apiJson("/api/admin/uploads?limit=10");
       setRecentUploads(data.uploads || []);
     } catch (err) {
       console.error("Error fetching upload history:", err);
@@ -118,12 +104,11 @@ export default function AdminProducts() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const res = await fetch("/api/meals/import", {
+      const { apiRequest } = await import("../../Utils/api");
+      const res = await apiRequest("/api/meals/import", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
         body: formData
+        // Don't set Content-Type header for FormData - browser will set it with boundary
       });
 
       const data = await res.json();
@@ -323,20 +308,6 @@ export default function AdminProducts() {
                 </div>
               )}
 
-              {/* CSV Format Info */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">CSV Format Requirements:</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>Headers: mealName, mealType, tags, calories, price, protein, carbs, fats, fiber, sugar</li>
-                      <li>mealType must be: Breakfast, Lunch, Dinner, or Snack</li>
-                      <li>tags should be comma-separated (e.g., "gluten-free, low-fat")</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

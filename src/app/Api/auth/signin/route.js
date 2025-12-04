@@ -73,6 +73,14 @@ export async function POST(req) {
       );
     }
 
+    // Check if user is OAuth user (no password)
+    if (user.provider === 'google' || user.googleId) {
+      return NextResponse.json(
+        { message: "This account was created with Google. Please sign in with Google instead." },
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Check if password exists and is not empty
     if (!user.password || typeof user.password !== "string") {
       console.error("User found but password field is missing or invalid");
@@ -127,7 +135,7 @@ export async function POST(req) {
     }
 
 
-    const token = jwt.sign({ id: user._id.toString(), email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ id: user._id.toString(), email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "30m" });
     // Success response
     const responseData = {
       message: "Signed in successfully",

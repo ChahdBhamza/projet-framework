@@ -4,7 +4,11 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: function() { return !this.googleId; } },
+
+    // OAuth fields
+    googleId: { type: String, unique: true, sparse: true },
+    provider: { type: String, enum: ['local', 'google'], default: 'local' },
 
     // Email verification fields
     isEmailVerified: { type: Boolean, default: false },

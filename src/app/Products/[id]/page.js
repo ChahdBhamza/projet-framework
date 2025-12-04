@@ -109,26 +109,38 @@ export default function ProductDetail() {
       {/* Product Details */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Left: Image Placeholder */}
-          <div className="relative">
-            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 shadow-xl flex items-center justify-center">
-              <div className="text-center p-8">
-                <span className="text-8xl mb-4 block">🥗</span>
-                <span className="text-2xl font-medium text-green-800 opacity-75">{meal.mealType}</span>
-              </div>
+          {/* Left: Product Image */}
+          <div className="relative group">
+            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 shadow-xl">
+              {meal.mealName ? (
+                <>
+                  <Image
+                    src={`/${meal.mealName}.jpg`}
+                    alt={meal.mealName}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                      // Fallback to placeholder if image doesn't exist
+                      e.target.style.display = 'none';
+                      const fallback = e.target.nextElementSibling;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  {/* Fallback placeholder */}
+                  <div className="hidden h-full w-full items-center justify-center text-center p-8">
+                    <span className="text-8xl mb-4 block">🥗</span>
+                    <span className="text-2xl font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                  </div>
+                  {/* Hover Overlay - Transparent Green */}
+                  <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+                </>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-center p-8">
+                  <span className="text-8xl mb-4 block">🥗</span>
+                  <span className="text-2xl font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                </div>
+              )}
             </div>
-            {/* Favorite Badge */}
-            <button
-              onClick={handleFavoriteToggle}
-              className="absolute top-4 right-4 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-            >
-              <Heart
-                className={`w-6 h-6 transition-colors ${isFavorite
-                  ? "text-red-500 fill-red-500"
-                  : "text-gray-400 hover:text-red-400"
-                  }`}
-              />
-            </button>
           </div>
 
           {/* Right: Details */}
@@ -152,14 +164,19 @@ export default function ProductDetail() {
                 ))}
                 <span className="ml-2 text-sm text-gray-600">(4.8)</span>
               </div>
-              <div className="flex gap-2">
-                <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                  Healthy
-                </span>
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                  Fresh
-                </span>
-              </div>
+              {/* Categories/Tags */}
+              {meal.tags && meal.tags.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {meal.tags.map((tag, i) => (
+                    <span 
+                      key={i} 
+                      className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full capitalize"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Description */}

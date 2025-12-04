@@ -4,6 +4,7 @@ import Users from "../../../../../models/users.js";
 import orders from "../../../../../models/orders.js";
 import meals from "../../../../../models/meals.js";
 import favorites from "../../../../../models/favorites.js";
+import UploadHistory from "../../../../../models/uploadHistory.js";
 import { verifyToken } from "../../utils/auth.js";
 
 export async function GET(request) {
@@ -344,6 +345,81 @@ export async function GET(request) {
     const avgFavoritesPerUser = totalUsers > 0 ? (totalFavorites / totalUsers).toFixed(1) : 0;
     const avgOrdersPerUser = usersWithOrders.length > 0 ? (totalOrders / usersWithOrders.length).toFixed(1) : 0;
 
+    // Growth calculations (comparing last 7 days to previous 7 days)
+    const fourteenDaysAgo = new Date(today);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    
+    const previousWeekRevenue = await orders.aggregate([
+      {
+        $match: {
+          orderDate: { $gte: fourteenDaysAgo, $lt: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$totalAmount" }
+        }
+      }
+    ]);
+    const prevRevenue = previousWeekRevenue.length > 0 ? previousWeekRevenue[0].total : 0;
+    const lastWeekRevenue = revenueData.reduce((sum, day) => sum + (day.revenue || 0), 0);
+    const revenueGrowth = prevRevenue > 0 ? (((lastWeekRevenue - prevRevenue) / prevRevenue) * 100).toFixed(1) : 0;
+
+    const previousWeekOrders = await orders.countDocuments({
+      orderDate: { $gte: fourteenDaysAgo, $lt: sevenDaysAgo }
+    });
+    const lastWeekOrders = orderTrends.reduce((sum, day) => sum + (day.orders || 0), 0);
+    const ordersGrowth = previousWeekOrders > 0 ? (((lastWeekOrders - previousWeekOrders) / previousWeekOrders) * 100).toFixed(1) : 0;
+
+    const previousWeekUsers = await Users.countDocuments({
+      createdAt: { $gte: fourteenDaysAgo, $lt: sevenDaysAgo }
+    });
+    const usersGrowth = previousWeekUsers > 0 ? (((usersCreatedLast7Days - previousWeekUsers) / previousWeekUsers) * 100).toFixed(1) : 0;
+
+    // Recent uploads
+    const recentUploads = await UploadHistory.find({})
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    // Meal type distribution
+    const mealTypeDistribution = await meals.aggregate([
+      {
+        $group: {
+          _id: "$mealType",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Peak ordering hours (last 30 days)
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const ordersByHour = await orders.aggregate([
+      {
+        $match: {
+          orderDate: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $hour: "$orderDate" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Recent user signups (last 5)
+    const recentUsers = await Users.find({})
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name email createdAt isEmailVerified')
+      .lean();
+
     const response = {
       // User stats
       totalUsers,
@@ -389,7 +465,35 @@ export async function GET(request) {
       avgFavoritesPerUser,
       avgOrdersPerUser,
       totalFavorites,
-      usersWithOrdersCount: usersWithOrders.length
+      usersWithOrdersCount: usersWithOrders.length,
+
+      // Growth metrics
+      revenueGrowth: parseFloat(revenueGrowth),
+      ordersGrowth: parseFloat(ordersGrowth),
+      usersGrowth: parseFloat(usersGrowth),
+
+      // Additional metrics
+      recentUploads: recentUploads.map(upload => ({
+        fileName: upload.fileName,
+        uploadedBy: upload.uploadedBy,
+        importedCount: upload.importedCount,
+        totalRows: upload.totalRows,
+        createdAt: upload.createdAt
+      })),
+      mealTypeDistribution: mealTypeDistribution.map(item => ({
+        type: item._id,
+        count: item.count
+      })),
+      ordersByHour: ordersByHour.map(item => ({
+        hour: item._id,
+        count: item.count
+      })),
+      recentUsers: recentUsers.map(user => ({
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        isEmailVerified: user.isEmailVerified
+      }))
     };
 
     return NextResponse.json(response, { status: 200 });
