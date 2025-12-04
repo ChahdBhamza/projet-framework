@@ -9,6 +9,19 @@ export function GetCart() {
 export function AddToCart(mealId, mealData) {
     if (typeof window === "undefined") return;
     
+    // Check if user is authenticated
+    const token = localStorage.getItem("token");
+    if (!token) {
+        // Store the return URL and action for after login
+        if (!window.location.pathname.includes("/Signin")) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            const actionData = JSON.stringify({ action: 'addToCart', mealId, mealData });
+            localStorage.setItem('pendingAction', actionData);
+            window.location.href = `/Signin?reason=loginRequired&message=Please sign in to add items to your cart&returnUrl=${returnUrl}`;
+        }
+        throw new Error("Please sign in to add items to your cart");
+    }
+    
     const cart = GetCart();
     
     // Check if meal already exists in cart

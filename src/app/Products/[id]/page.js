@@ -48,22 +48,66 @@ export default function ProductDetail() {
     checkFavorite();
   }, [meal]);
 
+  // Check for pending actions after login
+  useEffect(() => {
+    const executePendingAction = async () => {
+      const pendingActionStr = localStorage.getItem('pendingAction');
+      if (!pendingActionStr || !meal) return;
+
+      try {
+        const pendingAction = JSON.parse(pendingActionStr);
+        
+        // Check if this action is for the current meal
+        if (pendingAction.mealId === meal._id) {
+          if (pendingAction.action === 'addToCart') {
+            await AddPurchase(meal._id, meal);
+            alert(`${meal.mealName} added to cart!`);
+            localStorage.removeItem('pendingAction');
+          } else if (pendingAction.action === 'addFavorite') {
+            await AddFavorites(meal._id);
+            setIsFavorite(true);
+            localStorage.removeItem('pendingAction');
+          }
+        }
+      } catch (error) {
+        console.error('Error executing pending action:', error);
+        localStorage.removeItem('pendingAction');
+      }
+    };
+
+    // Only execute if user is logged in
+    const token = localStorage.getItem("token");
+    if (token && meal) {
+      executePendingAction();
+    }
+  }, [meal]);
+
   const handleFavoriteToggle = async () => {
     if (!meal) return;
 
-    if (isFavorite) {
-      await RemoveFavorites(meal._id);
-      setIsFavorite(false);
-    } else {
-      await AddFavorites(meal._id);
-      setIsFavorite(true);
+    try {
+      if (isFavorite) {
+        await RemoveFavorites(meal._id);
+        setIsFavorite(false);
+      } else {
+        await AddFavorites(meal._id);
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      // Error handling is done in AddFavorites/RemoveFavorites (redirects to sign-in)
+      console.error("Error toggling favorite:", error);
     }
   };
 
   const handleAddToCart = async () => {
     if (meal) {
-      await AddPurchase(meal._id, meal);
-      alert(`${meal.mealName} added to cart!`);
+      try {
+        await AddPurchase(meal._id, meal);
+        alert(`${meal.mealName} added to cart!`);
+      } catch (error) {
+        // Error handling is done in AddToCart (redirects to sign-in)
+        console.error("Error adding to cart:", error);
+      }
     }
   };
 

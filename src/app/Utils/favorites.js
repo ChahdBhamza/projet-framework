@@ -27,8 +27,14 @@ export async function AddFavorites(id) {
     
     const token = localStorage.getItem("token");
     if (!token) {
-        console.error("No authentication token found");
-        return;
+        // Store the return URL and action for after login
+        if (!window.location.pathname.includes("/Signin")) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            const actionData = JSON.stringify({ action: 'addFavorite', mealId: id });
+            localStorage.setItem('pendingAction', actionData);
+            window.location.href = `/Signin?reason=loginRequired&message=Please sign in to add items to your favorites&returnUrl=${returnUrl}`;
+        }
+        throw new Error("Please sign in to add items to your favorites");
     }
 
     try {
@@ -48,8 +54,14 @@ export async function RemoveFavorites(id) {
     
     const token = localStorage.getItem("token");
     if (!token) {
-        console.error("No authentication token found");
-        return;
+        // Store the return URL and action for after login
+        if (!window.location.pathname.includes("/Signin")) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            const actionData = JSON.stringify({ action: 'removeFavorite', mealId: id });
+            localStorage.setItem('pendingAction', actionData);
+            window.location.href = `/Signin?reason=loginRequired&message=Please sign in to manage your favorites&returnUrl=${returnUrl}`;
+        }
+        throw new Error("Please sign in to manage your favorites");
     }
 
     try {

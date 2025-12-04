@@ -36,14 +36,24 @@ export default function Favorites() {
   }, []);
 
   const handleRemoveFavorite = async (id) => {
-    await RemoveFavorites(id);
-    setFavoriteIds(favoriteIds.filter(favId => favId !== id));
-    setFavoriteMeals(favoriteMeals.filter(meal => meal._id !== id));
+    try {
+      await RemoveFavorites(id);
+      setFavoriteIds(favoriteIds.filter(favId => favId !== id));
+      setFavoriteMeals(favoriteMeals.filter(meal => meal._id !== id));
+    } catch (error) {
+      // Error handling is done in RemoveFavorites (redirects to sign-in)
+      console.error("Error removing favorite:", error);
+    }
   };
 
   const handleAddToCart = async (meal) => {
-    await AddPurchase(meal._id, meal);
-    router.push("/Purchases");
+    try {
+      await AddPurchase(meal._id, meal);
+      router.push("/Purchases");
+    } catch (error) {
+      // Error handling is done in AddToCart (redirects to sign-in)
+      console.error("Error adding to cart:", error);
+    }
   };
 
   return (

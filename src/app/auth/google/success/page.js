@@ -13,10 +13,18 @@ export default function GoogleAuthSuccess() {
     const token = searchParams.get("token");
     const name = searchParams.get("name");
     const email = searchParams.get("email");
+    const returnUrl = searchParams.get("returnUrl");
 
     if (token && name && email) {
       login(token, { name, email });
-      router.push("/");
+      
+      // Redirect to returnUrl if provided, otherwise home
+      if (returnUrl) {
+        const decodedUrl = decodeURIComponent(returnUrl);
+        router.push(decodedUrl);
+      } else {
+        router.push("/");
+      }
     } else {
       router.push("/Signin?error=invalid_token");
     }

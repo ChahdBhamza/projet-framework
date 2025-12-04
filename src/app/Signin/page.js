@@ -22,11 +22,14 @@ export default function Signin() {
   useEffect(() => {
     const reason = searchParams.get("reason");
     const errorParam = searchParams.get("error");
+    const message = searchParams.get("message");
     
     if (reason === "sessionExpired") {
       setError("Your session has expired. Please sign in again.");
     } else if (reason === "invalidSession") {
       setError("Invalid session. Please sign in again.");
+    } else if (reason === "loginRequired") {
+      setError(message || "Please sign in to continue.");
     } else if (errorParam) {
       // Decode error message from OAuth callback
       const decodedError = decodeURIComponent(errorParam);
@@ -113,8 +116,16 @@ export default function Signin() {
       } else {
         console.log("Signed in user:", data?.user);
         login(data.token, data.user);
-        // Redirect to home page after successful login
-        router.push("/");
+        
+        // Check if there's a return URL to redirect back to
+        const returnUrl = searchParams.get("returnUrl");
+        if (returnUrl) {
+          const decodedUrl = decodeURIComponent(returnUrl);
+          router.push(decodedUrl);
+        } else {
+          // Redirect to home page after successful login
+          router.push("/");
+        }
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -232,7 +243,13 @@ export default function Signin() {
 
             <button
               type="button"
-              onClick={() => window.location.href = "/api/auth/google"}
+              onClick={() => {
+                const returnUrl = searchParams.get("returnUrl");
+                const googleAuthUrl = returnUrl 
+                  ? `/api/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`
+                  : "/api/auth/google";
+                window.location.href = googleAuthUrl;
+              }}
               className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-50 transition"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

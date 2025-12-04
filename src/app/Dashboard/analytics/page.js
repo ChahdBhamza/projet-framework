@@ -137,7 +137,7 @@ export default function Analytics() {
       };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col lg:ml-0">
@@ -152,47 +152,53 @@ export default function Analytics() {
           title="Analytics"
         />
 
-        <main className="flex-1 p-4 lg:p-8">
+        <main className="flex-1 p-4 lg:p-6 xl:p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50">
           <div className="max-w-7xl mx-auto">
+            {/* Page Header */}
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-              <p className="text-gray-600 mt-1">Detailed analytics and insights</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Analytics Dashboard</h1>
+              <p className="text-sm text-gray-600">Comprehensive insights and performance metrics</p>
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               {/* User Growth Line Chart */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">User Growth (Last 7 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">User Growth</h3>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={displayData.userGrowth && displayData.userGrowth.length > 0 ? displayData.userGrowth : [{ day: "No data", users: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="users"
                       stroke="#7ab530"
-                      strokeWidth={2}
-                      dot={{ fill: "#7ab530", r: 4 }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={3}
+                      dot={{ fill: "#7ab530", r: 5, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 7, stroke: '#7ab530', strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Meal Type Distribution */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Meal Type Distribution</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">Meal Type Distribution</h3>
+                <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
                       data={summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0 
@@ -202,7 +208,7 @@ export default function Analytics() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -212,58 +218,76 @@ export default function Analytics() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               {/* Revenue Trends */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Revenue Trends (Last 7 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">Revenue Trends</h3>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={displayData.revenueData && displayData.revenueData.length > 0 ? displayData.revenueData : [{ day: "No data", revenue: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                       formatter={(value) => [`${Number(value).toFixed(2)} TND`, "Revenue"]}
                     />
                     <Line
                       type="monotone"
                       dataKey="revenue"
                       stroke="#f97316"
-                      strokeWidth={2}
-                      dot={{ fill: "#f97316", r: 4 }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={3}
+                      dot={{ fill: "#f97316", r: 5, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 7, stroke: '#f97316', strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Order Trends */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Order Trends (Last 7 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">Order Trends</h3>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={displayData.orderTrends && displayData.orderTrends.length > 0 ? displayData.orderTrends : [{ day: "No data", orders: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
                     <Bar dataKey="orders" fill="#7ab530" radius={[8, 8, 0, 0]} />
                   </BarChart>
@@ -272,45 +296,52 @@ export default function Analytics() {
             </div>
 
             {/* Charts Row 3 - Price Distribution */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Meal Price Distribution</h3>
-              <ResponsiveContainer width="100%" height={300}>
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Meal Price Distribution</h3>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={displayData.priceDistribution && displayData.priceDistribution.length > 0 ? displayData.priceDistribution : [{ range: "No data", count: 0 }]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} />
-                  <YAxis stroke="#9ca3af" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                  <Bar dataKey="count" fill="#a78bfa" radius={[8, 8, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="range" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
+                      }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
+                    />
+                    <Bar dataKey="count" fill="#a78bfa" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Charts Row 4 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               {/* Peak Ordering Hours */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Peak Ordering Hours (Last 30 Days)</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">Peak Ordering Hours</h3>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 30 Days</span>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={summary?.ordersByHour && summary.ordersByHour.length > 0 
                     ? summary.ordersByHour.map(item => ({ hour: `${item.hour}:00`, count: item.count }))
                     : [{ hour: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="hour" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="hour" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
                     <Bar dataKey="count" fill="#7ab530" radius={[8, 8, 0, 0]} />
                   </BarChart>
@@ -318,9 +349,9 @@ export default function Analytics() {
               </div>
 
               {/* User Verification Status */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">User Verification Status</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">User Verification Status</h3>
+                <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
                       data={summary && summary.totalUsers > 0 ? [
@@ -331,7 +362,7 @@ export default function Analytics() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -340,7 +371,15 @@ export default function Analytics() {
                         <Cell key="unverified" fill="#f87171" />
                       ] : <Cell key="no-data" fill="#9ca3af" />}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
+                      }}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -348,22 +387,24 @@ export default function Analytics() {
             </div>
 
             {/* Charts Row 5 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               {/* Calorie Distribution */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Calorie Distribution</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">Calorie Distribution</h3>
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={displayData.calorieDistribution && displayData.calorieDistribution.length > 0 ? displayData.calorieDistribution : [{ range: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis dataKey="range" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
                     <Bar dataKey="count" fill="#60a5fa" radius={[8, 8, 0, 0]} />
                   </BarChart>
@@ -371,20 +412,22 @@ export default function Analytics() {
               </div>
 
               {/* Popular Meal Tags */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Popular Meal Tags</h3>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">Popular Meal Tags</h3>
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={displayData.popularTags && displayData.popularTags.length > 0 ? displayData.popularTags : [{ name: "No data", usage: 0 }]} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis type="number" stroke="#9ca3af" fontSize={12} />
-                    <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={12} width={100} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                    <XAxis type="number" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={11} width={100} tick={{ fill: '#6b7280' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
                         border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        padding: "12px",
                       }}
+                      labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
                     <Bar dataKey="usage" fill="#34d399" radius={[0, 8, 8, 0]} />
                   </BarChart>
@@ -393,64 +436,70 @@ export default function Analytics() {
             </div>
 
             {/* Tables Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               {/* Top Selling Meals */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <ShoppingCart className="w-5 h-5 text-[#7ab530]" />
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="p-1.5 bg-green-100 rounded-lg">
+                    <ShoppingCart className="w-4 h-4 text-[#7ab530]" />
+                  </div>
                   Top Selling Meals
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {displayData.topSellingMeals && displayData.topSellingMeals.length > 0 ? (
                     displayData.topSellingMeals.map((meal, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <div key={idx} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#7ab530] hover:bg-green-50/30 transition-all duration-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-sm">
                           #{idx + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
-                          <p className="text-sm text-gray-600">{meal.totalQuantity} units sold • {meal.orderCount} orders</p>
+                          <h4 className="font-medium text-sm text-gray-900 truncate mb-0.5">{meal.mealName || "Unknown Meal"}</h4>
+                          <p className="text-xs text-gray-500">{meal.totalQuantity} units • {meal.orderCount} orders</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-[#7ab530]">{Number(meal.totalRevenue || 0).toFixed(2)} TND</p>
-                          <p className="text-xs text-gray-600">Revenue</p>
+                          <p className="text-sm font-bold text-[#7ab530]">{Number(meal.totalRevenue || 0).toFixed(2)} TND</p>
+                          <p className="text-xs text-gray-500">Revenue</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No sales data yet</p>
+                    <div className="text-center py-12 text-gray-400">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">No sales data available</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Most Favorited Meals */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#7ab530]" />
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+                <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="p-1.5 bg-green-100 rounded-lg">
+                    <Award className="w-4 h-4 text-[#7ab530]" />
+                  </div>
                   Most Favorited Meals
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {summary?.favoriteMeals && summary.favoriteMeals.length > 0 ? (
                     summary.favoriteMeals.map((meal, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <div key={idx} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#7ab530] hover:bg-green-50/30 transition-all duration-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-sm">
                           {meal.mealName?.charAt(0) || "?"}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{meal.mealName || "Unknown Meal"}</h4>
-                          <p className="text-sm text-gray-600">Meal ID: {meal.mealId}</p>
+                          <h4 className="font-medium text-sm text-gray-900 truncate mb-0.5">{meal.mealName || "Unknown Meal"}</h4>
+                          <p className="text-xs text-gray-500">ID: {meal.mealId}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{meal.favorites}</p>
-                          <p className="text-xs text-red-600">❤️ favorites</p>
+                          <p className="text-sm font-bold text-gray-900">{meal.favorites}</p>
+                          <p className="text-xs text-red-500">❤️</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No favorites yet</p>
+                    <div className="text-center py-12 text-gray-400">
+                      <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">No favorites data available</p>
                     </div>
                   )}
                 </div>
@@ -458,30 +507,32 @@ export default function Analytics() {
             </div>
 
             {/* Order Statistics */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#7ab530]" />
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="p-1.5 bg-green-100 rounded-lg">
+                  <Clock className="w-4 h-4 text-[#7ab530]" />
+                </div>
                 Order Statistics
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Total Orders</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200/50 hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-gray-600 mb-1">Total Orders</p>
                   <p className="text-2xl font-bold text-gray-900">{summary?.totalOrders || 0}</p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Orders Today</p>
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200/50 hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-gray-600 mb-1">Orders Today</p>
                   <p className="text-2xl font-bold text-gray-900">{summary?.ordersToday || 0}</p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
+                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200/50 hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-gray-600 mb-1">Average Order Value</p>
                   <p className="text-2xl font-bold text-[#7ab530]">{summary?.averageOrderValue || 0} TND</p>
                 </div>
               </div>
             </div>
 
             {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-center">
-                {error}
+              <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-center shadow-sm">
+                <p className="font-medium">{error}</p>
               </div>
             )}
           </div>

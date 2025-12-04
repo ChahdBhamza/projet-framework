@@ -83,15 +83,25 @@ export default function Products() {
     }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced]);
 
     const handleAddToCart = async (meal) => {
-        await AddPurchase(meal._id, meal);
-        const count = await GetPurchasesCount();
-        setPurchasesCount(count);
+        try {
+            await AddPurchase(meal._id, meal);
+            const count = await GetPurchasesCount();
+            setPurchasesCount(count);
+        } catch (error) {
+            // Error handling is done in AddToCart (redirects to sign-in)
+            console.error("Error adding to cart:", error);
+        }
     };
 
     const handleAddFavorite = async (mealId) => {
-        await AddFavorites(mealId);
-        const favorites = await GetFavorites();
-        setFavoritesCount(favorites.length);
+        try {
+            await AddFavorites(mealId);
+            const favorites = await GetFavorites();
+            setFavoritesCount(favorites.length);
+        } catch (error) {
+            // Error handling is done in AddFavorites (redirects to sign-in)
+            console.error("Error adding favorite:", error);
+        }
     };
 
     const handlePriceChange = (e) => {

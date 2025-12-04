@@ -9,6 +9,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const error = searchParams.get("error");
+    const returnUrl = searchParams.get("returnUrl");
 
     if (error) {
       return NextResponse.redirect(
@@ -99,8 +100,11 @@ export async function GET(request) {
       { expiresIn: "30m" }
     );
 
-    // Redirect to frontend with token
-    const frontendUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/auth/google/success?token=${encodeURIComponent(token)}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
+    // Redirect to frontend with token and returnUrl if provided
+    let frontendUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/auth/google/success?token=${encodeURIComponent(token)}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
+    if (returnUrl) {
+      frontendUrl += `&returnUrl=${encodeURIComponent(returnUrl)}`;
+    }
     
     return NextResponse.redirect(frontendUrl);
   } catch (error) {

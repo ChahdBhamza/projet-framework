@@ -37,8 +37,14 @@ export default function PopularMeals() {
 
   const handleAddToCart = async (meal) => {
     if (!meal?._id) return;
-    await AddPurchase(meal._id, meal);
-    router.push("/Purchases");
+    try {
+      await AddPurchase(meal._id, meal);
+      router.push("/Purchases");
+    } catch (error) {
+      // Error handling is done in AddToCart (redirects to sign-in)
+      // Just prevent navigation if there's an error
+      console.error("Error adding to cart:", error);
+    }
   };
 
   return (
