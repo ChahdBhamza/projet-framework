@@ -15,8 +15,7 @@ export default function Checkout() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
-    
-    // Payment form state
+
     const [cardNumber, setCardNumber] = useState("");
     const [cardName, setCardName] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
@@ -63,75 +62,46 @@ export default function Checkout() {
 
     const validateForm = () => {
         const newErrors = {};
-        
+
         if (!cardNumber || cardNumber.replace(/\s/g, "").length < 16) {
             newErrors.cardNumber = "Please enter a valid 16-digit card number";
         }
-        
+
         if (!cardName || cardName.trim().length < 3) {
             newErrors.cardName = "Please enter cardholder name";
         }
-        
+
         if (!expiryDate || expiryDate.length < 5) {
             newErrors.expiryDate = "Please enter expiry date (MM/YY)";
         }
-        
+
         if (!cvv || cvv.length < 3) {
             newErrors.cvv = "Please enter CVV";
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleCardNumberChange = (e) => {
-        const formatted = formatCardNumber(e.target.value);
-        setCardNumber(formatted);
-        if (errors.cardNumber) {
-            setErrors({ ...errors, cardNumber: "" });
-        }
-    };
-
-    const handleExpiryChange = (e) => {
-        const formatted = formatExpiryDate(e.target.value);
-        setExpiryDate(formatted);
-        if (errors.expiryDate) {
-            setErrors({ ...errors, expiryDate: "" });
-        }
-    };
-
-    const handleCvvChange = (e) => {
-        const value = e.target.value.replace(/\D/g, "").substring(0, 3);
-        setCvv(value);
-        if (errors.cvv) {
-            setErrors({ ...errors, cvv: "" });
-        }
-    };
-
     const handlePayment = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
 
         setProcessing(true);
-        
+
         try {
-            // Simulate fake payment processing
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Create order in database after successful payment
+
             const order = await CreateOrder(purchases, totalAmount);
-            
+
             if (order) {
-                // Clear cart after successful order creation
                 await ClearPurchases();
-                
                 setPaymentSuccess(true);
                 setProcessing(false);
-                
-                // Redirect to home after 3 seconds
+
                 setTimeout(() => {
                     router.push("/");
                 }, 3000);
@@ -172,14 +142,12 @@ export default function Checkout() {
                         </div>
                         <h2 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h2>
                         <p className="text-gray-600 mb-6">
-                            Thank you for your order. Your payment has been processed successfully.
+                            Thank you for your order.
                         </p>
                         <p className="text-sm text-gray-500 mb-8">
-                            Order Total: <span className="font-bold text-[#7ab530]">{totalAmount.toFixed(2)} TND</span>
+                            Total: <span className="font-bold text-[#7ab530]">{totalAmount.toFixed(2)} TND</span>
                         </p>
-                        <p className="text-sm text-gray-500">
-                            Redirecting to home page...
-                        </p>
+                        <p className="text-sm text-gray-500">Redirecting...</p>
                     </div>
                 </div>
                 <Footer />
@@ -192,7 +160,7 @@ export default function Checkout() {
             <Header />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Back Button */}
+
                 <Link href="/Purchases">
                     <button className="flex items-center gap-2 text-gray-600 hover:text-[#7ab530] transition-colors font-medium mb-6">
                         <ArrowLeft className="w-4 h-4" />
@@ -201,7 +169,8 @@ export default function Checkout() {
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Payment Form - Left Side */}
+
+                    {/* LEFT FORM */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                             <div className="flex items-center gap-2 mb-6">
@@ -210,51 +179,36 @@ export default function Checkout() {
                             </div>
 
                             <form onSubmit={handlePayment} className="space-y-6">
-                                {/* Card Number */}
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Card Number
                                     </label>
                                     <input
                                         type="text"
-                                        value={cardNumber}
-                                        onChange={handleCardNumberChange}
                                         placeholder="1234 5678 9012 3456"
+                                        value={cardNumber}
+                                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                                         maxLength={19}
-                                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition ${
-                                            errors.cardNumber ? "border-red-500" : "border-gray-300"
-                                        }`}
+                                        className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-[#7ab530] transition ${errors.cardNumber ? "border-red-500" : "border-gray-300"}`}
                                     />
-                                    {errors.cardNumber && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>
-                                    )}
+                                    {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
                                 </div>
 
-                                {/* Cardholder Name */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Cardholder Name
                                     </label>
                                     <input
                                         type="text"
-                                        value={cardName}
-                                        onChange={(e) => {
-                                            setCardName(e.target.value);
-                                            if (errors.cardName) {
-                                                setErrors({ ...errors, cardName: "" });
-                                            }
-                                        }}
                                         placeholder="John Doe"
-                                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition ${
-                                            errors.cardName ? "border-red-500" : "border-gray-300"
-                                        }`}
+                                        value={cardName}
+                                        onChange={(e) => setCardName(e.target.value)}
+                                        className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-[#7ab530] transition ${errors.cardName ? "border-red-500" : "border-gray-300"}`}
                                     />
-                                    {errors.cardName && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.cardName}</p>
-                                    )}
+                                    {errors.cardName && <p className="text-red-500 text-sm mt-1">{errors.cardName}</p>}
                                 </div>
 
-                                {/* Expiry and CVV */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -262,43 +216,35 @@ export default function Checkout() {
                                         </label>
                                         <input
                                             type="text"
-                                            value={expiryDate}
-                                            onChange={handleExpiryChange}
                                             placeholder="MM/YY"
+                                            value={expiryDate}
                                             maxLength={5}
-                                            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition ${
-                                                errors.expiryDate ? "border-red-500" : "border-gray-300"
-                                            }`}
+                                            onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
+                                            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-[#7ab530] transition ${errors.expiryDate ? "border-red-500" : "border-gray-300"}`}
                                         />
-                                        {errors.expiryDate && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>
-                                        )}
+                                        {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
                                     </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             CVV
                                         </label>
                                         <input
                                             type="text"
-                                            value={cvv}
-                                            onChange={handleCvvChange}
                                             placeholder="123"
+                                            value={cvv}
                                             maxLength={3}
-                                            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition ${
-                                                errors.cvv ? "border-red-500" : "border-gray-300"
-                                            }`}
+                                            onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+                                            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-[#7ab530] transition ${errors.cvv ? "border-red-500" : "border-gray-300"}`}
                                         />
-                                        {errors.cvv && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>
-                                        )}
+                                        {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
                                     </div>
                                 </div>
 
-                                {/* Submit Button */}
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="w-full bg-[#7ab530] text-white py-4 rounded-lg font-bold hover:bg-[#6aa02b] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-[#7ab530] text-white py-4 rounded-lg font-bold hover:bg-[#6aa02b] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {processing ? (
                                         <>
@@ -314,7 +260,6 @@ export default function Checkout() {
                                 </button>
                             </form>
 
-                            {/* Security Notice */}
                             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                                 <div className="flex items-start gap-2">
                                     <Lock className="w-5 h-5 text-green-600 mt-0.5" />
@@ -329,15 +274,17 @@ export default function Checkout() {
                         </div>
                     </div>
 
-                    {/* Order Summary - Right Side */}
+                    {/* RIGHT SIDE ORDER SUMMARY (FIXED) */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-24">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-24 h-fit">
                             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                                 <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
                             </div>
-                            <div className="p-6 space-y-4">
-                                {/* Order Items */}
-                                <div className="space-y-3 max-h-64 overflow-y-auto">
+
+                            {/* Scrollable content */}
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+                                <div className="space-y-3">
                                     {purchases.map((purchase) => (
                                         <div key={purchase.id} className="flex justify-between text-sm">
                                             <div className="flex-1">
@@ -362,10 +309,12 @@ export default function Checkout() {
                                         </span>
                                         <span className="text-gray-900 font-medium">{totalAmount.toFixed(2)} TND</span>
                                     </div>
+
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Shipping</span>
                                         <span className="text-gray-900 font-medium">Free</span>
                                     </div>
+
                                     <div className="border-t border-gray-200 pt-3">
                                         <div className="flex justify-between">
                                             <span className="text-base font-semibold text-gray-900">Total</span>
@@ -375,14 +324,15 @@ export default function Checkout() {
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <Footer />
+         
         </main>
     );
 }
-

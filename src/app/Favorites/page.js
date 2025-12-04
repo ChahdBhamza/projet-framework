@@ -7,7 +7,6 @@ import Footer from "../Footer";
 import Header from "../Header";
 import { GetFavorites, RemoveFavorites } from "../Utils/favorites";
 import { AddPurchase } from "../Utils/purchases";
-import { meals as allMeals } from "../Utils/meals";
 import { useState, useEffect } from "react";
 import { Heart, Trash2, ShoppingCart, Sparkles, ArrowLeft } from "lucide-react";
 

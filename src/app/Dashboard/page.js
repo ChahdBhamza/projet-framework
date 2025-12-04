@@ -236,6 +236,10 @@ export default function Dashboard() {
               <Home className="w-5 h-5" />
               Dashboard
             </Link>
+            <Link href="/admin/products" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+              <UtensilsCrossed className="w-5 h-5" />
+              Products
+            </Link>
             <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
               <Home className="w-5 h-5" />
               Home

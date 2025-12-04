@@ -8,12 +8,31 @@ import { verifyToken } from "../../utils/auth.js";
 
 export async function GET(request) {
   try {
-    // Verify admin authentication
+    // Verify authentication
     const authResult = verifyToken(request);
     if (authResult.error) {
       return NextResponse.json(
         { message: "Unauthorized", error: authResult.error },
         { status: authResult.status }
+      );
+    }
+
+    // Verify admin permissions
+    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    if (!ADMIN_EMAIL) {
+      return NextResponse.json(
+        { message: "Admin email not configured", error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const userEmail = authResult.email?.toLowerCase()?.trim();
+    const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
+    
+    if (userEmail !== adminEmail) {
+      return NextResponse.json(
+        { message: "Forbidden", error: "Admin access required" },
+        { status: 403 }
       );
     }
 

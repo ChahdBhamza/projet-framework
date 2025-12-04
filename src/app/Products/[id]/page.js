@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { meals } from "../../Utils/meals";
 import { GetFavorites, AddFavorites, RemoveFavorites } from "../../Utils/favorites";
 import { AddPurchase } from "../../Utils/purchases";
 import { useState, useEffect } from "react";

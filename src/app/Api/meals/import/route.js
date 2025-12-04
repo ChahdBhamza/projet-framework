@@ -1,10 +1,40 @@
 import { connectDB } from '../../../../../db.js';
 import meals from '../../../../../models/meals.js';
+import UploadHistory from '../../../../../models/uploadHistory.js';
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
+import { verifyToken } from '../../utils/auth.js';
 
 export async function POST(request) {
     try {
+        // Verify authentication
+        const authResult = verifyToken(request);
+        if (authResult.error) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized", message: authResult.error },
+                { status: authResult.status }
+            );
+        }
+
+        // Verify admin permissions
+        const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        if (!ADMIN_EMAIL) {
+            return NextResponse.json(
+                { success: false, error: "Admin email not configured" },
+                { status: 500 }
+            );
+        }
+
+        const userEmail = authResult.email?.toLowerCase()?.trim();
+        const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
+        
+        if (userEmail !== adminEmail) {
+            return NextResponse.json(
+                { success: false, error: "Forbidden", message: "Admin access required" },
+                { status: 403 }
+            );
+        }
+
         await connectDB();
 
         const formData = await request.formData();
@@ -181,18 +211,34 @@ export async function POST(request) {
         const dinnerCount = await meals.countDocuments({ mealType: 'Dinner' });
         const snackCount = await meals.countDocuments({ mealType: 'Snack' });
 
+        const summary = {
+            breakfast: breakfastCount,
+            lunch: lunchCount,
+            dinner: dinnerCount,
+            snack: snackCount,
+            total: await meals.countDocuments()
+        };
+
+        // Save upload history
+        const uploadHistory = new UploadHistory({
+            fileName: file.name,
+            uploadedBy: authResult.email || 'Unknown',
+            uploadedById: authResult.userId || null,
+            totalRows: csvData.length,
+            importedCount: result.length,
+            errorCount: errors.length,
+            errors: errors.length > 0 ? errors.slice(0, 10) : [], // Store first 10 errors
+            summary: summary
+        });
+        await uploadHistory.save();
+
         return NextResponse.json({
             success: true,
             message: `Successfully imported ${result.length} meals`,
             imported: result.length,
             errors: errors.length > 0 ? errors : undefined,
-            summary: {
-                breakfast: breakfastCount,
-                lunch: lunchCount,
-                dinner: dinnerCount,
-                snack: snackCount,
-                total: await meals.countDocuments()
-            }
+            summary: summary,
+            uploadId: uploadHistory._id
         });
     } catch (error) {
         console.error('Error importing meals from CSV:', error);
