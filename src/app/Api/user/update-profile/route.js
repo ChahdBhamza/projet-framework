@@ -51,7 +51,8 @@ export async function PUT(request) {
             { 
                 id: user._id.toString(), 
                 email: user.email, 
-                name: user.name 
+                name: user.name,
+                provider: user.provider || 'local'
             },
             process.env.JWT_SECRET,
             { expiresIn: "30m" }

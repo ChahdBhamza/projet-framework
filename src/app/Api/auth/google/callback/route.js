@@ -95,7 +95,12 @@ export async function GET(request) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, name: user.name },
+      { 
+        id: user._id.toString(), 
+        email: user.email, 
+        name: user.name,
+        provider: user.provider || 'google'
+      },
       process.env.JWT_SECRET,
       { expiresIn: "30m" }
     );

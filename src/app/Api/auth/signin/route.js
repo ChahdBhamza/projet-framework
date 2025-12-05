@@ -135,7 +135,16 @@ export async function POST(req) {
     }
 
 
-    const token = jwt.sign({ id: user._id.toString(), email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "30m" });
+    const token = jwt.sign(
+      { 
+        id: user._id.toString(), 
+        email: user.email, 
+        name: user.name,
+        provider: user.provider || 'local'
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "30m" }
+    );
     // Success response
     const responseData = {
       message: "Signed in successfully",
