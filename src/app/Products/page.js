@@ -240,13 +240,16 @@ export default function Products() {
         }
     }, [searchParams, currentPage]);
 
-    // Reset to page 1 when filters change (but preserve URL param if it exists)
+    // Reset to page 1 when filters change (regardless of URL param)
     useEffect(() => {
-        const pageParam = searchParams.get('page');
-        if (!pageParam) {
-            setCurrentPage(1);
+        setCurrentPage(1);
+        // Update URL to remove page parameter when filters change
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has('page')) {
+            currentUrl.searchParams.delete('page');
+            router.replace(currentUrl.pathname + currentUrl.search, { scroll: false });
         }
-    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced, searchParams]);
+    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced, router]);
 
     const handlePreviousPage = () => {
         const newPage = Math.max(1, currentPage - 1);

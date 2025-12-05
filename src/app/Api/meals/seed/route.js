@@ -39,7 +39,7 @@ const mealsData = [
     {
         mealName: "Apple-Cinnamon Quinoa Porridge",
         mealType: "Breakfast",
-        tags: ["low-fat"],
+        tags: ["gluten-free", "low-fat"],
         calories: 390,
         protein: 13,
         carbs: 59,
