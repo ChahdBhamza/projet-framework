@@ -380,8 +380,8 @@ export default function Products() {
                                                 {/* Fallback placeholder */}
                                                 <div className="image-fallback hidden h-full w-full items-center justify-center text-center absolute inset-0">
                                                     <div className="text-center">
-                                                        <span className="text-4xl mb-2 block">🥗</span>
-                                                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                                                    <span className="text-4xl mb-2 block">🥗</span>
+                                                    <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
                                                     </div>
                                                 </div>
                                                 {/* Hover Overlay - Transparent Green */}
@@ -392,23 +392,23 @@ export default function Products() {
                                         {/* White Content Section */}
                                         <div className="p-5 flex flex-col">
                                             {/* Product Title */}
-                                            <Link href={`/Products/${meal._id}`}>
+                                                <Link href={`/Products/${meal._id}`}>
                                                 <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-2">
-                                                    {meal.mealName}
-                                                </h3>
-                                            </Link>
-                                            
+                                                        {meal.mealName}
+                                                    </h3>
+                                                </Link>
+
                                             {/* Tags */}
                                             {meal.tags && meal.tags.length > 0 && (
                                                 <div className="mb-3 flex flex-wrap gap-2">
                                                     {meal.tags.slice(0, 2).map((tag, i) => (
                                                         <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
                                             )}
-                                             
+
                                             {/* Price and Add to Cart */}
                                             <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
                                                 <span className="text-base font-semibold text-gray-900">

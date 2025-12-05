@@ -47,16 +47,30 @@ export default function Header() {
       <div className="actions">
             {user ? (
               <>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "8px 16px",
-              backgroundColor: "#f5f5f5",
-              borderRadius: "8px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              marginRight: "15px"
-            }}>
+            <Link
+              href="/Profile"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "8px 16px",
+                backgroundColor: "#f5f5f5",
+                borderRadius: "8px",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                marginRight: "15px",
+                textDecoration: "none",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#e8f5e0";
+                e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#f5f5f5";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+              }}
+            >
               <div style={{
                 width: "36px",
                 height: "36px",
@@ -72,7 +86,7 @@ export default function Header() {
                     {displayName.charAt(0).toUpperCase()}
                   </div>
               <span style={{ color: "#333", fontWeight: "500", textTransform: "lowercase" }}>{displayName}</span>
-                </div>
+            </Link>
             <Link
               href="#"
               onClick={(e) => {

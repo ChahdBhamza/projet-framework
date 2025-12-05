@@ -81,14 +81,14 @@ export async function GET(request) {
         await user.save();
       }
     } else {
-      // Create new user
+      // Create new user (no password field for OAuth users)
       user = new Users({
         name: name || email.split('@')[0],
         email: email.toLowerCase(),
         googleId: googleId,
         provider: 'google',
         isEmailVerified: true, // Google emails are verified
-        password: '', // No password for OAuth users
+        // password is not set - schema allows it to be undefined when googleId exists
       });
       await user.save();
     }

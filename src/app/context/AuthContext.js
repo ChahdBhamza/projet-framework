@@ -117,6 +117,13 @@ export function AuthProvider({ children }) {
     router.push("/Signin");
   };
 
+  const updateUser = (updatedUserData) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+      return { ...prevUser, ...updatedUserData };
+    });
+  };
+
   // Listen for storage changes (logout from other tabs)
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -141,7 +148,7 @@ export function AuthProvider({ children }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

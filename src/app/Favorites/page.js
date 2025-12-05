@@ -38,7 +38,7 @@ export default function Favorites() {
   const handleRemoveFavorite = async (id) => {
     try {
       await RemoveFavorites(id);
-      setFavoriteIds(favoriteIds.filter(favId => favId !== id));
+    setFavoriteIds(favoriteIds.filter(favId => favId !== id));
       setFavoriteMeals(favoriteMeals.filter(meal => meal._id !== id));
     } catch (error) {
       // Error handling is done in RemoveFavorites (redirects to sign-in)
@@ -49,7 +49,7 @@ export default function Favorites() {
   const handleAddToCart = async (meal) => {
     try {
       await AddPurchase(meal._id, meal);
-      router.push("/Purchases");
+    router.push("/Purchases");
     } catch (error) {
       // Error handling is done in AddToCart (redirects to sign-in)
       console.error("Error adding to cart:", error);
