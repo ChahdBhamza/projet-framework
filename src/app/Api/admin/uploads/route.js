@@ -58,7 +58,7 @@ export async function GET(request) {
         uploadedBy: upload.uploadedBy,
         totalRows: upload.totalRows,
         importedCount: upload.importedCount,
-        errorCount: upload.errorCount,
+       
         errors: upload.errors,
         summary: upload.summary,
         createdAt: upload.createdAt,

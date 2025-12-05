@@ -17,7 +17,7 @@ const mealsData = [
     {
         mealName: "Savory Herb Egg-White Cups",
         mealType: "Breakfast",
-        tags: ["gluten-free", "low-fat", "high-protein"],
+        tags: ["gluten-free", , "high-protein"],
         calories: 220,
         protein: 20,
         carbs: 8,
@@ -39,7 +39,7 @@ const mealsData = [
     {
         mealName: "Apple-Cinnamon Quinoa Porridge",
         mealType: "Breakfast",
-        tags: ["gluten-free", "low-fat"],
+        tags: ["low-fat"],
         calories: 390,
         protein: 13,
         carbs: 59,
@@ -290,7 +290,7 @@ const mealsData = [
         sugar: 8
     },
     {
-        mealName: "Lemon-Herb Seared Cod with Pumpkin Purée",
+        mealName: "Lemon-Herb Seared Cod with Pumpkin Puree",
         mealType: "Dinner",
         tags: ["gluten-free", "high-protein"],
         calories: 510,

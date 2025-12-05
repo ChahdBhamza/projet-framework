@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Footer from "../Footer";
 import Header from "../Header";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import { AddFavorites, GetFavorites } from "../Utils/favorites";
 import { AddPurchase, GetPurchasesCount } from "../Utils/purchases";
@@ -11,8 +12,87 @@ import { AddPurchase, GetPurchasesCount } from "../Utils/purchases";
 import { useState, useEffect, useMemo } from "react";
 import { ShoppingCart, Heart, Star, Filter, Search, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 
+// Product Card Component with image error handling
+function ProductCard({ meal, onAddToCart, currentPage = 1 }) {
+    const [imageError, setImageError] = useState(false);
+
+    return (
+        <div className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+            {/* Product Image */}
+            <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
+                <Link href={`/Products/${meal._id}${currentPage > 1 ? `?page=${currentPage}` : ''}`} className="block h-full w-full relative">
+                    {!imageError ? (
+                        <Image
+                            src={`/${meal.mealName}.jpg`}
+                            alt={meal.mealName}
+                            fill
+                            unoptimized
+                            className="object-cover transition-transform duration-300 group-hover:scale-110"
+                            onError={() => {
+                                setImageError(true);
+                            }}
+                            onLoad={(e) => {
+                                // Check if image actually loaded
+                                const img = e.target;
+                                if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                                    setImageError(true);
+                                }
+                            }}
+                        />
+                    ) : null}
+                    {/* Fallback placeholder */}
+                    <div className={`${imageError ? 'flex' : 'hidden'} h-full w-full items-center justify-center text-center absolute inset-0`}>
+                        <div className="text-center">
+                            <span className="text-4xl mb-2 block">🥗</span>
+                            <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+                        </div>
+                    </div>
+                    {/* Hover Overlay - Transparent Green */}
+                    <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
+                </Link>
+            </div>
+
+            {/* White Content Section */}
+            <div className="p-5 flex flex-col">
+                {/* Product Title */}
+                <Link href={`/Products/${meal._id}${currentPage > 1 ? `?page=${currentPage}` : ''}`}>
+                    <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-2">
+                        {meal.mealName}
+                    </h3>
+                </Link>
+
+                {/* Tags */}
+                {meal.tags && meal.tags.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                        {meal.tags.slice(0, 2).map((tag, i) => (
+                            <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Price and Add to Cart */}
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <span className="text-base font-semibold text-gray-900">
+                        {meal.price || 15} TND
+                    </span>
+                    <button
+                        onClick={() => onAddToCart(meal)}
+                        className="bg-[#7ab530] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow-md"
+                    >
+                        <ShoppingCart className="w-4 h-4" />
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function Products() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const [purchasesCount, setPurchasesCount] = useState(0);
     const [favoritesCount, setFavoritesCount] = useState(0);
     const [priceRange, setPriceRange] = useState(90);
@@ -22,9 +102,14 @@ export default function Products() {
     const [sortBy, setSortBy] = useState("default");
     const [meals, setMeals] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
     const [priceRangeDebounced, setPriceRangeDebounced] = useState(90);
+    
+    // Initialize currentPage from URL params or default to 1
+    const [currentPage, setCurrentPage] = useState(() => {
+        const pageParam = searchParams.get('page');
+        return pageParam ? parseInt(pageParam, 10) : 1;
+    });
 
     useEffect(() => {
         const updateCounts = async () => {
@@ -144,17 +229,49 @@ export default function Products() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedMeals = sortedMeals.slice(startIndex, endIndex);
 
-    // Reset to page 1 when filters change
+    // Update currentPage from URL params when they change
     useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced]);
+        const pageParam = searchParams.get('page');
+        if (pageParam) {
+            const pageNum = parseInt(pageParam, 10);
+            if (pageNum > 0 && pageNum !== currentPage) {
+                setCurrentPage(pageNum);
+            }
+        }
+    }, [searchParams, currentPage]);
+
+    // Reset to page 1 when filters change (but preserve URL param if it exists)
+    useEffect(() => {
+        const pageParam = searchParams.get('page');
+        if (!pageParam) {
+            setCurrentPage(1);
+        }
+    }, [searchQuery, selectedCategory, selectedCalories, priceRangeDebounced, searchParams]);
 
     const handlePreviousPage = () => {
-        setCurrentPage(prev => Math.max(1, prev - 1));
+        const newPage = Math.max(1, currentPage - 1);
+        setCurrentPage(newPage);
+        // Update URL without page param if page is 1
+        if (newPage === 1) {
+            router.push('/Products', { scroll: false });
+        } else {
+            router.push(`/Products?page=${newPage}`, { scroll: false });
+        }
     };
 
     const handleNextPage = () => {
-        setCurrentPage(prev => Math.min(totalPages, prev + 1));
+        const newPage = Math.min(totalPages, currentPage + 1);
+        setCurrentPage(newPage);
+        router.push(`/Products?page=${newPage}`, { scroll: false });
+    };
+
+    const handlePageChange = (pageNum) => {
+        setCurrentPage(pageNum);
+        if (pageNum === 1) {
+            router.push('/Products', { scroll: false });
+        } else {
+            router.push(`/Products?page=${pageNum}`, { scroll: false });
+        }
     };
 
 
@@ -356,74 +473,13 @@ export default function Products() {
                         ) : (
                             <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" style={{ gridAutoRows: '1fr' }}>
-                                {paginatedMeals.map((meal, index) => (
-                                    <div
-                                        key={meal._id}
-                                        className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
-                                    >
-                                        {/* Product Image */}
-                                        <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
-                                            <Link href={`/Products/${meal._id}`} className="block h-full w-full relative">
-                                                <Image
-                                                    src={`/${meal.mealName}.jpg`}
-                                                    alt={meal.mealName}
-                                                    fill
-                                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                                                    onError={(e) => {
-                                                        const img = e.target;
-                                                        img.style.display = 'none';
-                                                        const container = img.parentElement;
-                                                        const fallback = container.querySelector('.image-fallback');
-                                                        if (fallback) fallback.style.display = 'flex';
-                                                    }}
-                                                />
-                                                {/* Fallback placeholder */}
-                                                <div className="image-fallback hidden h-full w-full items-center justify-center text-center absolute inset-0">
-                                                    <div className="text-center">
-                                                    <span className="text-4xl mb-2 block">🥗</span>
-                                                    <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
-                                                    </div>
-                                                </div>
-                                                {/* Hover Overlay - Transparent Green */}
-                                                <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
-                                            </Link>
-                                        </div>
-
-                                        {/* White Content Section */}
-                                        <div className="p-5 flex flex-col">
-                                            {/* Product Title */}
-                                                <Link href={`/Products/${meal._id}`}>
-                                                <h3 className="text-lg font-bold text-gray-900 hover:text-[#7ab530] transition-colors mb-2 line-clamp-2">
-                                                        {meal.mealName}
-                                                    </h3>
-                                                </Link>
-
-                                            {/* Tags */}
-                                            {meal.tags && meal.tags.length > 0 && (
-                                                <div className="mb-3 flex flex-wrap gap-2">
-                                                    {meal.tags.slice(0, 2).map((tag, i) => (
-                                                        <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            )}
-
-                                            {/* Price and Add to Cart */}
-                                            <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-                                                <span className="text-base font-semibold text-gray-900">
-                                                    {meal.price || 15} TND
-                                                </span>
-                                                <button
-                                                    onClick={() => handleAddToCart(meal)}
-                                                    className="bg-[#7ab530] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow-md"
-                                                >
-                                                    <ShoppingCart className="w-4 h-4" />
-                                                    Add to Cart
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {paginatedMeals.map((meal) => (
+                                    <ProductCard 
+                                        key={meal._id} 
+                                        meal={meal} 
+                                        onAddToCart={handleAddToCart}
+                                        currentPage={currentPage}
+                                    />
                                 ))}
                             </div>
 
@@ -489,7 +545,7 @@ export default function Products() {
                                             return (
                                                 <button
                                                     key={pageNum}
-                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    onClick={() => handlePageChange(pageNum)}
                                                     className={`rounded-full transition-all duration-200 ${
                                                         currentPage === pageNum
                                                             ? 'bg-[#7ab530] w-8 h-2'

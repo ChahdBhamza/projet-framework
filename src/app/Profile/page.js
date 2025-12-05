@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import Header from "../Header";
@@ -68,6 +68,36 @@ export default function Profile() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoadingOrders(true);
+      const data = await apiJson("/api/orders");
+      if (data.success) {
+        setOrders(data.orders || []);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setOrders([]);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, []);
+
+  const fetchActivityLogs = useCallback(async () => {
+    try {
+      setLoadingActivityLogs(true);
+      const data = await apiJson("/api/admin/activity-logs?limit=50");
+      if (data.success) {
+        setActivityLogs(data.logs || []);
+      }
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      setActivityLogs([]);
+    } finally {
+      setLoadingActivityLogs(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/Signin");
@@ -89,37 +119,7 @@ export default function Profile() {
         fetchActivityLogs();
       }
     }
-  }, [user]);
-
-  const fetchOrders = async () => {
-    try {
-      setLoadingOrders(true);
-      const data = await apiJson("/api/orders");
-      if (data.success) {
-        setOrders(data.orders || []);
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setOrders([]);
-    } finally {
-      setLoadingOrders(false);
-    }
-  };
-
-  const fetchActivityLogs = async () => {
-    try {
-      setLoadingActivityLogs(true);
-      const data = await apiJson("/api/admin/activity-logs?limit=50");
-      if (data.success) {
-        setActivityLogs(data.logs || []);
-      }
-    } catch (error) {
-      console.error("Error fetching activity logs:", error);
-      setActivityLogs([]);
-    } finally {
-      setLoadingActivityLogs(false);
-    }
-  };
+  }, [user, fetchOrders, fetchActivityLogs]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);

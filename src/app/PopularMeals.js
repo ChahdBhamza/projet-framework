@@ -7,6 +7,46 @@ import { useEffect, useState } from "react";
 import { AddPurchase } from "./Utils/purchases";
 import { ShoppingCart } from "lucide-react";
 
+// Product Image Component with error handling
+function ProductImage({ meal }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
+      <Link href={`/Products/${meal._id}`} className="block h-full w-full relative">
+        {!imageError ? (
+          <Image
+            src={`/${meal.mealName}.jpg`}
+            alt={meal.mealName}
+            fill
+            unoptimized
+            className="object-cover transition-transform duration-300 group-hover:scale-110"
+            onError={() => {
+              setImageError(true);
+            }}
+            onLoad={(e) => {
+              // Check if image actually loaded
+              const img = e.target;
+              if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                setImageError(true);
+              }
+            }}
+          />
+        ) : null}
+        {/* Fallback placeholder */}
+        <div className={`${imageError ? 'flex' : 'hidden'} h-full w-full items-center justify-center text-center absolute inset-0`}>
+          <div className="text-center">
+            <span className="text-4xl mb-2 block">🥗</span>
+            <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
+          </div>
+        </div>
+        {/* Hover Overlay - Transparent Green */}
+        <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
+      </Link>
+    </div>
+  );
+}
+
 export default function PopularMeals() {
   const router = useRouter();
   const [meals, setMeals] = useState([]);
@@ -19,7 +59,7 @@ export default function PopularMeals() {
         const res = await fetch("/api/meals");
         const data = await res.json();
         if (data.success && Array.isArray(data.meals)) {
-          // Pick 4 “popular” meals – for now just take the first 4
+          // Pick 4 "popular" meals – for now just take the first 4
           setMeals(data.meals.slice(0, 4));
         } else {
           setMeals([]);
@@ -79,32 +119,7 @@ export default function PopularMeals() {
                 className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
                 {/* Product Image */}
-                <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100">
-                  <Link href={`/Products/${meal._id}`} className="block h-full w-full relative">
-                    <Image
-                      src={`/${meal.mealName}.jpg`}
-                      alt={meal.mealName}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-110"
-                      onError={(e) => {
-                        const img = e.target;
-                        img.style.display = 'none';
-                        const container = img.parentElement;
-                        const fallback = container.querySelector('.image-fallback');
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                    />
-                    {/* Fallback placeholder */}
-                    <div className="image-fallback hidden h-full w-full items-center justify-center text-center absolute inset-0">
-                      <div className="text-center">
-                        <span className="text-4xl mb-2 block">🥗</span>
-                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
-                      </div>
-                    </div>
-                    {/* Hover Overlay - Transparent Green */}
-                    <div className="absolute inset-0 bg-[#7ab530]/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"></div>
-                  </Link>
-                </div>
+                <ProductImage meal={meal} />
 
                 {/* White Content Section */}
                 <div className="p-5 flex flex-col">
@@ -148,5 +163,3 @@ export default function PopularMeals() {
     </section>
   );
 }
-
-
