@@ -1,6 +1,7 @@
 import { connectDB } from '../../../../../db.js';
 import meals from '../../../../../models/meals.js';
 import UploadHistory from '../../../../../models/uploadHistory.js';
+import ActivityLog from '../../../../../models/activityLog.js';
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import { verifyToken } from '../../utils/auth.js';
@@ -231,6 +232,34 @@ export async function POST(request) {
             summary: summary
         });
         await uploadHistory.save();
+
+        // Log activity
+        try {
+            const ipAddress = request.headers.get('x-forwarded-for') || 
+                             request.headers.get('x-real-ip') || 
+                             'unknown';
+            const userAgent = request.headers.get('user-agent') || 'unknown';
+            
+            await ActivityLog.create({
+                userId: authResult.userId,
+                userEmail: authResult.email,
+                action: 'product_upload',
+                description: `Uploaded ${result.length} products from CSV file: ${file.name}`,
+                metadata: {
+                    fileName: file.name,
+                    importedCount: result.length,
+                    errorCount: errors.length,
+                    totalRows: csvData.length,
+                    summary: summary,
+                    uploadId: uploadHistory._id.toString()
+                },
+                ipAddress,
+                userAgent
+            });
+        } catch (logError) {
+            console.error('Error logging activity:', logError);
+            // Don't fail the request if logging fails
+        }
 
         return NextResponse.json({
             success: true,

@@ -37,7 +37,7 @@ export default function Header() {
         <Link href="/MealPlans">Meal Plans</Link>
         <Link href="/Aboutus">About Us</Link>
             {isAdmin && (
-          <Link href="/Dashboard" style={{ color: "#7ab530", fontWeight: "600" }}>
+          <Link href="/Dashboard" >
                 Dashboard
               </Link>
             )}

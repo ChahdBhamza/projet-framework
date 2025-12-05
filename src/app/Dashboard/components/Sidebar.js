@@ -8,6 +8,8 @@ import {
   UtensilsCrossed,
   BarChart3,
   LogOut,
+  ShoppingBag,
+  Calendar,
 } from "lucide-react";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -18,6 +20,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     { href: "/Dashboard", label: "Dashboard", icon: Home },
     { href: "/Dashboard/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/admin/products", label: "Products", icon: UtensilsCrossed },
+    { href: "/Dashboard/orders", label: "Order History", icon: ShoppingBag },
+    { href: "/Dashboard/meal-plans", label: "Meal Plans Generated", icon: Calendar },
   ];
 
   return (

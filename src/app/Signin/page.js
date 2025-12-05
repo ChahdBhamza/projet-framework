@@ -117,11 +117,20 @@ export default function Signin() {
         console.log("Signed in user:", data?.user);
         login(data.token, data.user);
         
+        // Check if user is admin
+        const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const userEmail = data?.user?.email?.toLowerCase()?.trim();
+        const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+        const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
+        
         // Check if there's a return URL to redirect back to
         const returnUrl = searchParams.get("returnUrl");
         if (returnUrl) {
           const decodedUrl = decodeURIComponent(returnUrl);
           router.push(decodedUrl);
+        } else if (isAdmin) {
+          // Redirect admin users to dashboard immediately
+          router.push("/Dashboard");
         } else {
           // Redirect to home page after successful login
           router.push("/");

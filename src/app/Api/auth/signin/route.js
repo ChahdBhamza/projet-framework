@@ -1,5 +1,6 @@
 ﻿import { connectDB } from "../../../../../db";
 import Users from "../../../../../models/users";
+import ActivityLog from "../../../../../models/activityLog.js";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -145,6 +146,35 @@ export async function POST(req) {
       process.env.JWT_SECRET, 
       { expiresIn: "30m" }
     );
+    // Log activity for admin users
+    try {
+      const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+      const userEmail = user.email?.toLowerCase()?.trim();
+      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+      
+      if (ADMIN_EMAIL && userEmail === adminEmail) {
+        const ipAddress = req.headers.get('x-forwarded-for') || 
+                         req.headers.get('x-real-ip') || 
+                         'unknown';
+        const userAgent = req.headers.get('user-agent') || 'unknown';
+        
+        await ActivityLog.create({
+          userId: user._id,
+          userEmail: user.email,
+          action: 'login',
+          description: `Admin signed in successfully`,
+          metadata: {
+            loginMethod: 'email_password'
+          },
+          ipAddress,
+          userAgent
+        });
+      }
+    } catch (logError) {
+      console.error('Error logging activity:', logError);
+      // Don't fail the request if logging fails
+    }
+
     // Success response
     const responseData = {
       message: "Signed in successfully",

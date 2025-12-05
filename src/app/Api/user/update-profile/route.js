@@ -1,5 +1,6 @@
 import { connectDB } from '../../../../../db.js';
 import Users from '../../../../../models/users.js';
+import ActivityLog from '../../../../../models/activityLog.js';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '../../utils/auth.js';
 import jwt from 'jsonwebtoken';
@@ -57,6 +58,35 @@ export async function PUT(request) {
             process.env.JWT_SECRET,
             { expiresIn: "30m" }
         );
+
+        // Log activity for admin users
+        try {
+            const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+            const userEmail = authResult.email?.toLowerCase()?.trim();
+            const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+            
+            if (ADMIN_EMAIL && userEmail === adminEmail) {
+                const ipAddress = request.headers.get('x-forwarded-for') || 
+                                 request.headers.get('x-real-ip') || 
+                                 'unknown';
+                const userAgent = request.headers.get('user-agent') || 'unknown';
+                
+                await ActivityLog.create({
+                    userId: authResult.userId,
+                    userEmail: authResult.email,
+                    action: 'profile_update',
+                    description: `Updated profile name to: ${user.name}`,
+                    metadata: {
+                        newName: user.name
+                    },
+                    ipAddress,
+                    userAgent
+                });
+            }
+        } catch (logError) {
+            console.error('Error logging activity:', logError);
+            // Don't fail the request if logging fails
+        }
 
         return NextResponse.json({
             success: true,

@@ -28,6 +28,7 @@ import {
   X,
   Save,
   Scroll,
+  Activity,
 } from "lucide-react";
 
 export default function Profile() {
@@ -35,11 +36,14 @@ export default function Profile() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     profile: true,
     password: false,
     orders: false,
     mealPlans: false,
+    activityLogs: false,
   });
   
   // Name editing state
@@ -74,6 +78,16 @@ export default function Profile() {
     if (user) {
       fetchOrders();
       setEditedName(user?.name || "");
+      
+      // Check if admin and fetch activity logs
+      const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
+      const userEmail = user?.email?.toLowerCase()?.trim();
+      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+      const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
+      
+      if (isAdmin) {
+        fetchActivityLogs();
+      }
     }
   }, [user]);
 
@@ -89,6 +103,21 @@ export default function Profile() {
       setOrders([]);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const fetchActivityLogs = async () => {
+    try {
+      setLoadingActivityLogs(true);
+      const data = await apiJson("/api/admin/activity-logs?limit=50");
+      if (data.success) {
+        setActivityLogs(data.logs || []);
+      }
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      setActivityLogs([]);
+    } finally {
+      setLoadingActivityLogs(false);
     }
   };
 
@@ -242,6 +271,12 @@ export default function Profile() {
   const isOAuthUser = user?.provider === "google" || !user?.email?.includes("@");
   const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   const totalOrders = orders.length;
+  
+  // Check if user is admin
+  const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
+  const userEmail = user?.email?.toLowerCase()?.trim();
+  const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+  const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
 
   if (authLoading) {
     return (
@@ -276,40 +311,42 @@ export default function Profile() {
           <p className="text-gray-600 text-lg">Manage your account and track your activity</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6 text-blue-600" />
+        {/* Stats Cards - Hidden for admins */}
+        {!isAdmin && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Package className="w-6 h-6 text-blue-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-900">{totalOrders}</span>
               </div>
-              <span className="text-3xl font-bold text-gray-900">{totalOrders}</span>
+              <p className="text-gray-600 font-medium">Total Orders</p>
             </div>
-            <p className="text-gray-600 font-medium">Total Orders</p>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-green-600" />
+            
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-green-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-900">{totalSpent.toFixed(0)}</span>
               </div>
-              <span className="text-3xl font-bold text-gray-900">{totalSpent.toFixed(0)}</span>
+              <p className="text-gray-600 font-medium">Total Spent (TND)</p>
             </div>
-            <p className="text-gray-600 font-medium">Total Spent (TND)</p>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
+            
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-900">
+                  {orders.length > 0 ? Math.round(totalSpent / totalOrders) : 0}
+                </span>
               </div>
-              <span className="text-3xl font-bold text-gray-900">
-                {orders.length > 0 ? Math.round(totalSpent / totalOrders) : 0}
-              </span>
+              <p className="text-gray-600 font-medium">Avg. Order Value</p>
             </div>
-            <p className="text-gray-600 font-medium">Avg. Order Value</p>
           </div>
-        </div>
+        )}
 
         {/* Profile Information Section */}
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
@@ -589,7 +626,8 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Orders Section */}
+        {/* Orders Section - Hidden for admins */}
+        {!isAdmin && (
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
           <button
             onClick={() => toggleSection("orders")}
@@ -692,9 +730,11 @@ export default function Profile() {
             </div>
           )}
         </div>
+        )}
 
-        {/* Meal Plans Section */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+        {/* Meal Plans Section - Hidden for admins */}
+        {!isAdmin && (
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
           <button
             onClick={() => toggleSection("mealPlans")}
             className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
@@ -734,7 +774,116 @@ export default function Profile() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
+
+        {/* Activity Logs Section - Only for admins */}
+        {isAdmin && (
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+            <button
+              onClick={() => toggleSection("activityLogs")}
+              className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <Activity className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h2 className="text-xl font-bold text-gray-900">Activity Logs</h2>
+                  <p className="text-sm text-gray-500">
+                    {activityLogs.length > 0 ? `${activityLogs.length} recent activities` : "No activities yet"}
+                  </p>
+                </div>
+              </div>
+              {expandedSections.activityLogs ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+
+            {expandedSections.activityLogs && (
+              <div className="px-6 pb-6 border-t border-gray-100">
+                <div className="pt-6">
+                  {loadingActivityLogs ? (
+                    <div className="text-center py-16">
+                      <div className="w-12 h-12 border-4 border-[#7ab530] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading activity logs...</p>
+                    </div>
+                  ) : activityLogs.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Activity className="w-10 h-10 text-indigo-600" />
+                      </div>
+                      <p className="text-gray-900 font-semibold text-lg mb-2">No activity logs yet</p>
+                      <p className="text-sm text-gray-600">Your activities will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activityLogs.map((log) => (
+                        <div
+                          key={log._id}
+                          className="border-2 border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all bg-gradient-to-br from-gray-50 to-white"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  log.action === 'product_upload' ? 'bg-green-500' :
+                                  log.action === 'login' ? 'bg-blue-500' :
+                                  log.action === 'logout' ? 'bg-gray-500' :
+                                  log.action === 'profile_update' ? 'bg-purple-500' :
+                                  'bg-indigo-500'
+                                }`}></div>
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                  {log.action.replace('_', ' ')}
+                                </span>
+                                <span className="text-xs text-gray-400">•</span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(log.createdAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-gray-900 font-medium text-sm mb-1">
+                                {log.description}
+                              </p>
+                              {log.metadata && Object.keys(log.metadata).length > 0 && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <div className="flex flex-wrap gap-2">
+                                    {log.metadata.fileName && (
+                                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                        File: {log.metadata.fileName}
+                                      </span>
+                                    )}
+                                    {log.metadata.importedCount !== undefined && (
+                                      <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                                        {log.metadata.importedCount} imported
+                                      </span>
+                                    )}
+                                    {log.metadata.errorCount > 0 && (
+                                      <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                                        {log.metadata.errorCount} errors
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Order Detail Modal */}

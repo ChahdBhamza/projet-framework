@@ -9,13 +9,13 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  AlertCircle,
   ArrowLeft,
-  Calendar,
-  User,
   Package,
   Loader2,
-  Download,
+  FileCheck,
+  X,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
 
 export default function AdminProducts() {
@@ -25,9 +25,8 @@ export default function AdminProducts() {
   
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
-  const [recentUploads, setRecentUploads] = useState([]);
-  const [loadingUploads, setLoadingUploads] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const isAdmin = typeof window !== "undefined" && user && process.env.NEXT_PUBLIC_ADMIN_EMAIL 
     ? user.email?.toLowerCase()?.trim() === process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()?.trim()
@@ -45,29 +44,6 @@ export default function AdminProducts() {
     }
   }, [user, loading, router, isAdmin]);
 
-  useEffect(() => {
-    if (user && isAdmin) {
-      fetchUploadHistory();
-    }
-  }, [user, isAdmin]);
-
-  const fetchUploadHistory = async () => {
-    try {
-      setLoadingUploads(true);
-      const { apiJson } = await import("../../Utils/api");
-      const data = await apiJson("/api/admin/uploads?limit=10");
-      setRecentUploads(data.uploads || []);
-    } catch (err) {
-      console.error("Error fetching upload history:", err);
-      setUploadStatus({
-        type: "error",
-        message: "Failed to load upload history"
-      });
-    } finally {
-      setLoadingUploads(false);
-    }
-  };
-
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -75,6 +51,35 @@ export default function AdminProducts() {
         setUploadStatus({
           type: "error",
           message: "Please select a CSV file"
+        });
+        return;
+      }
+      setSelectedFile(file);
+      setUploadStatus(null);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (!file.name.endsWith('.csv')) {
+        setUploadStatus({
+          type: "error",
+          message: "Please drop a CSV file"
         });
         return;
       }
@@ -108,7 +113,6 @@ export default function AdminProducts() {
       const res = await apiRequest("/api/meals/import", {
         method: "POST",
         body: formData
-        // Don't set Content-Type header for FormData - browser will set it with boundary
       });
 
       const data = await res.json();
@@ -129,9 +133,6 @@ export default function AdminProducts() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-
-      // Refresh upload history
-      await fetchUploadHistory();
     } catch (err) {
       setUploadStatus({
         type: "error",
@@ -142,20 +143,17 @@ export default function AdminProducts() {
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+  const clearFile = () => {
+    setSelectedFile(null);
+    setUploadStatus(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#7ab530] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -166,12 +164,15 @@ export default function AdminProducts() {
 
   if (user && !isAdmin) {
     return (
-      <main className="min-h-screen flex flex-col bg-gray-50">
+      <main className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-50">
         <div className="flex-grow flex items-center justify-center px-4">
-          <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-2">Restricted Area</h1>
-            <p className="text-gray-600 mb-4">This page is only accessible to admin users.</p>
-            <Link href="/Dashboard" className="inline-block mt-4 px-6 py-2 bg-[#7ab530] text-white rounded-lg hover:bg-[#6aa02b] transition">
+          <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full text-center border border-gray-100">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Restricted Area</h1>
+            <p className="text-gray-600 mb-6">This page is only accessible to admin users.</p>
+            <Link href="/Dashboard" className="inline-block px-6 py-3 bg-[#7ab530] text-white rounded-xl font-semibold hover:bg-[#6aa02b] transition shadow-md hover:shadow-lg">
               Go to Dashboard
             </Link>
           </div>
@@ -181,227 +182,189 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Simple Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link 
               href="/Dashboard"
               className="p-2 rounded-lg hover:bg-gray-100 transition"
+              title="Back to Dashboard"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Product Management</h1>
-              <p className="text-sm text-gray-500">Upload and manage meal products</p>
+              <h1 className="text-xl font-bold text-gray-900">Add Products</h1>
+              <p className="text-sm text-gray-500">Upload CSV file to import meals</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Upload Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-[#7ab530]" />
-              Upload CSV File
-            </h2>
-
-            <div className="space-y-4">
-              {/* File Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select CSV File
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="file-upload"
-                  />
+      <main className="max-w-4xl mx-auto p-4 lg:p-8">
+        {/* Upload Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="p-8">
+            {/* File Drop Zone */}
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-xl p-12 transition-all ${
+                dragActive
+                  ? "border-[#7ab530] bg-green-50"
+                  : selectedFile
+                  ? "border-[#7ab530] bg-green-50/30"
+                  : "border-gray-300 bg-gray-50/50 hover:border-gray-400"
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="file-upload"
+              />
+              
+              {selectedFile ? (
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-[#7ab530] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileCheck className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <FileText className="w-5 h-5 text-[#7ab530]" />
+                    <span className="font-semibold text-gray-900 text-lg">{selectedFile.name}</span>
+                    <button
+                      onClick={clearFile}
+                      className="p-1.5 rounded-full hover:bg-gray-200 transition ml-2"
+                      title="Remove file"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {(selectedFile.size / 1024).toFixed(2)} KB
+                  </p>
                   <label
                     htmlFor="file-upload"
-                    className="flex-1 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#7ab530] transition text-center"
+                    className="mt-4 inline-block text-sm text-[#7ab530] hover:text-[#6aa02b] font-medium cursor-pointer underline"
                   >
-                    {selectedFile ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <FileText className="w-5 h-5 text-[#7ab530]" />
-                        <span className="text-sm font-medium text-gray-900">{selectedFile.name}</span>
-                      </div>
-                    ) : (
-                      <div className="text-gray-500">
-                        <Upload className="w-6 h-6 mx-auto mb-2" />
-                        <p className="text-sm">Click to select CSV file</p>
-                      </div>
-                    )}
+                    Choose different file
                   </label>
                 </div>
-              </div>
+              ) : (
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                >
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Upload className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <p className="text-gray-900 font-semibold text-lg mb-2">
+                    Drop your CSV file here or click to browse
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    CSV files only
+                  </p>
+                </label>
+              )}
+            </div>
 
-              {/* Upload Button */}
-              <button
-                onClick={handleUpload}
-                disabled={!selectedFile || uploading}
-                className="w-full px-6 py-3 bg-[#7ab530] text-white rounded-lg hover:bg-[#6aa02b] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-5 h-5" />
-                    Upload & Import
-                  </>
-                )}
-              </button>
+            {/* Upload Button */}
+            <button
+              onClick={handleUpload}
+              disabled={!selectedFile || uploading}
+              className="w-full mt-6 px-6 py-4 bg-[#7ab530] text-white rounded-xl hover:bg-[#6aa02b] transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Upload & Import
+                </>
+              )}
+            </button>
 
-              {/* Upload Status */}
-              {uploadStatus && (
-                <div className={`p-4 rounded-lg ${
-                  uploadStatus.type === "success" 
-                    ? "bg-green-50 border border-green-200" 
-                    : "bg-red-50 border border-red-200"
-                }`}>
-                  <div className="flex items-start gap-3">
-                    {uploadStatus.type === "success" ? (
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    )}
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium ${
-                        uploadStatus.type === "success" ? "text-green-800" : "text-red-800"
-                      }`}>
-                        {uploadStatus.message}
-                      </p>
-                      {uploadStatus.details && (
-                        <div className="mt-2 text-xs text-gray-600">
-                          <p>Breakfast: {uploadStatus.details.breakfast || 0}</p>
-                          <p>Lunch: {uploadStatus.details.lunch || 0}</p>
-                          <p>Dinner: {uploadStatus.details.dinner || 0}</p>
-                          <p>Snack: {uploadStatus.details.snack || 0}</p>
-                          <p className="font-medium mt-1">Total: {uploadStatus.details.total || 0} meals</p>
+            {/* Upload Status */}
+            {uploadStatus && (
+              <div className={`mt-6 rounded-xl p-5 border-2 ${
+                uploadStatus.type === "success" 
+                  ? "bg-green-50 border-green-200" 
+                  : "bg-red-50 border-red-200"
+              }`}>
+                <div className="flex items-start gap-3">
+                  {uploadStatus.type === "success" ? (
+                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className={`font-semibold mb-3 ${
+                      uploadStatus.type === "success" ? "text-green-900" : "text-red-900"
+                    }`}>
+                      {uploadStatus.message}
+                    </p>
+                    {uploadStatus.details && (
+                      <div className="bg-white rounded-lg p-4 mb-3 border border-gray-200">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">Import Summary:</p>
+                        <div className="grid grid-cols-4 gap-3">
+                          {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => (
+                            <div key={type} className="text-center p-3 bg-gray-50 rounded-lg">
+                              <p className="text-xs text-gray-600 capitalize mb-1">{type}</p>
+                              <p className="text-xl font-bold text-[#7ab530]">
+                                {uploadStatus.details[type] || 0}
+                              </p>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                      {uploadStatus.errors && uploadStatus.errors.length > 0 && (
-                        <div className="mt-2 text-xs text-red-600">
-                          <p className="font-medium">Errors ({uploadStatus.errors.length}):</p>
-                          <ul className="list-disc list-inside mt-1">
-                            {uploadStatus.errors.slice(0, 5).map((error, idx) => (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-base font-bold text-gray-900 text-center">
+                            Total: {uploadStatus.details.total || 0} meals imported
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {uploadStatus.errors && uploadStatus.errors.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-red-200">
+                        <p className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4" />
+                          Errors ({uploadStatus.errors.length}):
+                        </p>
+                        <div className="max-h-40 overflow-y-auto">
+                          <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
+                            {uploadStatus.errors.slice(0, 10).map((error, idx) => (
                               <li key={idx}>{error}</li>
                             ))}
-                            {uploadStatus.errors.length > 5 && (
-                              <li>... and {uploadStatus.errors.length - 5} more</li>
+                            {uploadStatus.errors.length > 10 && (
+                              <li className="font-semibold">
+                                ... and {uploadStatus.errors.length - 10} more errors
+                              </li>
                             )}
                           </ul>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Recent Uploads */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#7ab530]" />
-              Recent Uploads
-            </h2>
-
-            {loadingUploads ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-[#7ab530]" />
-              </div>
-            ) : recentUploads.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No uploads yet</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentUploads.map((upload) => (
-                  <div
-                    key={upload.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-[#7ab530] transition"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Package className="w-4 h-4 text-gray-400" />
-                          <h3 className="font-medium text-gray-900 truncate">{upload.fileName}</h3>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            <span>{upload.uploadedBy}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDate(upload.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        upload.errorCount > 0 
-                          ? "bg-yellow-100 text-yellow-800" 
-                          : "bg-green-100 text-green-800"
-                      }`}>
-                        {upload.importedCount} imported
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 bg-gray-50 rounded">
-                        <p className="text-gray-600">Total Rows</p>
-                        <p className="font-semibold text-gray-900">{upload.totalRows}</p>
-                      </div>
-                      <div className="p-2 bg-gray-50 rounded">
-                        <p className="text-gray-600">Errors</p>
-                        <p className="font-semibold text-red-600">{upload.errorCount}</p>
-                      </div>
-                    </div>
-
-                    {upload.summary && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs font-medium text-gray-700 mb-2">Summary:</p>
-                        <div className="grid grid-cols-4 gap-2 text-xs">
-                          <div>
-                            <p className="text-gray-600">Breakfast</p>
-                            <p className="font-semibold">{upload.summary.breakfast || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Lunch</p>
-                            <p className="font-semibold">{upload.summary.lunch || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Dinner</p>
-                            <p className="font-semibold">{upload.summary.dinner || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Snack</p>
-                            <p className="font-semibold">{upload.summary.snack || 0}</p>
-                          </div>
-                        </div>
                       </div>
                     )}
                   </div>
-                ))}
+                </div>
               </div>
             )}
+
+            {/* Simple Info */}
+            <div className="mt-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>CSV Format:</strong> mealName, mealType (Breakfast/Lunch/Dinner/Snack), calories, price, protein, carbs, fats, fiber, sugar
+              </p>
+            </div>
           </div>
         </div>
       </main>
     </div>
   );
 }
-
