@@ -29,7 +29,8 @@ export async function GET(request) {
 
         // Filter by tags
         if (tags && tags !== 'All Categories') {
-            query.tags = { $in: [tags.toLowerCase()] };
+            const tagsArray = tags.split(',').map(tag => tag.trim().toLowerCase());
+            query.tags = { $in: tagsArray };
         }
 
         // Filter by calories range

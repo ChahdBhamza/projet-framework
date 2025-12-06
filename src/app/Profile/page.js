@@ -45,18 +45,18 @@ export default function Profile() {
     mealPlans: false,
     activityLogs: false,
   });
-  
+
   // Name editing state
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [nameError, setNameError] = useState("");
   const [nameSuccess, setNameSuccess] = useState("");
   const [updatingName, setUpdatingName] = useState(false);
-  
+
   // Order detail modal state
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  
+
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -73,23 +73,6 @@ export default function Profile() {
       router.push("/Signin");
     }
   }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-      setEditedName(user?.name || "");
-      
-      // Check if admin and fetch activity logs
-      const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
-      const userEmail = user?.email?.toLowerCase()?.trim();
-      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
-      const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
-      
-      if (isAdmin) {
-        fetchActivityLogs();
-      }
-    }
-  }, [user, fetchOrders, fetchActivityLogs]);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -120,6 +103,23 @@ export default function Profile() {
       setLoadingActivityLogs(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+      setEditedName(user?.name || "");
+
+      // Check if admin and fetch activity logs
+      const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
+      const userEmail = user?.email?.toLowerCase()?.trim();
+      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+      const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
+
+      if (isAdmin) {
+        fetchActivityLogs();
+      }
+    }
+  }, [user, fetchOrders, fetchActivityLogs]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);
@@ -166,17 +166,17 @@ export default function Profile() {
       if (data.success) {
         setNameSuccess("Name updated successfully!");
         setIsEditingName(false);
-        
+
         // Update token in localStorage if a new token is provided
         if (data.token && typeof window !== "undefined") {
           localStorage.setItem("token", data.token);
         }
-        
+
         // Update user context with new data
         if (updateUser) {
           updateUser({ ...user, name: data.user.name });
         }
-        
+
         setTimeout(() => setNameSuccess(""), 3000);
       } else {
         setNameError(data.error || "Failed to update name");
@@ -271,7 +271,7 @@ export default function Profile() {
   const isOAuthUser = user?.provider === "google" || !user?.email?.includes("@");
   const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   const totalOrders = orders.length;
-  
+
   // Check if user is admin
   const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
   const userEmail = user?.email?.toLowerCase()?.trim();
@@ -323,7 +323,7 @@ export default function Profile() {
               </div>
               <p className="text-gray-600 font-medium">Total Orders</p>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -333,7 +333,7 @@ export default function Profile() {
               </div>
               <p className="text-gray-600 font-medium">Total Spent (TND)</p>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -628,152 +628,152 @@ export default function Profile() {
 
         {/* Orders Section - Hidden for admins */}
         {!isAdmin && (
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
-          <button
-            onClick={() => toggleSection("orders")}
-            className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+            <button
+              onClick={() => toggleSection("orders")}
+              className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h2 className="text-xl font-bold text-gray-900">Order History</h2>
+                  <p className="text-sm text-gray-500">
+                    {totalOrders > 0 ? `${totalOrders} order${totalOrders > 1 ? "s" : ""} found` : "No orders yet"}
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <h2 className="text-xl font-bold text-gray-900">Order History</h2>
-                <p className="text-sm text-gray-500">
-                  {totalOrders > 0 ? `${totalOrders} order${totalOrders > 1 ? "s" : ""} found` : "No orders yet"}
-                </p>
-              </div>
-            </div>
-            {expandedSections.orders ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            )}
-          </button>
+              {expandedSections.orders ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
 
-          {expandedSections.orders && (
-            <div className="px-6 pb-6 border-t border-gray-100">
-              <div className="pt-6">
-                {loadingOrders ? (
-                  <div className="text-center py-16">
-                    <div className="w-12 h-12 border-4 border-[#7ab530] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading orders...</p>
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <ShoppingBag className="w-10 h-10 text-gray-400" />
+            {expandedSections.orders && (
+              <div className="px-6 pb-6 border-t border-gray-100">
+                <div className="pt-6">
+                  {loadingOrders ? (
+                    <div className="text-center py-16">
+                      <div className="w-12 h-12 border-4 border-[#7ab530] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading orders...</p>
                     </div>
-                    <p className="text-gray-900 font-semibold text-lg mb-2">No orders yet</p>
-                    <p className="text-sm text-gray-600 mb-6">Start shopping to see your orders here</p>
-                    <a
-                      href="/Products"
-                      className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                      Browse Products
-                    </a>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div
-                        key={order._id}
-                        className="border-2 border-gray-200 rounded-2xl p-6 hover:border-[#7ab530] hover:shadow-lg transition-all bg-gradient-to-br from-gray-50 to-white cursor-pointer"
-                        onClick={() => openOrderModal(order)}
+                  ) : orders.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <ShoppingBag className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <p className="text-gray-900 font-semibold text-lg mb-2">No orders yet</p>
+                      <p className="text-sm text-gray-600 mb-6">Start shopping to see your orders here</p>
+                      <a
+                        href="/Products"
+                        className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
                       >
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 bg-[#7ab530] rounded-xl flex items-center justify-center">
-                                <Package className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="font-bold text-gray-900 text-lg">
-                                  Order #{order._id.slice(-8).toUpperCase()}
-                                </h3>
-                                <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-4 h-4" />
-                                    {formatDate(order.orderDate)}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                    <span className="capitalize font-medium">{order.paymentStatus}</span>
+                        Browse Products
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div
+                          key={order._id}
+                          className="border-2 border-gray-200 rounded-2xl p-6 hover:border-[#7ab530] hover:shadow-lg transition-all bg-gradient-to-br from-gray-50 to-white cursor-pointer"
+                          onClick={() => openOrderModal(order)}
+                        >
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 bg-[#7ab530] rounded-xl flex items-center justify-center">
+                                  <Package className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-gray-900 text-lg">
+                                    Order #{order._id.slice(-8).toUpperCase()}
+                                  </h3>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-4 h-4" />
+                                      {formatDate(order.orderDate)}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                      <span className="capitalize font-medium">{order.paymentStatus}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="text-left md:text-right">
-                            <p className="text-2xl font-bold text-[#7ab530] flex items-center gap-1 md:justify-end">
-                              <DollarSign className="w-6 h-6" />
-                              {order.totalAmount.toFixed(2)} TND
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">{order.items.length} item(s)</p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openOrderModal(order);
-                              }}
-                              className="mt-3 flex items-center gap-2 text-[#7ab530] hover:text-[#6aa02b] font-semibold text-sm transition"
-                            >
-                              <Scroll className="w-4 h-4" />
-                              View Details
-                            </button>
+                            <div className="text-left md:text-right">
+                              <p className="text-2xl font-bold text-[#7ab530] flex items-center gap-1 md:justify-end">
+                                <DollarSign className="w-6 h-6" />
+                                {order.totalAmount.toFixed(2)} TND
+                              </p>
+                              <p className="text-sm text-gray-500 mt-1">{order.items.length} item(s)</p>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openOrderModal(order);
+                                }}
+                                className="mt-3 flex items-center gap-2 text-[#7ab530] hover:text-[#6aa02b] font-semibold text-sm transition"
+                              >
+                                <Scroll className="w-4 h-4" />
+                                View Details
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         )}
 
         {/* Meal Plans Section - Hidden for admins */}
         {!isAdmin && (
           <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
-          <button
-            onClick={() => toggleSection("mealPlans")}
-            className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-left">
-                <h2 className="text-xl font-bold text-gray-900">Meal Plans</h2>
-                <p className="text-sm text-gray-500">Create and manage your personalized meal plans</p>
-              </div>
-            </div>
-            {expandedSections.mealPlans ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            )}
-          </button>
-
-          {expandedSections.mealPlans && (
-            <div className="px-6 pb-6 border-t border-gray-100">
-              <div className="pt-6">
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-10 h-10 text-purple-600" />
-                  </div>
-                  <p className="text-gray-900 font-semibold text-lg mb-2">No meal plans yet</p>
-                  <p className="text-sm text-gray-600 mb-6">Create a personalized meal plan to get started on your health journey</p>
-                  <a
-                    href="/MealPlans"
-                    className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
-                  >
-                    Create Meal Plan
-                  </a>
+            <button
+              onClick={() => toggleSection("mealPlans")}
+              className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h2 className="text-xl font-bold text-gray-900">Meal Plans</h2>
+                  <p className="text-sm text-gray-500">Create and manage your personalized meal plans</p>
                 </div>
               </div>
-            </div>
-          )}
+              {expandedSections.mealPlans ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+
+            {expandedSections.mealPlans && (
+              <div className="px-6 pb-6 border-t border-gray-100">
+                <div className="pt-6">
+                  <div className="text-center py-16">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <p className="text-gray-900 font-semibold text-lg mb-2">No meal plans yet</p>
+                    <p className="text-sm text-gray-600 mb-6">Create a personalized meal plan to get started on your health journey</p>
+                    <a
+                      href="/MealPlans"
+                      className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
+                    >
+                      Create Meal Plan
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -828,13 +828,12 @@ export default function Profile() {
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  log.action === 'product_upload' ? 'bg-green-500' :
-                                  log.action === 'login' ? 'bg-blue-500' :
-                                  log.action === 'logout' ? 'bg-gray-500' :
-                                  log.action === 'profile_update' ? 'bg-purple-500' :
-                                  'bg-indigo-500'
-                                }`}></div>
+                                <div className={`w-2 h-2 rounded-full ${log.action === 'product_upload' ? 'bg-green-500' :
+                                    log.action === 'login' ? 'bg-blue-500' :
+                                      log.action === 'logout' ? 'bg-gray-500' :
+                                        log.action === 'profile_update' ? 'bg-purple-500' :
+                                          'bg-indigo-500'
+                                  }`}></div>
                                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                   {log.action.replace('_', ' ')}
                                 </span>

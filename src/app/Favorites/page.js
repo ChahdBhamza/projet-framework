@@ -111,11 +111,11 @@ export default function Favorites() {
             </div>
             
             <div className="flex items-center justify-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-[#7ab530]" />
-              <h1 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#7ab530] via-[#8bc63e] to-[#97d45b]">
+           
+              <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#7ab530] via-[#8bc63e] to-[#97d45b]">
                 My Favorite Meals
               </h1>
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+          
             </div>
             <div className="flex items-center justify-center gap-2 mb-2">
               <p className="text-gray-600 text-base md:text-lg">

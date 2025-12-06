@@ -9,11 +9,11 @@ import { AddFavorites, GetFavorites } from "../Utils/favorites";
 import { AddPurchase, GetPurchasesCount } from "../Utils/purchases";
 
 import { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Heart, Star, Filter, Search, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, Heart, Star, Filter, Search, Sparkles, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import Slider from "../components/Slider";
 
 // Product Card Component with image error handling
-function ProductCard({ meal, onAddToCart, onToggleFavorite, isFavorite }) {
+function ProductCard({ meal, onAddToCart, onToggleFavorite, isFavorite, selectedCategories = [] }) {
     const [imageError, setImageError] = useState(false);
 
     return (
@@ -74,12 +74,32 @@ function ProductCard({ meal, onAddToCart, onToggleFavorite, isFavorite }) {
                 </Link>
 
                 {/* Tags */}
-                <div className="mb-2 flex items-center gap-1 overflow-x-auto scrollbar-hide">
-                    {meal.tags?.slice(0, 2).map((tag, i) => (
-                        <span key={i} className="px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md capitalize whitespace-nowrap border border-green-200">
-                            {tag}
-                        </span>
-                    ))}
+                <div className="mb-2 flex flex-wrap gap-1">
+                    {(() => {
+                        // Sort tags to show selected ones first
+                        const sortedTags = [...(meal.tags || [])].sort((a, b) => {
+                            const aSelected = selectedCategories.includes(a);
+                            const bSelected = selectedCategories.includes(b);
+                            if (aSelected && !bSelected) return -1;
+                            if (!aSelected && bSelected) return 1;
+                            return 0;
+                        });
+
+                        return (
+                            <>
+                                {sortedTags.slice(0, 2).map((tag, i) => (
+                                    <span key={i} className={`px-2 py-1 text-xs font-medium rounded-md capitalize whitespace-nowrap border ${selectedCategories.includes(tag) ? 'bg-green-100 text-green-800 border-green-300' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                                        {tag}
+                                    </span>
+                                ))}
+                                {sortedTags.length > 2 && (
+                                    <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-md border border-gray-200">
+                                        +{sortedTags.length - 2}
+                                    </span>
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
 
                 {/* Calories Badge */}
@@ -113,7 +133,8 @@ export default function Products() {
     const [priceRange, setPriceRange] = useState({ min: 15, max: 90 });
     const [caloriesRange, setCaloriesRange] = useState({ min: 220, max: 680 });
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("All Categories");
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [sortBy, setSortBy] = useState("default");
     const [meals, setMeals] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -146,8 +167,8 @@ export default function Products() {
                 if (searchQuery) {
                     params.append('search', searchQuery);
                 }
-                if (selectedCategory !== 'All Categories') {
-                    params.append('tags', selectedCategory);
+                if (selectedCategories.length > 0) {
+                    params.append('tags', selectedCategories.join(','));
                 }
                 // Calories filters (min/max)
                 if (caloriesRangeDebounced.min > 220) {
@@ -183,7 +204,7 @@ export default function Products() {
             }
         };
         fetchMeals();
-    }, [searchQuery, selectedCategory, caloriesRangeDebounced.min, caloriesRangeDebounced.max, priceRangeDebounced.min, priceRangeDebounced.max]);
+    }, [searchQuery, selectedCategories, caloriesRangeDebounced.min, caloriesRangeDebounced.max, priceRangeDebounced.min, priceRangeDebounced.max]);
 
     const handleAddToCart = async (meal) => {
         try {
@@ -272,7 +293,7 @@ export default function Products() {
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, selectedCategory, caloriesRangeDebounced, priceRangeDebounced]);
+    }, [searchQuery, selectedCategories, caloriesRangeDebounced, priceRangeDebounced]);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(1, prev - 1));
@@ -391,18 +412,72 @@ export default function Products() {
                             {/* Category */}
                             <div>
                                 <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Category</h3>
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="w-full p-3 border-2 border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#7ab530] focus:border-[#7ab530] transition text-sm font-medium cursor-pointer"
-                                >
-                                    <option>All Categories</option>
-                                    <option>gluten-free</option>
-                                    <option>vegan</option>
-                                    <option>high-protein</option>
-                                    <option>low-fat</option>
-                                    <option>low-carb</option>
-                                </select>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                                        className="w-full p-3 pr-10 border-2 border-gray-200 rounded-xl bg-white outline-none focus:border-[#7ab530] text-left transition text-sm font-medium cursor-pointer flex items-center justify-between"
+                                    >
+                                        <span className={selectedCategories.length === 0 ? "text-gray-500" : "text-gray-900"}>
+                                            {selectedCategories.length === 0
+                                                ? "Select Categories"
+                                                : `${selectedCategories.length} Selected`}
+                                        </span>
+                                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`} />
+                                    </button>
+
+                                    {isCategoryOpen && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-2 max-h-60 overflow-y-auto">
+                                            {["gluten-free", "vegan", "high-protein", "low-fat", "low-carb"].map((category) => (
+                                                <label
+                                                    key={category}
+                                                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                                                >
+                                                    <div className="relative flex items-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedCategories.includes(category)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedCategories([...selectedCategories, category]);
+                                                                } else {
+                                                                    setSelectedCategories(selectedCategories.filter(c => c !== category));
+                                                                }
+                                                            }}
+                                                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-all checked:border-[#7ab530] checked:bg-[#7ab530]"
+                                                        />
+                                                        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100">
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                className="h-3.5 w-3.5"
+                                                                viewBox="0 0 20 20"
+                                                                fill="currentColor"
+                                                                stroke="currentColor"
+                                                                strokeWidth="1"
+                                                            >
+                                                                <path
+                                                                    fillRule="evenodd"
+                                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                                    clipRule="evenodd"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700 capitalize">
+                                                        {category}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Backdrop to close dropdown when clicking outside */}
+                                    {isCategoryOpen && (
+                                        <div
+                                            className="fixed inset-0 z-40 bg-transparent"
+                                            onClick={() => setIsCategoryOpen(false)}
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             {/* Calories Range */}
@@ -480,7 +555,7 @@ export default function Products() {
                                     <button
                                         onClick={() => {
                                             setSearchQuery("");
-                                            setSelectedCategory("All Categories");
+                                            setSelectedCategories([]);
                                             setCaloriesRange({ min: 220, max: 680 });
                                             setCaloriesRangeDebounced({ min: 220, max: 680 });
                                             setPriceRange({ min: 15, max: 90 });
@@ -502,6 +577,7 @@ export default function Products() {
                                             onAddToCart={handleAddToCart}
                                             onToggleFavorite={handleToggleFavorite}
                                             isFavorite={favorites.some(f => f.mealId === meal._id || f._id === meal._id)}
+                                            selectedCategories={selectedCategories}
                                         />
                                     ))}
                                 </div>

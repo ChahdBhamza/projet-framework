@@ -8,6 +8,88 @@ import { GetPurchases, RemovePurchase, UpdatePurchaseQuantity, ClearPurchases } 
 import { useState, useEffect } from "react";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, CreditCard, X } from "lucide-react";
 
+function CartItem({ purchase, onRemove, onUpdateQuantity }) {
+    const [imageError, setImageError] = useState(false);
+
+    return (
+        <div className="p-6 hover:bg-gray-50 transition-colors">
+            <div className="flex gap-4">
+                {/* Product Image */}
+                <Link href={`/Products/${purchase.id}`} className="flex-shrink-0">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-br from-green-50 to-emerald-100 relative">
+                        {!imageError ? (
+                            <Image
+                                src={`/${purchase.mealName}.jpg`}
+                                alt={purchase.mealName || purchase.name}
+                                fill
+                                className="object-cover"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-green-50">
+                                <span className="text-3xl">🥗</span>
+                            </div>
+                        )}
+                    </div>
+                </Link>
+
+                {/* Product Details */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <Link href={`/Products/${purchase.id}`}>
+                                <h3 className="text-lg font-semibold text-gray-900 hover:text-[#7ab530] transition-colors mb-1">
+                                    {purchase.mealName || purchase.name}
+                                </h3>
+                            </Link>
+                            <p className="text-sm text-gray-500 mb-2">{purchase.calories} kcal</p>
+                            <p className="text-lg font-bold text-[#7ab530]">
+                                {((purchase.price || 15) * purchase.quantity).toFixed(2)} TND
+                            </p>
+                            {purchase.quantity > 1 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {(purchase.price || 15).toFixed(2)} TND × {purchase.quantity}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Remove Button */}
+                        <button
+                            onClick={() => onRemove(purchase.id)}
+                            className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            title="Remove item"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-4 mt-4">
+                        <span className="text-sm font-medium text-gray-700">Quantity:</span>
+                        <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
+                            <button
+                                onClick={() => onUpdateQuantity(purchase.id, purchase.quantity - 1)}
+                                className="p-2 hover:bg-gray-100 transition-colors rounded-l-lg"
+                            >
+                                <Minus className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <span className="px-4 py-2 text-base font-semibold text-gray-900 min-w-[3rem] text-center">
+                                {purchase.quantity}
+                            </span>
+                            <button
+                                onClick={() => onUpdateQuantity(purchase.id, purchase.quantity + 1)}
+                                className="p-2 hover:bg-gray-100 transition-colors rounded-r-lg"
+                            >
+                                <Plus className="w-4 h-4 text-gray-600" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Purchases() {
     const [purchases, setPurchases] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
@@ -21,16 +103,16 @@ export default function Purchases() {
 
     useEffect(() => {
         loadPurchases();
-        
+
         // Listen for cart changes (localStorage events from other tabs)
         const handleStorageChange = (e) => {
             if (e.key === 'cart') {
                 loadPurchases();
             }
         };
-        
+
         window.addEventListener("storage", handleStorageChange);
-        
+
         return () => {
             window.removeEventListener("storage", handleStorageChange);
         };
@@ -113,70 +195,12 @@ export default function Purchases() {
                                 </div>
                                 <div className="divide-y divide-gray-200">
                                     {purchases.map((purchase) => (
-                                        <div key={purchase.id} className="p-6 hover:bg-gray-50 transition-colors">
-                                            <div className="flex gap-4">
-                                                {/* Product Image */}
-                                                {/* Product Image Placeholder */}
-                                                <Link href={`/Products/${purchase.id}`} className="flex-shrink-0">
-                                                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-                                                        <span className="text-3xl">🥗</span>
-                                                    </div>
-                                                </Link>
-
-                                                {/* Product Details */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div className="flex-1">
-                                                            <Link href={`/Products/${purchase.id}`}>
-                                                                <h3 className="text-lg font-semibold text-gray-900 hover:text-[#7ab530] transition-colors mb-1">
-                                                                    {purchase.mealName || purchase.name}
-                                                                </h3>
-                                                            </Link>
-                                                            <p className="text-sm text-gray-500 mb-2">{purchase.calories} kcal</p>
-                                                            <p className="text-lg font-bold text-[#7ab530]">
-                                                                {((purchase.price || 15) * purchase.quantity).toFixed(2)} TND
-                                                            </p>
-                                                            {purchase.quantity > 1 && (
-                                                                <p className="text-xs text-gray-500 mt-1">
-                                                                    {(purchase.price || 15).toFixed(2)} TND × {purchase.quantity}
-                                                                </p>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Remove Button */}
-                                                        <button
-                                                            onClick={() => handleRemovePurchase(purchase.id)}
-                                                            className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                            title="Remove item"
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Quantity Controls */}
-                                                    <div className="flex items-center gap-4 mt-4">
-                                                        <span className="text-sm font-medium text-gray-700">Quantity:</span>
-                                                        <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
-                                                            <button
-                                                                onClick={() => handleUpdateQuantity(purchase.id, purchase.quantity - 1)}
-                                                                className="p-2 hover:bg-gray-100 transition-colors rounded-l-lg"
-                                                            >
-                                                                <Minus className="w-4 h-4 text-gray-600" />
-                                                            </button>
-                                                            <span className="px-4 py-2 text-base font-semibold text-gray-900 min-w-[3rem] text-center">
-                                                                {purchase.quantity}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => handleUpdateQuantity(purchase.id, purchase.quantity + 1)}
-                                                                className="p-2 hover:bg-gray-100 transition-colors rounded-r-lg"
-                                                            >
-                                                                <Plus className="w-4 h-4 text-gray-600" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <CartItem
+                                            key={purchase.id}
+                                            purchase={purchase}
+                                            onRemove={handleRemovePurchase}
+                                            onUpdateQuantity={handleUpdateQuantity}
+                                        />
                                     ))}
                                 </div>
                             </div>
