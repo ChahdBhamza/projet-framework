@@ -69,11 +69,7 @@ export default function Footer() {
                   About Us
                 </a>
               </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Contact Us
-                </a>
-              </li>
+              
             </ul>
           </div>
 
@@ -82,22 +78,18 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4 text-[#7ab530]">Services</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                <a href="MealPlans" className="text-gray-400 hover:text-[#7ab530] transition-colors">
                   Meal Planning
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Nutrition Tracking
+                <a href="Aboutus" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                  Nutrition informations
                 </a>
               </li>
+             
               <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
-                  Diet Consultation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#7ab530] transition-colors">
+                <a href="/Products" className="text-gray-400 hover:text-[#7ab530] transition-colors">
                   Meals Purchase
                 </a>
               </li>

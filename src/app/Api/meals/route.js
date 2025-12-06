@@ -8,9 +8,11 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const mealType = searchParams.get('mealType');
-        const calories = searchParams.get('calories');
+        const caloriesMin = searchParams.get('caloriesMin');
+        const caloriesMax = searchParams.get('caloriesMax');
+        const priceMin = searchParams.get('priceMin');
+        const priceMax = searchParams.get('priceMax');
         const tags = searchParams.get('tags');
-        const price = searchParams.get('price');
         const search = searchParams.get('search');
 
         let query = {};
@@ -30,23 +32,18 @@ export async function GET(request) {
             query.tags = { $in: [tags.toLowerCase()] };
         }
 
-        // Filter by calories
-        if (calories && calories !== 'Any Calories') {
-            if (calories === '< 400 kcal') {
-                query.calories = { $lt: 400 };
-            } else if (calories === '400 - 500 kcal') {
-                query.calories = { $gte: 400, $lte: 500 };
-            } else if (calories === '> 500 kcal') {
-                query.calories = { $gt: 500 };
-            }
+        // Filter by calories range
+        if (caloriesMin || caloriesMax) {
+            query.calories = {};
+            if (caloriesMin) query.calories.$gte = parseInt(caloriesMin);
+            if (caloriesMax) query.calories.$lte = parseInt(caloriesMax);
         }
 
-        // Filter by price
-        if (price) {
-            const maxPrice = parseInt(price);
-            if (!isNaN(maxPrice)) {
-                query.price = { $lte: maxPrice };
-            }
+        // Filter by price range
+        if (priceMin || priceMax) {
+            query.price = {};
+            if (priceMin) query.price.$gte = parseInt(priceMin);
+            if (priceMax) query.price.$lte = parseInt(priceMax);
         }
 
         const allMeals = await meals.find(query).lean();

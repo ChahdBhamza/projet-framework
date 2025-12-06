@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GetFavorites, AddFavorites, RemoveFavorites } from "../../Utils/favorites";
@@ -12,9 +12,7 @@ import Footer from "../../Footer";
 
 export default function ProductDetail() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const id = params.id;
-  const returnPage = searchParams.get('page');
   const [isFavorite, setIsFavorite] = useState(false);
   const [meal, setMeal] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -129,7 +127,7 @@ export default function ProductDetail() {
         <Header />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
           <p className="text-gray-500 text-lg">Meal not found.</p>
-          <Link href={returnPage ? `/Products?page=${returnPage}` : "/Products"}>
+          <Link href="/Products">
             <button className="mt-4 text-[#7ab530] hover:underline">Back to Products</button>
           </Link>
         </div>
@@ -145,7 +143,7 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href={returnPage ? `/Products?page=${returnPage}` : "/Products"}>
+          <Link href="/Products">
             <button className="flex items-center gap-2 text-gray-600 hover:text-[#7ab530] transition-colors font-medium">
               <ArrowLeft className="w-4 h-4" />
               Back to Products

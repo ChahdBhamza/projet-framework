@@ -68,6 +68,29 @@ export default function Profile() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/Signin");
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+      setEditedName(user?.name || "");
+      
+      // Check if admin and fetch activity logs
+      const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
+      const userEmail = user?.email?.toLowerCase()?.trim();
+      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+      const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
+      
+      if (isAdmin) {
+        fetchActivityLogs();
+      }
+    }
+  }, [user, fetchOrders, fetchActivityLogs]);
+
   const fetchOrders = useCallback(async () => {
     try {
       setLoadingOrders(true);
@@ -97,29 +120,6 @@ export default function Profile() {
       setLoadingActivityLogs(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/Signin");
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-      setEditedName(user?.name || "");
-      
-      // Check if admin and fetch activity logs
-      const ADMIN_EMAIL = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_ADMIN_EMAIL : undefined;
-      const userEmail = user?.email?.toLowerCase()?.trim();
-      const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
-      const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
-      
-      if (isAdmin) {
-        fetchActivityLogs();
-      }
-    }
-  }, [user, fetchOrders, fetchActivityLogs]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);
