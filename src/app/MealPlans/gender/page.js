@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../Header";
-import Footer from "../Footer";
+import Header from "../../Header";
+import Footer from "../../Footer";
 import {
   ArrowRight,
-  Scale
+  User
 } from "lucide-react";
 
-export default function MealPlansWeight() {
+export default function MealPlansGender() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     weight: "",
@@ -47,18 +47,22 @@ export default function MealPlansWeight() {
   const handleInputChange = (value) => {
     setFormData((prev) => ({
       ...prev,
-      weight: value,
+      gender: value,
     }));
   };
 
   const handleNext = () => {
-    if (formData.weight) {
-      router.push("/MealPlans/gender");
+    if (formData.gender) {
+      router.push("/MealPlans/height");
     }
   };
 
-  const totalSteps = 8;
-  const currentStep = 1;
+  const handlePrevious = () => {
+    router.push("/MealPlans");
+  };
+
+  const totalSteps = 7;
+  const currentStep = 2;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
@@ -95,34 +99,54 @@ export default function MealPlansWeight() {
             Personal Information
           </h2>
           <h3 className="text-center text-2xl md:text-3xl font-semibold text-gray-900 mb-8">
-            What's your weight?
+            What's your gender?
           </h3>
 
           <div className="mb-8">
-            <input
-              type="number"
-              min="1"
-              max="300"
-              value={formData.weight}
-              onChange={(e) => handleInputChange(e.target.value)}
-              placeholder="Enter your weight in kilograms"
-              className="w-full p-4 rounded-lg border border-[#7ab530] focus:outline-none focus:ring-1 focus:ring-[#7ab530] text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              autoFocus
-            />
+            <label className="flex items-center gap-2 text-gray-700 font-medium mb-4 text-lg justify-center">
+              <User className="w-6 h-6 text-[#7ab530]" />
+              Gender
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {["Male", "Female"].map((gender) => (
+                <button
+                  key={gender}
+                  onClick={() => handleInputChange(gender.toLowerCase())}
+                  className={`p-6 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-3 ${formData.gender === gender.toLowerCase()
+                      ? "border-[#7ab530] bg-green-50 shadow-md"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                >
+                  <User className={`w-6 h-6 ${formData.gender === gender.toLowerCase() ? "text-[#7ab530]" : "text-gray-400"}`} />
+                  <span className={`font-medium text-lg ${formData.gender === gender.toLowerCase() ? "text-[#7ab530]" : "text-gray-700"}`}>
+                    {gender}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Next Button */}
-          <button
-            onClick={handleNext}
-            disabled={!formData.weight}
-            className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.weight
-                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-          >
-            Next
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          {/* Navigation Buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={handlePrevious}
+              className="flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
+              <ArrowRight className="w-5 h-5 rotate-180" />
+              Previous
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!formData.gender}
+              className={`flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.gender
+                  ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }`}
+            >
+              Next
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -130,3 +154,4 @@ export default function MealPlansWeight() {
     </main>
   );
 }
+

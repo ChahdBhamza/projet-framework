@@ -409,3 +409,13 @@ html { scroll-behavior: smooth; }
   animation: float 6s ease-in-out infinite;
   filter: drop-shadow(0 0 10px rgba(122, 181, 48, 0.2));
 }
+
+@keyframes loading {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+.animate-loading {
+  animation: loading 2s ease-in-out infinite;
+}

@@ -8,27 +8,30 @@ import Header from "../Header";
 import { GetFavorites, RemoveFavorites } from "../Utils/favorites";
 import { AddPurchase } from "../Utils/purchases";
 import { useState, useEffect } from "react";
-import { Heart, Trash2, ShoppingCart, Sparkles, ArrowLeft } from "lucide-react";
+import { Heart, Trash2, ShoppingCart, ArrowLeft, ImageOff, ChefHat } from "lucide-react";
 
 export default function Favorites() {
   const router = useRouter();
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadFavorites = async () => {
+      setLoading(true);
       const ids = await GetFavorites();
       setFavoriteIds(ids);
-      // Fetch meals from API instead of using static data
       try {
         const res = await fetch('/api/meals');
         const data = await res.json();
         if (data.success) {
           const favorites = data.meals.filter(meal => ids.includes(meal._id));
-      setFavoriteMeals(favorites);
+          setFavoriteMeals(favorites);
         }
       } catch (error) {
         console.error('Error loading meals:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -38,10 +41,9 @@ export default function Favorites() {
   const handleRemoveFavorite = async (id) => {
     try {
       await RemoveFavorites(id);
-    setFavoriteIds(favoriteIds.filter(favId => favId !== id));
+      setFavoriteIds(favoriteIds.filter(favId => favId !== id));
       setFavoriteMeals(favoriteMeals.filter(meal => meal._id !== id));
     } catch (error) {
-      // Error handling is done in RemoveFavorites (redirects to sign-in)
       console.error("Error removing favorite:", error);
     }
   };
@@ -49,174 +51,150 @@ export default function Favorites() {
   const handleAddToCart = async (meal) => {
     try {
       await AddPurchase(meal._id, meal);
-    router.push("/Purchases");
+      router.push("/Purchases");
     } catch (error) {
-      // Error handling is done in AddToCart (redirects to sign-in)
       console.error("Error adding to cart:", error);
     }
   };
 
   return (
-    <main>
-      <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
-        {/* 🍏 Floating Fruits / Decorations */}
-        <Image
-          src="/apple.png"
-          alt="Apple"
-          width={100}
-          height={100}
-          className="floating absolute top-24 left-10 opacity-80 drop-shadow-md z-0"
-        />
-        <Image
-          src="/strawberry.png"
-          alt="Strawberry"
-          width={110}
-          height={110}
-          className="floating absolute bottom-28 left-24 opacity-80 drop-shadow-md z-0"
-        />
-        <Image
-          src="/carrot.png"
-          alt="Carrot"
-          width={100}
-          height={100}
-          className="floating absolute top-32 right-20 opacity-80 drop-shadow-md z-0"
-        />
-        <Image
-          src="/broccoli.png"
-          alt="Broccoli"
-          width={90}
-          height={90}
-          className="floating absolute bottom-12 right-16 opacity-80 drop-shadow-md z-0"
-        />
+    <main className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      <Header />
 
-        {/* 🌿 Soft translucent overlay */}
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-0"></div>
-
-        {/* Navbar */}
-        <div className="relative z-10">
-          <Header />
-        </div>
-
-        {/* Hero Section */}
-        <section className="text-center py-16 mb-12 relative z-10 px-4">
-          <div className="max-w-3xl mx-auto">
-            {/* Back Button */}
-            <div className="flex justify-start mb-6">
-              <Link href="/Products">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200 hover:border-[#7ab530] hover:bg-white transition-all shadow-sm hover:shadow-md text-gray-700 font-medium">
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Products
-                </button>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Link
+                href="/Products"
+                className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#7ab530] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                Back to Menu
               </Link>
             </div>
-            
-            <div className="flex items-center justify-center gap-2 mb-3">
-           
-              <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#7ab530] via-[#8bc63e] to-[#97d45b]">
-                My Favorite Meals
-              </h1>
-          
-            </div>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <p className="text-gray-600 text-base md:text-lg">
-                {favoriteMeals.length > 0
-                  ? `${favoriteMeals.length} favorite meal${favoriteMeals.length > 1 ? "s" : ""} saved`
-                  : "No favorites yet. Start adding meals you love!"}
-              </p>
-            </div>
-            {favoriteMeals.length > 0 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full">
-                <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                <span className="text-sm font-semibold text-red-700">
-                  {favoriteMeals.length} item{favoriteMeals.length > 1 ? "s" : ""} in favorites
-                </span>
-              </div>
-            )}
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+              Your Favorites
+            </h1>
+            <p className="mt-2 text-gray-500">
+              {favoriteMeals.length} {favoriteMeals.length === 1 ? 'item' : 'items'} saved for later
+            </p>
           </div>
-        </section>
-
-        {/* Favorites Content */}
-        <div className="max-w-7xl mx-auto py-6 px-4 mb-16 relative z-10">
-          {favoriteMeals.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="bg-white/95 backdrop-blur-md rounded-2xl p-10 shadow-xl max-w-md mx-auto border border-gray-100">
-                <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">No favorites yet</h3>
-                <p className="text-gray-500 mb-6 text-sm">Start adding meals you love to your favorites!</p>
-                <Link href="/Products">
-                  <button className="bg-gradient-to-r from-[#7ab530] to-[#8bc63e] text-white px-6 py-2.5 rounded-xl font-semibold hover:from-[#6aa02b] hover:to-[#7ab530] transition-all shadow-md hover:shadow-lg">
-                    Browse Meals
-                  </button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {favoriteMeals.map((meal) => (
-                <div
-                  key={meal._id}
-                  className="group bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                >
-                  {/* Image Section */}
-                  <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-                    <Link href={`/Products/${meal._id}`} className="block h-full w-full flex items-center justify-center">
-                      <div className="text-center p-4">
-                        <span className="text-4xl mb-2 block">🥗</span>
-                        <span className="text-sm font-medium text-green-800 opacity-75">{meal.mealType}</span>
-                      </div>
-                      <div className="absolute top-3 left-3">
-                        <div className="bg-red-500 rounded-full p-1.5 shadow-md">
-                          <Heart className="w-4 h-4 text-white fill-white" />
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4">
-                    <div className="mb-3">
-                      <Link href={`/Products/${meal._id}`}>
-                        <h3 className="text-lg font-bold text-gray-800 hover:text-[#7ab530] transition-colors mb-1">
-                          {meal.mealName}
-                        </h3>
-                      </Link>
-                      <div className="flex items-center justify-between">
-                        <p className="text-gray-500 text-xs font-medium">{meal.calories} kcal</p>
-                        <p className="text-[#7ab530] font-bold">{meal.price || 15} TND</p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(meal);
-                        }}
-                        className="flex-1 bg-[#7ab530] text-white py-2 rounded-lg font-semibold hover:bg-[#6aa02b] active:scale-95 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-sm"
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        Add to Cart
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFavorite(meal._id);
-                        }}
-                        className="flex-1 border border-red-300 text-red-600 py-2 rounded-lg font-semibold hover:bg-red-500 hover:text-white active:scale-95 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Content Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-96 rounded-2xl bg-gray-200 animate-pulse" />
+            ))}
+          </div>
+        ) : favoriteMeals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <Heart className="w-10 h-10 text-gray-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">No favorites yet</h3>
+            <p className="text-gray-500 max-w-md mb-8">
+              Save your favorite meals here to easily order them later.
+            </p>
+            <Link href="/Products">
+              <button className="px-8 py-3 bg-[#7ab530] text-white rounded-xl font-semibold hover:bg-[#6aa02b] transition-all shadow-lg hover:shadow-[#7ab530]/20 active:scale-95">
+                Explore Menu
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {favoriteMeals.map((meal) => (
+              <FavoriteCard
+                key={meal._id}
+                meal={meal}
+                onRemove={handleRemoveFavorite}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+        )}
       </div>
       <Footer />
     </main>
+  );
+}
+
+function FavoriteCard({ meal, onRemove, onAddToCart }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 flex flex-col h-full">
+      {/* Image Container */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        <Link href={`/Products/${meal._id}`}>
+          {!imageError ? (
+            <Image
+              src={`/${meal.mealName}.jpg`}
+              alt={meal.mealName}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+              <ImageOff className="w-10 h-10 mb-2 opacity-50" />
+              <span className="text-xs font-medium">No Image</span>
+            </div>
+          )}
+          {/* Overlay gradient for better text visibility if needed, though we have white bg below */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+        </Link>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(meal._id);
+          }}
+          className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 hover:bg-white transition-all shadow-sm opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300"
+          title="Remove from favorites"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="mb-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <Link href={`/Products/${meal._id}`} className="block">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#7ab530] transition-colors line-clamp-1">
+                {meal.mealName}
+              </h3>
+            </Link>
+            <span className="text-lg font-bold text-[#7ab530] whitespace-nowrap">
+              {meal.price || 15} TND
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span className="flex items-center gap-1.5">
+              <ChefHat className="w-4 h-4" />
+              {meal.calories} kcal
+            </span>
+            <span className="w-1 h-1 rounded-full bg-gray-300" />
+            <span className="capitalize">{meal.mealType}</span>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-gray-50">
+          <button
+            onClick={() => onAddToCart(meal)}
+            className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-[#7ab530] transition-all duration-300 flex items-center justify-center gap-2 group/btn"
+          >
+            <ShoppingCart className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
