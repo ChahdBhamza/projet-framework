@@ -27,6 +27,8 @@ export default function MealPlansResult() {
   const [isLoading, setIsLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState(null);
   const [error, setError] = useState(null);
+  const [mealDetails, setMealDetails] = useState({}); // Store fetched meal details by name
+  const [loadingMeals, setLoadingMeals] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("mealPlanFormData");
@@ -128,7 +130,21 @@ export default function MealPlansResult() {
         responseData = await res.text();
       }
 
+      // Handle n8n response format (array with output property)
+      if (Array.isArray(responseData) && responseData[0]?.output) {
+        try {
+          responseData = JSON.parse(responseData[0].output);
+        } catch (e) {
+          console.error("Error parsing output:", e);
+        }
+      }
+
       setAiResponse(responseData);
+      
+      // Fetch meal details from database
+      if (responseData.mealPlan) {
+        fetchMealDetails(responseData.mealPlan);
+      }
     } catch (error) {
       console.error('Error sending data to webhook:', error);
       setError("Failed to get AI recommendations. Please try again.");
@@ -148,6 +164,43 @@ export default function MealPlansResult() {
       </main>
     );
   }
+
+  // Fetch meal details from database by name
+  const fetchMealDetails = async (mealPlan) => {
+    if (!mealPlan || !Array.isArray(mealPlan)) return;
+    
+    setLoadingMeals(true);
+    const mealNames = new Set();
+    
+    // Collect all meal names from the meal plan
+    mealPlan.forEach(day => {
+      if (day.breakfast?.mealName) mealNames.add(day.breakfast.mealName);
+      if (day.lunch?.mealName) mealNames.add(day.lunch.mealName);
+      if (day.dinner?.mealName) mealNames.add(day.dinner.mealName);
+    });
+
+    // Fetch each meal from database
+    const details = {};
+    const fetchPromises = Array.from(mealNames).map(async (mealName) => {
+      try {
+        const res = await fetch(`/api/meals?search=${encodeURIComponent(mealName)}`);
+        const data = await res.json();
+        if (data.success && data.meals && data.meals.length > 0) {
+          // Find the best match (exact or closest match)
+          const exactMatch = data.meals.find(m => 
+            m.mealName.toLowerCase() === mealName.toLowerCase()
+          );
+          details[mealName] = exactMatch || data.meals[0];
+        }
+      } catch (error) {
+        console.error(`Error fetching meal ${mealName}:`, error);
+      }
+    });
+
+    await Promise.all(fetchPromises);
+    setMealDetails(details);
+    setLoadingMeals(false);
+  };
 
   const stats = calculateStats();
   const bmiValue = formData.weight && formData.height
@@ -179,6 +232,123 @@ export default function MealPlansResult() {
 
   const parsedResponse = parseAIResponse(aiResponse);
 
+  // Render a single meal card
+  const renderMealCard = (meal, mealType) => {
+    const mealDetail = mealDetails[meal.mealName];
+    const hasDetails = !!mealDetail;
+    
+    return (
+      <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 border-2 border-gray-200 hover:border-[#7ab530] transition-all duration-300 shadow-sm hover:shadow-md">
+        <div className="flex gap-4">
+          {/* Meal Image */}
+          {hasDetails && mealDetail.image && (
+            <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 border-gray-200">
+              <Image
+                src={mealDetail.image}
+                alt={meal.mealName}
+                fill
+                className="object-cover"
+                onError={(e) => {
+                  e.target.parentElement.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0">
+            {/* Meal Type Badge */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  mealType === 'Breakfast' ? 'bg-orange-100 text-orange-700' :
+                  mealType === 'Lunch' ? 'bg-blue-100 text-blue-700' :
+                  'bg-purple-100 text-purple-700'
+                }`}>
+                  {mealType}
+                </div>
+              </div>
+              <span className="text-sm font-bold text-[#7ab530] bg-green-50 px-2 py-1 rounded-lg">
+                {meal.calories} kcal
+              </span>
+            </div>
+
+            {/* Meal Name */}
+            <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+              {meal.mealName}
+            </h4>
+
+            {/* Description from database */}
+            {hasDetails && mealDetail.description && (
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {mealDetail.description}
+              </p>
+            )}
+
+            {/* Tags */}
+            {meal.tags && meal.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {meal.tags.slice(0, 3).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                  >
+                    <Tag className="w-3 h-3" />
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Macros */}
+            <div className="grid grid-cols-4 gap-2 pt-3 border-t border-gray-200">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                  <span className="text-xs text-gray-500">Protein</span>
+                </div>
+                <p className="text-sm font-bold text-gray-900">{meal.protein || 0}g</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                  <span className="text-xs text-gray-500">Carbs</span>
+                </div>
+                <p className="text-sm font-bold text-gray-900">{meal.carbs || 0}g</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                  <span className="text-xs text-gray-500">Fats</span>
+                </div>
+                <p className="text-sm font-bold text-gray-900">{meal.fats || 0}g</p>
+              </div>
+              {meal.fiber && (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                    <span className="text-xs text-gray-500">Fiber</span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900">{meal.fiber}g</p>
+                </div>
+              )}
+            </div>
+
+            {/* Link to meal detail page if available */}
+            {hasDetails && mealDetail._id && (
+              <Link
+                href={`/Products/${mealDetail._id}`}
+                className="mt-3 inline-flex items-center gap-1 text-sm text-[#7ab530] hover:text-[#6aa02a] font-medium"
+              >
+                View Details
+                <ExternalLink className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render AI response visualization
   const renderAIResponse = () => {
     if (!parsedResponse) return null;
@@ -186,87 +356,90 @@ export default function MealPlansResult() {
     // Handle structured meal plan response
     if (parsedResponse.mealPlan || parsedResponse.meals || parsedResponse.days) {
       const mealPlan = parsedResponse.mealPlan || parsedResponse.meals || [];
-      const days = parsedResponse.days || formData.days || 7;
+      const dailyTargets = parsedResponse.dailyTargets || parsedResponse.totalsPerDay;
 
       return (
-        <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <Brain className="w-6 h-6 text-[#7ab530]" />
-            <h2 className="text-2xl font-bold text-gray-900">AI-Generated Meal Plan</h2>
-          </div>
-
-          <div className="space-y-6">
-            {Array.isArray(mealPlan) && mealPlan.length > 0 ? (
-              mealPlan.map((day, dayIndex) => {
-                const dayNumber = dayIndex + 1;
-                const dayMeals = Array.isArray(day.meals) ? day.meals : Array.isArray(day) ? day : [];
-                const dayTotalCals = dayMeals.reduce((acc, meal) => acc + (meal.calories || 0), 0);
-
-                return (
-                  <div key={dayIndex} className="border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-[#7ab530]" />
-                        {day.day || day.title || `Day ${dayNumber}`}
-                      </h3>
-                      {dayTotalCals > 0 && (
-                        <span className="text-sm font-semibold text-gray-500">Total: {dayTotalCals} kcal</span>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      {dayMeals.map((meal, mealIndex) => (
-                        <div
-                          key={mealIndex}
-                          className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-[#7ab530] transition-colors"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Utensils className="w-5 h-5 text-[#7ab530]" />
-                              <h4 className="font-semibold text-gray-900">{meal.mealType || meal.type || 'Meal'}</h4>
-                            </div>
-                            {meal.calories && (
-                              <span className="text-sm font-bold text-[#7ab530]">
-                                {meal.calories} kcal
-                              </span>
-                            )}
-                          </div>
-                          {meal.name && (
-                            <p className="text-gray-900 text-sm font-medium mb-2">{meal.name}</p>
-                          )}
-                          {meal.description && (
-                            <p className="text-gray-600 text-sm mb-2">{meal.description}</p>
-                          )}
-                          {(meal.protein || meal.carbs || meal.fats) && (
-                            <div className="flex gap-4 text-xs text-gray-500">
-                              {meal.protein && (
-                                <span className="flex items-center gap-1">
-                                  <div className="w-2 h-2 rounded-full bg-red-400"></div> P: {meal.protein}g
-                                </span>
-                              )}
-                              {meal.carbs && (
-                                <span className="flex items-center gap-1">
-                                  <div className="w-2 h-2 rounded-full bg-yellow-400"></div> C: {meal.carbs}g
-                                </span>
-                              )}
-                              {meal.fats && (
-                                <span className="flex items-center gap-1">
-                                  <div className="w-2 h-2 rounded-full bg-blue-400"></div> F: {meal.fats}g
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No meal plan data available
+        <div className="space-y-8">
+          {/* Daily Targets Summary */}
+          {dailyTargets && (
+            <div className="bg-gradient-to-r from-[#7ab530] to-[#6aa02a] rounded-3xl shadow-xl p-6 md:p-8 text-white">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                Daily Nutritional Targets
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+                  <p className="text-sm opacity-90 mb-1">Calories</p>
+                  <p className="text-2xl font-bold">{dailyTargets.calories || 0}</p>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+                  <p className="text-sm opacity-90 mb-1">Protein</p>
+                  <p className="text-2xl font-bold">{dailyTargets.protein || 0}g</p>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+                  <p className="text-sm opacity-90 mb-1">Carbs</p>
+                  <p className="text-2xl font-bold">{dailyTargets.carbs || 0}g</p>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+                  <p className="text-sm opacity-90 mb-1">Fats</p>
+                  <p className="text-2xl font-bold">{dailyTargets.fats || 0}g</p>
+                </div>
               </div>
-            )}
+            </div>
+          )}
+
+          {/* Meal Plan Days */}
+          <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Brain className="w-6 h-6 text-[#7ab530]" />
+              <h2 className="text-2xl font-bold text-gray-900">AI-Generated Meal Plan</h2>
+              {loadingMeals && (
+                <Loader2 className="w-4 h-4 text-gray-400 animate-spin ml-2" />
+              )}
+            </div>
+
+            <div className="space-y-8">
+              {Array.isArray(mealPlan) && mealPlan.length > 0 ? (
+                mealPlan.map((day, dayIndex) => {
+                  const dayNumber = day.day || dayIndex + 1;
+                  const breakfast = day.breakfast;
+                  const lunch = day.lunch;
+                  const dinner = day.dinner;
+                  
+                  const dayTotalCals = (breakfast?.calories || 0) + 
+                                      (lunch?.calories || 0) + 
+                                      (dinner?.calories || 0);
+
+                  return (
+                    <div key={dayIndex} className="border-2 border-gray-200 rounded-3xl p-6 md:p-8 bg-gradient-to-br from-white to-gray-50">
+                      <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
+                        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#7ab530] flex items-center justify-center text-white font-bold">
+                            {dayNumber}
+                          </div>
+                          Day {dayNumber}
+                        </h3>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500 mb-1">Total Calories</p>
+                          <p className="text-xl font-bold text-[#7ab530]">{dayTotalCals} kcal</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        {breakfast && renderMealCard(breakfast, 'Breakfast')}
+                        {lunch && renderMealCard(lunch, 'Lunch')}
+                        {dinner && renderMealCard(dinner, 'Dinner')}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <Utensils className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p>No meal plan data available</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
