@@ -103,7 +103,7 @@ export default function MealPlansResult() {
     setIsLoading(true);
     setAiResponse(null);
     setError(null);
-    
+
     try {
       const payload = {
         userProfile: formData,
@@ -140,7 +140,7 @@ export default function MealPlansResult() {
       }
 
       setAiResponse(responseData);
-      
+
       // Fetch meal details from database
       if (responseData.mealPlan) {
         fetchMealDetails(responseData.mealPlan);
@@ -168,10 +168,10 @@ export default function MealPlansResult() {
   // Fetch meal details from database by name
   const fetchMealDetails = async (mealPlan) => {
     if (!mealPlan || !Array.isArray(mealPlan)) return;
-    
+
     setLoadingMeals(true);
     const mealNames = new Set();
-    
+
     // Collect all meal names from the meal plan
     mealPlan.forEach(day => {
       if (day.breakfast?.mealName) mealNames.add(day.breakfast.mealName);
@@ -187,7 +187,7 @@ export default function MealPlansResult() {
         const data = await res.json();
         if (data.success && data.meals && data.meals.length > 0) {
           // Find the best match (exact or closest match)
-          const exactMatch = data.meals.find(m => 
+          const exactMatch = data.meals.find(m =>
             m.mealName.toLowerCase() === mealName.toLowerCase()
           );
           details[mealName] = exactMatch || data.meals[0];
@@ -236,34 +236,60 @@ export default function MealPlansResult() {
   const renderMealCard = (meal, mealType) => {
     const mealDetail = mealDetails[meal.mealName];
     const hasDetails = !!mealDetail;
-    
+    const mealLink = hasDetails && mealDetail._id ? `/Products/${mealDetail._id}?from=mealplan` : null;
+
     return (
       <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 border-2 border-gray-200 hover:border-[#7ab530] transition-all duration-300 shadow-sm hover:shadow-md">
         <div className="flex gap-4">
           {/* Meal Image */}
-          {hasDetails && mealDetail.image && (
-            <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 border-gray-200">
-              <Image
-                src={mealDetail.image}
-                alt={meal.mealName}
-                fill
-                className="object-cover"
-                onError={(e) => {
-                  e.target.parentElement.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
-          
+          <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 border-gray-200 bg-white">
+            {hasDetails ? (
+              mealLink ? (
+                <Link href={mealLink} className="block w-full h-full relative cursor-pointer">
+                  <Image
+                    src={mealDetail.image || `/${mealDetail.mealName}.jpg`}
+                    alt={meal.mealName}
+                    fill
+                    className="object-cover hover:scale-110 transition-transform duration-300"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.classList.add('flex', 'items-center', 'justify-center');
+                      // Show fallback icon if image fails
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-gray-300"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+                      e.target.parentElement.appendChild(icon.firstChild);
+                    }}
+                  />
+                </Link>
+              ) : (
+                <Image
+                  src={mealDetail.image || `/${mealDetail.mealName}.jpg`}
+                  alt={meal.mealName}
+                  fill
+                  className="object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.classList.add('flex', 'items-center', 'justify-center');
+                    // Show fallback icon
+                    e.target.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-gray-300"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+                  }}
+                />
+              )
+            ) : (
+              <Link href={mealLink || '#'} className={`w-full h-full flex items-center justify-center text-gray-300 ${!mealLink && 'cursor-default'}`}>
+                <Utensils className="w-8 h-8" />
+              </Link>
+            )}
+          </div>
+
           <div className="flex-1 min-w-0">
             {/* Meal Type Badge */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  mealType === 'Breakfast' ? 'bg-orange-100 text-orange-700' :
-                  mealType === 'Lunch' ? 'bg-blue-100 text-blue-700' :
-                  'bg-purple-100 text-purple-700'
-                }`}>
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${mealType === 'Breakfast' ? 'bg-orange-100 text-orange-700' :
+                    mealType === 'Lunch' ? 'bg-blue-100 text-blue-700' :
+                      'bg-purple-100 text-purple-700'
+                  }`}>
                   {mealType}
                 </div>
               </div>
@@ -274,7 +300,13 @@ export default function MealPlansResult() {
 
             {/* Meal Name */}
             <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-              {meal.mealName}
+              {mealLink ? (
+                <Link href={mealLink} className="hover:text-[#7ab530] transition-colors">
+                  {meal.mealName}
+                </Link>
+              ) : (
+                meal.mealName
+              )}
             </h4>
 
             {/* Description from database */}
@@ -332,17 +364,6 @@ export default function MealPlansResult() {
                 </div>
               )}
             </div>
-
-            {/* Link to meal detail page if available */}
-            {hasDetails && mealDetail._id && (
-              <Link
-                href={`/Products/${mealDetail._id}`}
-                className="mt-3 inline-flex items-center gap-1 text-sm text-[#7ab530] hover:text-[#6aa02a] font-medium"
-              >
-                View Details
-                <ExternalLink className="w-4 h-4" />
-              </Link>
-            )}
           </div>
         </div>
       </div>
@@ -405,10 +426,10 @@ export default function MealPlansResult() {
                   const breakfast = day.breakfast;
                   const lunch = day.lunch;
                   const dinner = day.dinner;
-                  
-                  const dayTotalCals = (breakfast?.calories || 0) + 
-                                      (lunch?.calories || 0) + 
-                                      (dinner?.calories || 0);
+
+                  const dayTotalCals = (breakfast?.calories || 0) +
+                    (lunch?.calories || 0) +
+                    (dinner?.calories || 0);
 
                   return (
                     <div key={dayIndex} className="border-2 border-gray-200 rounded-3xl p-6 md:p-8 bg-gradient-to-br from-white to-gray-50">
@@ -625,11 +646,10 @@ export default function MealPlansResult() {
           <button
             onClick={sendToWebhook}
             disabled={isLoading || !stats}
-            className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${
-              isLoading || !stats
+            className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${isLoading || !stats
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
-            }`}
+              }`}
           >
             {isLoading ? (
               <>
@@ -657,5 +677,3 @@ export default function MealPlansResult() {
     </main>
   );
 }
-
-

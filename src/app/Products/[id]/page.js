@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GetFavorites, AddFavorites, RemoveFavorites } from "../../Utils/favorites";
@@ -12,7 +12,10 @@ import Footer from "../../Footer";
 
 export default function ProductDetail() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id;
+  const fromSource = searchParams.get('from');
+
   const [isFavorite, setIsFavorite] = useState(false);
   const [meal, setMeal] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +61,7 @@ export default function ProductDetail() {
 
       try {
         const pendingAction = JSON.parse(pendingActionStr);
-        
+
         // Check if this action is for the current meal
         if (pendingAction.mealId === meal._id) {
           if (pendingAction.action === 'addToCart') {
@@ -143,10 +146,10 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/Products">
+          <Link href={fromSource === 'mealplan' ? "/MealPlans/result" : "/Products"}>
             <button className="flex items-center gap-2 text-gray-600 hover:text-[#7ab530] transition-colors font-medium">
               <ArrowLeft className="w-4 h-4" />
-              Back to Products
+              {fromSource === 'mealplan' ? "Back to Meal Plan" : "Back to Products"}
             </button>
           </Link>
         </div>
@@ -219,8 +222,8 @@ export default function ProductDetail() {
               {meal.tags && meal.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {meal.tags.map((tag, i) => (
-                    <span 
-                      key={i} 
+                    <span
+                      key={i}
                       className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full capitalize"
                     >
                       {tag}
