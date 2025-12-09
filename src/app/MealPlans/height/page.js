@@ -22,8 +22,6 @@ export default function MealPlansHeight() {
     days: null,
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
-
   // Load form data from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("mealPlanFormData");
@@ -35,15 +33,14 @@ export default function MealPlansHeight() {
         console.error("Error loading form data:", e);
       }
     }
-    setIsLoaded(true);
   }, []);
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage when it changes
   useEffect(() => {
-    if (isLoaded) {
+    if (formData.height) {
       localStorage.setItem("mealPlanFormData", JSON.stringify(formData));
     }
-  }, [formData, isLoaded]);
+  }, [formData]);
 
   // Calculate BMI from weight (kg) and height (cm)
   const bmi = useMemo(() => {
@@ -98,8 +95,8 @@ export default function MealPlansHeight() {
               <div
                 key={step}
                 className={`h-2 rounded-full transition-all duration-300 ${step <= currentStep
-                    ? "bg-[#7ab530] w-12"
-                    : "bg-gray-200 w-12"
+                  ? "bg-[#7ab530] w-12"
+                  : "bg-gray-200 w-12"
                   }`}
               />
             ))}
@@ -158,8 +155,8 @@ export default function MealPlansHeight() {
               onClick={handleNext}
               disabled={!formData.height}
               className={`flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.height
-                  ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
             >
               Next

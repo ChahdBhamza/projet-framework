@@ -21,8 +21,6 @@ export default function MealPlansGender() {
     days: null,
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
-
   // Load form data from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("mealPlanFormData");
@@ -34,15 +32,14 @@ export default function MealPlansGender() {
         console.error("Error loading form data:", e);
       }
     }
-    setIsLoaded(true);
   }, []);
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage when it changes
   useEffect(() => {
-    if (isLoaded) {
+    if (formData.gender) {
       localStorage.setItem("mealPlanFormData", JSON.stringify(formData));
     }
-  }, [formData, isLoaded]);
+  }, [formData]);
 
   const handleInputChange = (value) => {
     setFormData((prev) => ({
@@ -85,8 +82,8 @@ export default function MealPlansGender() {
               <div
                 key={step}
                 className={`h-2 rounded-full transition-all duration-300 ${step <= currentStep
-                    ? "bg-[#7ab530] w-12"
-                    : "bg-gray-200 w-12"
+                  ? "bg-[#7ab530] w-12"
+                  : "bg-gray-200 w-12"
                   }`}
               />
             ))}
@@ -113,8 +110,8 @@ export default function MealPlansGender() {
                   key={gender}
                   onClick={() => handleInputChange(gender.toLowerCase())}
                   className={`p-6 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-3 ${formData.gender === gender.toLowerCase()
-                      ? "border-[#7ab530] bg-green-50 shadow-md"
-                      : "border-gray-200 bg-white hover:border-gray-300"
+                    ? "border-[#7ab530] bg-green-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                 >
                   <User className={`w-6 h-6 ${formData.gender === gender.toLowerCase() ? "text-[#7ab530]" : "text-gray-400"}`} />
@@ -139,8 +136,8 @@ export default function MealPlansGender() {
               onClick={handleNext}
               disabled={!formData.gender}
               className={`flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.gender
-                  ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
             >
               Next

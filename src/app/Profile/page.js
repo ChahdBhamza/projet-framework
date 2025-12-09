@@ -29,6 +29,8 @@ import {
   Save,
   Scroll,
   Activity,
+  Utensils,
+  Loader2,
 } from "lucide-react";
 
 export default function Profile() {
@@ -36,6 +38,9 @@ export default function Profile() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [mealPlans, setMealPlans] = useState([]);
+  const [loadingMealPlans, setLoadingMealPlans] = useState(true);
+  const [expandedMealPlans, setExpandedMealPlans] = useState({});
   const [activityLogs, setActivityLogs] = useState([]);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -104,9 +109,25 @@ export default function Profile() {
     }
   }, []);
 
+  const fetchMealPlans = useCallback(async () => {
+    try {
+      setLoadingMealPlans(true);
+      const data = await apiJson("/api/meal-plans");
+      if (data.success) {
+        setMealPlans(data.mealPlans || []);
+      }
+    } catch (error) {
+      console.error("Error fetching meal plans:", error);
+      setMealPlans([]);
+    } finally {
+      setLoadingMealPlans(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchOrders();
+      fetchMealPlans();
       setEditedName(user?.name || "");
 
       // Check if admin and fetch activity logs
@@ -119,7 +140,7 @@ export default function Profile() {
         fetchActivityLogs();
       }
     }
-  }, [user, fetchOrders, fetchActivityLogs]);
+  }, [user, fetchOrders, fetchMealPlans, fetchActivityLogs]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);
@@ -758,19 +779,216 @@ export default function Profile() {
             {expandedSections.mealPlans && (
               <div className="px-6 pb-6 border-t border-gray-100">
                 <div className="pt-6">
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar className="w-10 h-10 text-purple-600" />
+                  {loadingMealPlans ? (
+                    <div className="text-center py-16">
+                      <Loader2 className="w-12 h-12 text-[#7ab530] animate-spin mx-auto mb-4" />
+                      <p className="text-gray-600">Loading your meal plans...</p>
                     </div>
-                    <p className="text-gray-900 font-semibold text-lg mb-2">No meal plans yet</p>
-                    <p className="text-sm text-gray-600 mb-6">Create a personalized meal plan to get started on your health journey</p>
-                    <a
-                      href="/MealPlans"
-                      className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                      Create Meal Plan
-                    </a>
-                  </div>
+                  ) : mealPlans.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="w-10 h-10 text-purple-600" />
+                      </div>
+                      <p className="text-gray-900 font-semibold text-lg mb-2">No meal plans yet</p>
+                      <p className="text-sm text-gray-600 mb-6">Create a personalized meal plan to get started on your health journey</p>
+                      <a
+                        href="/MealPlans"
+                        className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
+                      >
+                        Create Meal Plan
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {mealPlans.map((plan) => (
+                        <div
+                          key={plan._id}
+                          className="bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all p-6"
+                        >
+                          {/* Header with Icon */}
+                          <div className="flex items-start gap-4 mb-6">
+                            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                              <Utensils className="w-7 h-7 text-gray-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">Meal Plan</h3>
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                Created {new Date(plan.createdAt).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                              <p className="text-xs text-gray-600 mb-1 font-medium">Daily Calories</p>
+                              <p className="text-2xl font-bold text-emerald-600">
+                                {plan.calculatedStats?.tdee || 0}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">kcal</p>
+                            </div>
+                            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                              <p className="text-xs text-gray-600 mb-1 font-medium">Protein</p>
+                              <p className="text-2xl font-bold text-indigo-600">
+                                {plan.calculatedStats?.macros?.protein || 0}g
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                            </div>
+                            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                              <p className="text-xs text-gray-600 mb-1 font-medium">Carbs</p>
+                              <p className="text-2xl font-bold text-amber-600">
+                                {plan.calculatedStats?.macros?.carbs || 0}g
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                            </div>
+                            <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                              <p className="text-xs text-gray-600 mb-1 font-medium">Fats</p>
+                              <p className="text-2xl font-bold text-purple-600">
+                                {plan.calculatedStats?.macros?.fats || 0}g
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full font-medium text-xs flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {plan.mealPlan?.length || 0} days
+                            </span>
+                            <span className="px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-medium text-xs capitalize flex items-center gap-1.5">
+                              <TrendingUp className="w-3.5 h-3.5" />
+                              {plan.userProfile?.trainingActivity || 'N/A'}
+                            </span>
+                            {plan.userProfile?.gender && (
+                              <span className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full font-medium text-xs capitalize">
+                                {plan.userProfile.gender}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* View Meals Button */}
+                          <button
+                            onClick={() => setExpandedMealPlans(prev => ({
+                              ...prev,
+                              [plan._id]: !prev[plan._id]
+                            }))}
+                            className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                          >
+                            {expandedMealPlans[plan._id] ? (
+                              <>
+                                <ChevronUp className="w-5 h-5" />
+                                Hide Meal Details
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-5 h-5" />
+                                View Meal Details
+                              </>
+                            )}
+                          </button>
+
+                          {/* Expandable Meal Details */}
+                          {expandedMealPlans[plan._id] && plan.mealPlan && (
+                            <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                              <h4 className="font-semibold text-gray-900 text-base mb-3">Daily Meal Plan</h4>
+                              {plan.mealPlan.map((dayPlan) => (
+                                <div key={dayPlan.day} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                  <p className="font-semibold text-gray-700 mb-3 text-sm">Day {dayPlan.day}</p>
+                                  <div className="space-y-2">
+                                    {/* Breakfast */}
+                                    {dayPlan.breakfast && (
+                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                        <p className="font-medium text-gray-600 mb-1 text-xs">BREAKFAST</p>
+                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.breakfast.mealName}</p>
+                                        <div className="grid grid-cols-4 gap-2 text-xs">
+                                          <div>
+                                            <p className="text-gray-500">Calories</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.calories}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Protein</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.protein}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Carbs</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.carbs}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Fats</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.fats}g</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Lunch */}
+                                    {dayPlan.lunch && (
+                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                        <p className="font-medium text-gray-600 mb-1 text-xs">LUNCH</p>
+                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.lunch.mealName}</p>
+                                        <div className="grid grid-cols-4 gap-2 text-xs">
+                                          <div>
+                                            <p className="text-gray-500">Calories</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.lunch.calories}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Protein</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.lunch.protein}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Carbs</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.lunch.carbs}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Fats</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.lunch.fats}g</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Dinner */}
+                                    {dayPlan.dinner && (
+                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                        <p className="font-medium text-gray-600 mb-1 text-xs">DINNER</p>
+                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.dinner.mealName}</p>
+                                        <div className="grid grid-cols-4 gap-2 text-xs">
+                                          <div>
+                                            <p className="text-gray-500">Calories</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.dinner.calories}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Protein</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.dinner.protein}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Carbs</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.dinner.carbs}g</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-gray-500">Fats</p>
+                                            <p className="font-medium text-gray-900">{dayPlan.dinner.fats}g</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -829,10 +1047,10 @@ export default function Profile() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <div className={`w-2 h-2 rounded-full ${log.action === 'product_upload' ? 'bg-green-500' :
-                                    log.action === 'login' ? 'bg-blue-500' :
-                                      log.action === 'logout' ? 'bg-gray-500' :
-                                        log.action === 'profile_update' ? 'bg-purple-500' :
-                                          'bg-indigo-500'
+                                  log.action === 'login' ? 'bg-blue-500' :
+                                    log.action === 'logout' ? 'bg-gray-500' :
+                                      log.action === 'profile_update' ? 'bg-purple-500' :
+                                        'bg-indigo-500'
                                   }`}></div>
                                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                   {log.action.replace('_', ' ')}

@@ -9,7 +9,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const error = searchParams.get("error");
-    const returnUrl = searchParams.get("returnUrl");
+    const state = searchParams.get("state");
+
+    // Decode returnUrl from state parameter
+    const returnUrl = state ? decodeURIComponent(state) : null;
 
     if (error) {
       return NextResponse.redirect(
@@ -72,7 +75,7 @@ export async function GET(request) {
           `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/Signin?error=${encodeURIComponent("An account with this email already exists. Please sign in with your email and password instead.")}`
         );
       }
-      
+
       // User exists with OAuth - update Google ID if not set (shouldn't happen, but just in case)
       if (!user.googleId) {
         user.googleId = googleId;
@@ -95,9 +98,9 @@ export async function GET(request) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        id: user._id.toString(), 
-        email: user.email, 
+      {
+        id: user._id.toString(),
+        email: user.email,
         name: user.name,
         provider: user.provider || 'google'
       },
@@ -110,7 +113,7 @@ export async function GET(request) {
     if (returnUrl) {
       frontendUrl += `&returnUrl=${encodeURIComponent(returnUrl)}`;
     }
-    
+
     return NextResponse.redirect(frontendUrl);
   } catch (error) {
     console.error("Google OAuth callback error:", error);

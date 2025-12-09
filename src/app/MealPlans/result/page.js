@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 import Header from "../../Header";
 import Footer from "../../Footer";
 import Image from "next/image";
@@ -16,12 +17,15 @@ import {
   Brain,
   X,
   ExternalLink,
-  Tag
+  Tag,
+  Save,
+  Bookmark
 } from "lucide-react";
 import Link from "next/link";
 
 export default function MealPlansResult() {
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -30,14 +34,73 @@ export default function MealPlansResult() {
   const [mealDetails, setMealDetails] = useState({}); // Store fetched meal details by name
   const [loadingMeals, setLoadingMeals] = useState(false);
 
+  // Save meal plan state
+  const [savingMealPlan, setSavingMealPlan] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+
+  // Fetch meal details from database by name
+  const fetchMealDetails = async (mealPlan) => {
+    if (!mealPlan || !Array.isArray(mealPlan)) return;
+
+    setLoadingMeals(true);
+    const mealNames = new Set();
+
+    // Collect all meal names from the meal plan
+    mealPlan.forEach(day => {
+      if (day.breakfast?.mealName) mealNames.add(day.breakfast.mealName);
+      if (day.lunch?.mealName) mealNames.add(day.lunch.mealName);
+      if (day.dinner?.mealName) mealNames.add(day.dinner.mealName);
+    });
+
+    // Fetch each meal from database
+    const details = {};
+    const fetchPromises = Array.from(mealNames).map(async (mealName) => {
+      try {
+        const res = await fetch(`/api/meals?search=${encodeURIComponent(mealName)}`);
+        const data = await res.json();
+        if (data.success && data.meals && data.meals.length > 0) {
+          // Find the best match (exact or closest match)
+          const exactMatch = data.meals.find(m =>
+            m.mealName.toLowerCase() === mealName.toLowerCase()
+          );
+          details[mealName] = exactMatch || data.meals[0];
+        }
+      } catch (error) {
+        console.error(`Error fetching meal ${mealName}:`, error);
+      }
+    });
+
+    await Promise.all(fetchPromises);
+    setMealDetails(details);
+    setLoadingMeals(false);
+  };
+
   useEffect(() => {
+    // Load form data and AI response from storage
     const saved = localStorage.getItem("mealPlanFormData");
+    const savedAiResponse = sessionStorage.getItem("mealPlanAiResponse");
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         setFormData(parsed);
       } catch (e) {
         console.error("Error loading form data:", e);
+      }
+    }
+
+    if (savedAiResponse) {
+      try {
+        const parsed = JSON.parse(savedAiResponse);
+        setAiResponse(parsed);
+
+        // Also fetch meal details if we have a meal plan
+        if (parsed.mealPlan) {
+          fetchMealDetails(parsed.mealPlan);
+        }
+      } catch (e) {
+        console.error("Error loading AI response:", e);
       }
     }
   }, []);
@@ -141,6 +204,9 @@ export default function MealPlansResult() {
 
       setAiResponse(responseData);
 
+      // Save AI response to sessionStorage so it persists during navigation
+      sessionStorage.setItem("mealPlanAiResponse", JSON.stringify(responseData));
+
       // Fetch meal details from database
       if (responseData.mealPlan) {
         fetchMealDetails(responseData.mealPlan);
@@ -150,6 +216,67 @@ export default function MealPlansResult() {
       setError("Failed to get AI recommendations. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Save meal plan to database
+  const saveMealPlan = async () => {
+    if (!user) {
+      router.push("/Signin");
+      return;
+    }
+
+    const stats = calculateStats();
+    if (!formData || !stats || !aiResponse) {
+      setSaveError("Please generate a meal plan first");
+      return;
+    }
+
+    setSavingMealPlan(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/Signin");
+        return;
+      }
+
+      const parsedResponse = parseAIResponse(aiResponse);
+      const mealPlan = parsedResponse.mealPlan || parsedResponse.meals || [];
+      const dailyTargets = parsedResponse.dailyTargets || parsedResponse.totalsPerDay;
+
+      const payload = {
+        userProfile: formData,
+        calculatedStats: stats,
+        mealPlan: mealPlan,
+        dailyTargets: dailyTargets,
+        aiResponse: aiResponse,
+      };
+
+      const res = await fetch("/api/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 5000);
+      } else {
+        setSaveError(data.error || "Failed to save meal plan");
+      }
+    } catch (error) {
+      console.error("Error saving meal plan:", error);
+      setSaveError("Failed to save meal plan. Please try again.");
+    } finally {
+      setSavingMealPlan(false);
     }
   };
 
@@ -164,43 +291,6 @@ export default function MealPlansResult() {
       </main>
     );
   }
-
-  // Fetch meal details from database by name
-  const fetchMealDetails = async (mealPlan) => {
-    if (!mealPlan || !Array.isArray(mealPlan)) return;
-
-    setLoadingMeals(true);
-    const mealNames = new Set();
-
-    // Collect all meal names from the meal plan
-    mealPlan.forEach(day => {
-      if (day.breakfast?.mealName) mealNames.add(day.breakfast.mealName);
-      if (day.lunch?.mealName) mealNames.add(day.lunch.mealName);
-      if (day.dinner?.mealName) mealNames.add(day.dinner.mealName);
-    });
-
-    // Fetch each meal from database
-    const details = {};
-    const fetchPromises = Array.from(mealNames).map(async (mealName) => {
-      try {
-        const res = await fetch(`/api/meals?search=${encodeURIComponent(mealName)}`);
-        const data = await res.json();
-        if (data.success && data.meals && data.meals.length > 0) {
-          // Find the best match (exact or closest match)
-          const exactMatch = data.meals.find(m =>
-            m.mealName.toLowerCase() === mealName.toLowerCase()
-          );
-          details[mealName] = exactMatch || data.meals[0];
-        }
-      } catch (error) {
-        console.error(`Error fetching meal ${mealName}:`, error);
-      }
-    });
-
-    await Promise.all(fetchPromises);
-    setMealDetails(details);
-    setLoadingMeals(false);
-  };
 
   const stats = calculateStats();
   const bmiValue = formData.weight && formData.height
@@ -287,8 +377,8 @@ export default function MealPlansResult() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className={`px-3 py-1 rounded-full text-xs font-semibold ${mealType === 'Breakfast' ? 'bg-orange-100 text-orange-700' :
-                    mealType === 'Lunch' ? 'bg-blue-100 text-blue-700' :
-                      'bg-purple-100 text-purple-700'
+                  mealType === 'Lunch' ? 'bg-blue-100 text-blue-700' :
+                    'bg-purple-100 text-purple-700'
                   }`}>
                   {mealType}
                 </div>
@@ -622,6 +712,32 @@ export default function MealPlansResult() {
           </div>
         )}
 
+        {/* Save Success Message */}
+        {saveSuccess && (
+          <div className="bg-green-50 border-2 border-green-200 rounded-3xl shadow-xl p-6 md:p-8 mb-8">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-bold text-green-900 mb-2">Meal Plan Saved!</h3>
+                <p className="text-green-700">Your meal plan has been saved successfully. You can view it in your profile.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Save Error Message */}
+        {saveError && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-3xl shadow-xl p-6 md:p-8 mb-8">
+            <div className="flex items-start gap-3">
+              <X className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-bold text-red-900 mb-2">Error Saving Meal Plan</h3>
+                <p className="text-red-700">{saveError}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Prompt to get AI recommendations if not loaded yet */}
         {!aiResponse && !isLoading && (
           <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-8 text-center">
@@ -647,8 +763,8 @@ export default function MealPlansResult() {
             onClick={sendToWebhook}
             disabled={isLoading || !stats}
             className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${isLoading || !stats
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
               }`}
           >
             {isLoading ? (
@@ -663,6 +779,35 @@ export default function MealPlansResult() {
               </>
             )}
           </button>
+
+          {/* Save Meal Plan Button - Only show if AI response exists */}
+          {aiResponse && (
+            <button
+              onClick={saveMealPlan}
+              disabled={savingMealPlan || saveSuccess}
+              className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${savingMealPlan || saveSuccess
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700"
+                }`}
+            >
+              {savingMealPlan ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : saveSuccess ? (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  Saved!
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Save Meal Plan
+                </>
+              )}
+            </button>
+          )}
 
           <Link
             href="/Products"

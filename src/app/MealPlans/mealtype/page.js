@@ -24,8 +24,6 @@ export default function MealPlansMealType() {
     days: null,
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
-
   // Load form data from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("mealPlanFormData");
@@ -37,15 +35,14 @@ export default function MealPlansMealType() {
         console.error("Error loading form data:", e);
       }
     }
-    setIsLoaded(true);
   }, []);
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage when it changes
   useEffect(() => {
-    if (isLoaded) {
+    if (formData.mealType) {
       localStorage.setItem("mealPlanFormData", JSON.stringify(formData));
     }
-  }, [formData, isLoaded]);
+  }, [formData]);
 
   const handleInputChange = (value) => {
     setFormData((prev) => ({
@@ -94,8 +91,8 @@ export default function MealPlansMealType() {
               <div
                 key={step}
                 className={`h-2 rounded-full transition-all duration-300 ${step <= currentStep
-                    ? "bg-[#7ab530] w-12"
-                    : "bg-gray-200 w-12"
+                  ? "bg-[#7ab530] w-12"
+                  : "bg-gray-200 w-12"
                   }`}
               />
             ))}
@@ -121,8 +118,8 @@ export default function MealPlansMealType() {
                   key={index}
                   onClick={() => handleInputChange(option.value)}
                   className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 text-left ${isSelected
-                      ? "border-[#7ab530] bg-green-50 shadow-md"
-                      : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                    ? "border-[#7ab530] bg-green-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                     }`}
                 >
                   <IconComponent className={`w-6 h-6 ${isSelected ? "text-[#7ab530]" : "text-gray-400"}`} />
@@ -155,8 +152,8 @@ export default function MealPlansMealType() {
               onClick={handleNext}
               disabled={!formData.mealType}
               className={`flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.mealType
-                  ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
             >
               Next

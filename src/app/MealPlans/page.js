@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 import Header from "../Header";
 import Footer from "../Footer";
 import {
@@ -11,6 +12,7 @@ import {
 
 export default function MealPlansWeight() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     weight: "",
     gender: "",
@@ -21,28 +23,25 @@ export default function MealPlansWeight() {
     days: null,
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load form data from localStorage on mount
+  // Check authentication
   useEffect(() => {
-    const saved = localStorage.getItem("mealPlanFormData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setFormData(parsed);
-      } catch (e) {
-        console.error("Error loading form data:", e);
-      }
+    if (!authLoading && !user) {
+      // Redirect to sign in with return URL
+      router.push(`/Signin?returnUrl=${encodeURIComponent('/MealPlans')}`);
     }
-    setIsLoaded(true);
+  }, [user, authLoading, router]);
+
+  // Clear localStorage when first visiting this page (form always starts fresh)
+  useEffect(() => {
+    localStorage.removeItem("mealPlanFormData");
   }, []);
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage when it changes (for navigation between pages)
   useEffect(() => {
-    if (isLoaded) {
+    if (formData.weight) {
       localStorage.setItem("mealPlanFormData", JSON.stringify(formData));
     }
-  }, [formData, isLoaded]);
+  }, [formData]);
 
   const handleInputChange = (value) => {
     setFormData((prev) => ({
@@ -59,6 +58,11 @@ export default function MealPlansWeight() {
 
   const totalSteps = 8;
   const currentStep = 1;
+
+  // Show loading or nothing while checking auth
+  if (authLoading || (!user && !authLoading)) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
@@ -81,8 +85,8 @@ export default function MealPlansWeight() {
               <div
                 key={step}
                 className={`h-2 rounded-full transition-all duration-300 ${step <= currentStep
-                    ? "bg-[#7ab530] w-12"
-                    : "bg-gray-200 w-12"
+                  ? "bg-[#7ab530] w-12"
+                  : "bg-gray-200 w-12"
                   }`}
               />
             ))}
@@ -116,8 +120,8 @@ export default function MealPlansWeight() {
             onClick={handleNext}
             disabled={!formData.weight}
             className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.weight
-                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
           >
             Next

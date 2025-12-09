@@ -12,7 +12,7 @@ export default function Header() {
     typeof window !== "undefined"
       ? process.env.NEXT_PUBLIC_ADMIN_EMAIL
       : undefined;
-  
+
   // Normalize emails for comparison (lowercase, trim)
   const userEmail = user?.email?.toLowerCase()?.trim();
   const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
@@ -23,30 +23,30 @@ export default function Header() {
 
   return (
     <header className="navbar">
-          {/* Logo */}
+      {/* Logo */}
       <div className="logo">
         <Link href="/">
           <h2 id="logotx">Dietopia</h2>
-          </Link>
+        </Link>
       </div>
 
-          {/* Navigation Links */}
+      {/* Navigation Links */}
       <nav className="nav-links">
         <Link href="/">Home</Link>
         <Link href="/Products">Products</Link>
         <Link href="/MealPlans">Meal Plans</Link>
         <Link href="/Aboutus">About Us</Link>
-            {isAdmin && (
+        {isAdmin && (
           <Link href="/Dashboard" >
-                Dashboard
-              </Link>
-            )}
-          </nav>
+            Dashboard
+          </Link>
+        )}
+      </nav>
 
-          {/* User Actions */}
+      {/* User Actions */}
       <div className="actions">
-            {user ? (
-              <>
+        {user ? (
+          <>
             <Link
               href="/Profile"
               style={{
@@ -83,8 +83,8 @@ export default function Header() {
                 fontWeight: "600",
                 fontSize: "16px"
               }}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
+                {displayName.charAt(0).toUpperCase()}
+              </div>
               <span style={{ color: "#333", fontWeight: "500", textTransform: "lowercase" }}>{displayName}</span>
             </Link>
             <Link
@@ -104,14 +104,14 @@ export default function Header() {
               }}
               onMouseEnter={(e) => e.target.style.color = "#7ab530"}
               onMouseLeave={(e) => e.target.style.color = "#333"}
-                >
-                  <LogOut className="w-4 h-4" />
+            >
+              <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/Signin">
+          </>
+        ) : (
+          <>
+            <Link href="/Signin">
               <button style={{
                 padding: "8px 16px",
                 color: "#333",
@@ -121,10 +121,10 @@ export default function Header() {
                 fontWeight: "500",
                 fontSize: "16px"
               }}>
-                    Sign In
-                  </button>
-                </Link>
-                <Link href="/Signup">
+                Sign In
+              </button>
+            </Link>
+            <Link href="/Signup">
               <button style={{
                 padding: "8px 16px",
                 backgroundColor: "#7ab530",
@@ -135,11 +135,11 @@ export default function Header() {
                 fontWeight: "500",
                 fontSize: "16px"
               }}>
-                    Sign Up
-                  </button>
-                </Link>
-              </>
-            )}
+                Sign Up
+              </button>
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );
