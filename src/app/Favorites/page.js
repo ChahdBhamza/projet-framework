@@ -58,10 +58,46 @@ export default function Favorites() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 font-sans text-gray-900">
-      <Header />
+    <main className="min-h-screen bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc] font-sans text-gray-900 relative overflow-hidden">
+      {/* 🍏 Floating Fruits / Decorations */}
+      <Image
+        src="/apple.png"
+        alt="Apple"
+        width={100}
+        height={100}
+        className="floating absolute top-24 left-10 opacity-80 drop-shadow-md z-0"
+      />
+      <Image
+        src="/strawberry.png"
+        alt="Strawberry"
+        width={110}
+        height={110}
+        className="floating absolute bottom-28 left-24 opacity-80 drop-shadow-md z-0"
+      />
+      <Image
+        src="/carrot.png"
+        alt="Carrot"
+        width={100}
+        height={100}
+        className="floating absolute top-32 right-20 opacity-80 drop-shadow-md z-0"
+      />
+      <Image
+        src="/broccoli.png"
+        alt="Broccoli"
+        width={90}
+        height={90}
+        className="floating absolute bottom-12 right-16 opacity-80 drop-shadow-md z-0"
+      />
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      {/* 🌿 Soft translucent overlay */}
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-0"></div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        <Header />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
@@ -118,7 +154,10 @@ export default function Favorites() {
           </div>
         )}
       </div>
-      <Footer />
+      
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </main>
   );
 }

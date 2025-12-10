@@ -138,7 +138,7 @@ export default function MealPlansBirthDate() {
         </div>
       </div>
 
-      <Footer />
+     
     </main>
   );
 }

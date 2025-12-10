@@ -1,11 +1,13 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "./context/AuthContext";
 import { LogOut } from "lucide-react";
+import { apiJson } from "./Utils/api";
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const [profilePicture, setProfilePicture] = useState(null);
 
   // Check if user is admin - case-insensitive email comparison
   const ADMIN_EMAIL =
@@ -20,6 +22,67 @@ export default function Header() {
 
   // Get display name - prefer name, fallback to first part of email, then "User"
   const displayName = user?.name || user?.email?.split("@")[0] || "User";
+
+  // Fetch profile picture from API and listen for updates
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Clear profile picture when user changes (including logout)
+    if (!user?.email) {
+      setProfilePicture(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchProfilePicture = async () => {
+      try {
+        // First check localStorage for quick display, but only if it matches current user
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        if (userData.profilePicture && userData.email === user.email) {
+          setProfilePicture(userData.profilePicture);
+        } else {
+          // Clear profile picture if localStorage data is for different user
+          setProfilePicture(null);
+        }
+
+        // Fetch from API using the apiJson utility (handles errors gracefully)
+        const data = await apiJson('/api/user/profile');
+
+        if (isMounted && data.success && data.user?.profilePicture) {
+          setProfilePicture(data.user.profilePicture);
+          // Update localStorage with current user's email
+          localStorage.setItem('user', JSON.stringify({
+            email: user.email,
+            profilePicture: data.user.profilePicture
+          }));
+        } else if (isMounted && data.success) {
+          // User has no profile picture
+          setProfilePicture(null);
+          localStorage.setItem('user', JSON.stringify({ email: user.email }));
+        }
+      } catch (error) {
+        // Silently fail - profile picture is optional
+        // apiJson already handles redirects for auth errors
+      }
+    };
+
+    fetchProfilePicture();
+
+    // Listen for profile picture updates
+    const handleProfilePictureUpdate = (event) => {
+      if (isMounted && event.detail?.profilePicture) {
+        setProfilePicture(event.detail.profilePicture);
+      }
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    };
+  }, [user?.email]);
 
   return (
     <header className="navbar">
@@ -71,20 +134,34 @@ export default function Header() {
                 e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
               }}
             >
-              <div style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#7ab530",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: "600",
-                fontSize: "16px"
-              }}>
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+              {profilePicture ? (
+                <img
+                  src={profilePicture}
+                  alt={displayName}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid #7ab530"
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "#7ab530",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: "600",
+                  fontSize: "18px"
+                }}>
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
               <span style={{ color: "#333", fontWeight: "500", textTransform: "lowercase" }}>{displayName}</span>
             </Link>
             <Link

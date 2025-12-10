@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
         // Check if we're in development (localhost or dev server)
         const isDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
         const sessionCleared = sessionStorage.getItem("dev_session_cleared");
-        
+
         if (isDev && !sessionCleared) {
           // Clear token and mark as cleared for this session
           localStorage.removeItem("token");
@@ -56,14 +56,14 @@ export function AuthProvider({ children }) {
           setUser(null);
           // Only redirect if not already on signin/signup pages
           if (!window.location.pathname.includes("/Signin") && !window.location.pathname.includes("/Signup")) {
-          router.push("/Signin?reason=invalidSession");
+            router.push("/Signin?reason=invalidSession");
           }
         } else if (decoded.exp * 1000 < Date.now()) {
           localStorage.removeItem("token");
           setUser(null);
           // Only redirect if not already on signin/signup pages
           if (!window.location.pathname.includes("/Signin") && !window.location.pathname.includes("/Signup")) {
-          router.push("/Signin?reason=sessionExpired");
+            router.push("/Signin?reason=sessionExpired");
           }
         } else {
           setUser({ ...decoded, token });
@@ -85,7 +85,7 @@ export function AuthProvider({ children }) {
           setUser(null);
           // Only redirect if not already on signin/signup pages
           if (!window.location.pathname.includes("/Signin") && !window.location.pathname.includes("/Signup")) {
-          router.push("/Signin?reason=sessionExpired");
+            router.push("/Signin?reason=sessionExpired");
           }
         } else if (decoded) {
           // Update user state if token is still valid (refresh user data)
@@ -110,6 +110,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      localStorage.removeItem("user"); // Clear user data including profile picture
       // Dispatch storage event to sync across tabs
       window.dispatchEvent(new Event("storage"));
     }

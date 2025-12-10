@@ -130,7 +130,7 @@ export default function MealPlansWeight() {
         </div>
       </div>
 
-      <Footer />
+      
     </main>
   );
 }

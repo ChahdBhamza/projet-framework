@@ -147,7 +147,7 @@ export default function MealPlansGender() {
         </div>
       </div>
 
-      <Footer />
+      
     </main>
   );
 }

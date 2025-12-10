@@ -6,10 +6,15 @@ import Header from "../../Header";
 import Footer from "../../Footer";
 import {
   ArrowRight,
-  UtensilsCrossed,
   Leaf,
   Wheat,
-  Apple
+  Apple,
+  Zap,
+  Droplet,
+  Beef,
+  Fish,
+  Salad,
+  CheckSquare
 } from "lucide-react";
 
 export default function MealPlansMealType() {
@@ -65,50 +70,51 @@ export default function MealPlansMealType() {
   const currentStep = 6;
 
   const mealTypeOptions = [
+    { label: "All Types", value: "all", icon: CheckSquare },
     { label: "Vegan", value: "vegan", icon: Leaf },
     { label: "Low Carb", value: "low-carb", icon: Apple },
     { label: "Gluten Free", value: "gluten-free", icon: Wheat },
+    { label: "High Protein", value: "high-protein", icon: Zap },
+    { label: "Low Fat", value: "low-fat", icon: Droplet},
+    { label: "Vegetarian", value: "vegetarian", icon: Leaf },
+    
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <Header />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">
-            <span className="text-gray-900">Diet</span>
-            <span className="text-[#7ab530]">&</span>
-            <span className="text-gray-900">Fit</span>
-          </h1>
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-8">
-          <div className="flex gap-2">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-              <div
-                key={step}
-                className={`h-2 rounded-full transition-all duration-300 ${step <= currentStep
-                  ? "bg-[#7ab530] w-12"
-                  : "bg-gray-200 w-12"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Header Section */}
+        <div className="text-center mb-10 md:mb-12">
+          <div className="inline-flex items-center justify-center mb-4">
+            <div className="flex gap-1.5">
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+                <div
+                  key={step}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    step <= currentStep
+                      ? "bg-[#7ab530] w-10"
+                      : "bg-gray-200 w-10"
                   }`}
-              />
-            ))}
+                />
+              ))}
+            </div>
           </div>
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            Step {currentStep} of {totalSteps}
+          </p>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+            Choose Your Meal Preferences
+          </h1>
+          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+            Select the type of meals that best fit your dietary needs and lifestyle
+          </p>
         </div>
 
-        {/* Form Section */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 max-w-2xl mx-auto">
-          <h2 className="text-center text-gray-500 text-lg mb-6 font-medium">
-            Meal Preferences
-          </h2>
-          <h3 className="text-center text-2xl md:text-3xl font-semibold text-gray-900 mb-8">
-            What type of meals do you want?
-          </h3>
-
-          <div className="space-y-4 mb-8">
+        {/* Meal Type Options Grid */}
+        <div className="max-w-5xl mx-auto mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             {mealTypeOptions.map((option, index) => {
               const IconComponent = option.icon;
               const isSelected = formData.mealType === option.value;
@@ -117,53 +123,80 @@ export default function MealPlansMealType() {
                 <button
                   key={index}
                   onClick={() => handleInputChange(option.value)}
-                  className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 text-left ${isSelected
-                    ? "border-[#7ab530] bg-green-50 shadow-md"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                    }`}
+                  className={`group relative p-6 md:p-7 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-3 text-center bg-white hover:shadow-lg ${
+                    isSelected
+                      ? "border-[#7ab530] bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg scale-[1.02]"
+                      : "border-gray-200 hover:border-gray-300 hover:scale-[1.01]"
+                  }`}
                 >
-                  <IconComponent className={`w-6 h-6 ${isSelected ? "text-[#7ab530]" : "text-gray-400"}`} />
+                  {/* Selection Indicator */}
+                  {isSelected && (
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#7ab530] flex items-center justify-center shadow-md">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                  
+                  {/* Icon Container */}
+                  <div
+                    className={`w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      isSelected
+                        ? "bg-[#7ab530] text-white shadow-md"
+                        : "bg-gray-100 text-gray-400 group-hover:bg-gray-200"
+                    }`}
+                  >
+                    <IconComponent className={`w-7 h-7 md:w-8 md:h-8 ${isSelected ? "text-white" : ""}`} />
+                  </div>
+                  
+                  {/* Label */}
                   <span
-                    className={`text-lg font-medium flex-1 ${isSelected ? "text-[#7ab530]" : "text-gray-700"
-                      }`}
+                    className={`text-base md:text-lg font-semibold transition-colors duration-300 ${
+                      isSelected ? "text-[#7ab530]" : "text-gray-700 group-hover:text-gray-900"
+                    }`}
                   >
                     {option.label}
                   </span>
-                  {isSelected && (
-                    <div className="w-6 h-6 rounded-full bg-[#7ab530] flex items-center justify-center">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
+                  
+                  {/* Hover Effect Overlay */}
+                  {!isSelected && (
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-50/0 to-emerald-50/0 group-hover:from-green-50/50 group-hover:to-emerald-50/50 transition-all duration-300 pointer-events-none" />
                   )}
                 </button>
               );
             })}
           </div>
+        </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={handlePrevious}
-              className="flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              <ArrowRight className="w-5 h-5 rotate-180" />
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={!formData.mealType}
-              className={`flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${formData.mealType
-                ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+        {/* Navigation Buttons */}
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handlePrevious}
+                className="flex-1 py-3.5 px-6 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-gray-300"
+              >
+                <ArrowRight className="w-5 h-5 rotate-180" />
+                Previous
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!formData.mealType}
+                className={`flex-1 py-3.5 px-6 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2 ${
+                  formData.mealType
+                    ? "bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-md hover:shadow-lg transform hover:scale-[1.01] cursor-pointer"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
-            >
-              Next
-              <ArrowRight className="w-5 h-5" />
-            </button>
+              >
+                Continue
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <Footer />
+    
     </main>
   );
 }

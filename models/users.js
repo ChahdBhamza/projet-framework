@@ -18,6 +18,9 @@ const UserSchema = new mongoose.Schema(
     // Password reset fields
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
+
+    // Profile picture
+    profilePicture: { type: String },
   },
   { timestamps: true }
 );

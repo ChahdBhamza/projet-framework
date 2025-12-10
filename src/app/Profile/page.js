@@ -73,6 +73,10 @@ export default function Profile() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Profile picture state
+  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/Signin");
@@ -124,10 +128,37 @@ export default function Profile() {
     }
   }, []);
 
+  // Fetch user profile data including profile picture
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const data = await apiJson("/api/user/profile");
+      if (data.success && data.user) {
+        setProfilePicture(data.user.profilePicture || null);
+        if (updateUser) {
+          updateUser({ ...user, profilePicture: data.user.profilePicture });
+        }
+        // Update localStorage with current user's email for validation
+        if (typeof window !== "undefined") {
+          localStorage.setItem('user', JSON.stringify({
+            email: user?.email,
+            profilePicture: data.user.profilePicture || null
+          }));
+        }
+      }
+    } catch (error) {
+      // Silently fail - profile picture is optional
+      // Only log if it's not a network/auth error
+      if (error.message && !error.message.includes('Session expired') && !error.message.includes('Network error')) {
+        console.error("Error fetching user profile:", error);
+      }
+    }
+  }, [user, updateUser]);
+
   useEffect(() => {
-    if (user) {
+    if (user?.email) {
       fetchOrders();
       fetchMealPlans();
+      fetchUserProfile();
       setEditedName(user?.name || "");
 
       // Check if admin and fetch activity logs
@@ -140,7 +171,8 @@ export default function Profile() {
         fetchActivityLogs();
       }
     }
-  }, [user, fetchOrders, fetchMealPlans, fetchActivityLogs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);
@@ -206,6 +238,85 @@ export default function Profile() {
       setNameError(error.message || "Failed to update name");
     } finally {
       setUpdatingName(false);
+    }
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingPicture(true);
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert('Please sign in to upload a profile picture');
+        setUploadingPicture(false);
+        return;
+      }
+
+      const response = await fetch('/api/user/profile-picture', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to upload profile picture' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Update local state
+        setProfilePicture(data.profilePicture);
+
+        // Update user context
+        if (updateUser) {
+          updateUser({ ...user, profilePicture: data.profilePicture });
+        }
+
+        // Store in localStorage with user email for validation
+        if (typeof window !== "undefined") {
+          localStorage.setItem('user', JSON.stringify({
+            email: user?.email,
+            profilePicture: data.profilePicture
+          }));
+
+          // Dispatch custom event to notify header
+          window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
+            detail: { profilePicture: data.profilePicture }
+          }));
+        }
+      } else {
+        alert(data.error || 'Failed to upload profile picture');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      // Show user-friendly error message
+      if (error.message && !error.message.includes('Failed to fetch') && !error.message.includes('Network error')) {
+        alert(error.message);
+      } else {
+        alert('Network error. Please check your connection and try again.');
+      }
+    } finally {
+      setUploadingPicture(false);
     }
   };
 
@@ -321,12 +432,37 @@ export default function Profile() {
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className="inline-block mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg border-2 border-white">
-              {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+          <div className="inline-block mb-4 relative">
+            <div className="relative group">
+              {profilePicture ? (
+                <img
+                  src={profilePicture}
+                  alt="Profile"
+                  className="w-28 h-28 rounded-full object-cover shadow-lg border-4 border-white"
+                />
+              ) : (
+                <div className="w-28 h-28 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white">
+                  {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
+              <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#7ab530] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#6aa02b] transition-all shadow-lg border-3 border-white hover:scale-110 z-10">
+                <Edit className="w-5 h-5 text-white" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  className="hidden"
+                  disabled={uploadingPicture}
+                />
+              </label>
+              {uploadingPicture && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full backdrop-blur-sm">
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                </div>
+              )}
             </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Welcome back, {user?.name?.split(" ")[0] || "User"}!
           </h1>
           <p className="text-gray-600 text-lg">Manage your account and track your activity</p>
@@ -370,7 +506,7 @@ export default function Profile() {
         )}
 
         {/* Profile Information Section */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden mt-8">
           <button
             onClick={() => toggleSection("profile")}
             className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
@@ -395,8 +531,33 @@ export default function Profile() {
             <div className="px-6 pb-6 border-t border-gray-100">
               <div className="pt-6 space-y-6">
                 <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                    {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+                  <div className="relative group">
+                    {profilePicture ? (
+                      <img
+                        src={profilePicture}
+                        alt="Profile"
+                        className="w-24 h-24 rounded-full object-cover shadow-lg border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 bg-gradient-to-br from-[#7ab530] to-[#6aa02b] rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                        {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <label className="absolute bottom-0 right-0 w-9 h-9 bg-[#7ab530] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#6aa02b] transition-all shadow-md border-2 border-white hover:scale-110 z-10">
+                      <Edit className="w-4 h-4 text-white" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureChange}
+                        className="hidden"
+                        disabled={uploadingPicture}
+                      />
+                    </label>
+                    {uploadingPicture && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full backdrop-blur-sm">
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{user?.name || "User"}</h3>
@@ -512,15 +673,17 @@ export default function Profile() {
         </div>
 
         {/* Password Change Section */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden mt-8">
           <button
             onClick={() => toggleSection("password")}
             className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#7ab530] rounded-xl flex items-center justify-center">
                 <Lock className="w-6 h-6 text-white" />
               </div>
+
+
               <div className="text-left">
                 <h2 className="text-xl font-bold text-gray-900">Security & Password</h2>
                 <p className="text-sm text-gray-500">Change your password and manage security</p>
@@ -537,15 +700,17 @@ export default function Profile() {
             <div className="px-6 pb-6 border-t border-gray-100">
               <div className="pt-6">
                 {isOAuthUser ? (
-                  <div className="p-8 bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-2xl text-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Lock className="w-8 h-8 text-yellow-600" />
+                  <div className="p-8 bg-white border-2 border-[#7ab530] rounded-2xl text-center">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-[#7ab530] bg-white">
+                      <Lock className="w-8 h-8 text-[#7ab530]" />
                     </div>
-                    <p className="text-yellow-900 font-semibold text-lg mb-2">Password Change Not Available</p>
-                    <p className="text-sm text-yellow-800 max-w-md mx-auto">
+                    <p className="text-[#7ab530] font-semibold text-lg mb-2">Password Change Not Available</p>
+                    <p className="text-sm text-black max-w-md mx-auto">
                       This account was created with Google. Password changes are managed through your Google account settings.
                     </p>
                   </div>
+
+
                 ) : (
                   <form onSubmit={handlePasswordChange} className="space-y-6 max-w-2xl mx-auto">
                     {passwordError && (
@@ -649,13 +814,13 @@ export default function Profile() {
 
         {/* Orders Section - Hidden for admins */}
         {!isAdmin && (
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden mt-8">
             <button
               onClick={() => toggleSection("orders")}
               className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#7ab530] rounded-xl flex items-center justify-center">
                   <ShoppingBag className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
@@ -695,52 +860,54 @@ export default function Profile() {
                       </a>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {orders.map((order) => (
                         <div
                           key={order._id}
-                          className="border-2 border-gray-200 rounded-2xl p-6 hover:border-[#7ab530] hover:shadow-lg transition-all bg-gradient-to-br from-gray-50 to-white cursor-pointer"
+                          className="group bg-white rounded-xl border border-slate-200 hover:border-[#7ab530] transition-all duration-300 cursor-pointer overflow-hidden"
                           onClick={() => openOrderModal(order)}
                         >
-                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 bg-[#7ab530] rounded-xl flex items-center justify-center">
-                                  <Package className="w-5 h-5 text-white" />
+                          <div className="p-5">
+                            <div className="flex items-start justify-between gap-4">
+                              {/* Left Section */}
+                              <div className="flex items-start gap-4 flex-1 min-w-0">
+                                <div className="w-12 h-12 bg-[#7ab530] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                                  <Package className="w-6 h-6 text-white" />
                                 </div>
-                                <div>
-                                  <h3 className="font-bold text-gray-900 text-lg">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-slate-900 text-base mb-1.5">
                                     Order #{order._id.slice(-8).toUpperCase()}
                                   </h3>
-                                  <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="w-4 h-4" />
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                    <div className="flex items-center gap-1.5">
+                                      <Clock className="w-3.5 h-3.5" />
                                       {formatDate(order.orderDate)}
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                      <CheckCircle className="w-4 h-4 text-green-600" />
-                                      <span className="capitalize font-medium">{order.paymentStatus}</span>
+                                    <div className="flex items-center gap-1.5">
+                                      <CheckCircle className="w-3.5 h-3.5 text-[#7ab530]" />
+                                      <span className="capitalize font-medium text-slate-600">{order.paymentStatus}</span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="text-left md:text-right">
-                              <p className="text-2xl font-bold text-[#7ab530] flex items-center gap-1 md:justify-end">
-                                <DollarSign className="w-6 h-6" />
-                                {order.totalAmount.toFixed(2)} TND
-                              </p>
-                              <p className="text-sm text-gray-500 mt-1">{order.items.length} item(s)</p>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openOrderModal(order);
-                                }}
-                                className="mt-3 flex items-center gap-2 text-[#7ab530] hover:text-[#6aa02b] font-semibold text-sm transition"
-                              >
-                                <Scroll className="w-4 h-4" />
-                                View Details
-                              </button>
+
+                              {/* Right Section */}
+                              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                <p className="text-xl font-semibold text-[#7ab530]">
+                                  {order.totalAmount.toFixed(2)} TND
+                                </p>
+                                <p className="text-xs text-slate-500">{order.items.length} item(s)</p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openOrderModal(order);
+                                  }}
+                                  className="mt-1 flex items-center gap-1.5 text-black hover:text-black font-medium text-xs transition-colors group/btn"
+                                >
+                                  <Scroll className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                                  View Details
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -755,18 +922,18 @@ export default function Profile() {
 
         {/* Meal Plans Section - Hidden for admins */}
         {!isAdmin && (
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 mb-6 overflow-hidden mt-8">
             <button
               onClick={() => toggleSection("mealPlans")}
               className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#7ab530] rounded-xl flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <h2 className="text-xl font-bold text-gray-900">Meal Plans</h2>
-                  <p className="text-sm text-gray-500">Create and manage your personalized meal plans</p>
+                  <h2 className="text-xl font-semibold text-slate-900">Meal Plans</h2>
+                  <p className="text-sm text-slate-500">Create and manage your personalized meal plans</p>
                 </div>
               </div>
               {expandedSections.mealPlans ? (
@@ -781,19 +948,19 @@ export default function Profile() {
                 <div className="pt-6">
                   {loadingMealPlans ? (
                     <div className="text-center py-16">
-                      <Loader2 className="w-12 h-12 text-[#7ab530] animate-spin mx-auto mb-4" />
-                      <p className="text-gray-600">Loading your meal plans...</p>
+                      <Loader2 className="w-12 h-12 text-slate-400 animate-spin mx-auto mb-4" />
+                      <p className="text-slate-600">Loading your meal plans...</p>
                     </div>
                   ) : mealPlans.length === 0 ? (
                     <div className="text-center py-16">
-                      <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Calendar className="w-10 h-10 text-purple-600" />
+                      <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200">
+                        <Calendar className="w-10 h-10 text-slate-400" />
                       </div>
-                      <p className="text-gray-900 font-semibold text-lg mb-2">No meal plans yet</p>
-                      <p className="text-sm text-gray-600 mb-6">Create a personalized meal plan to get started on your health journey</p>
+                      <p className="text-slate-900 font-semibold text-lg mb-2">No meal plans yet</p>
+                      <p className="text-sm text-slate-500 mb-6">Create a personalized meal plan to get started on your health journey</p>
                       <a
                         href="/MealPlans"
-                        className="inline-block px-8 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
+                        className="inline-block px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
                       >
                         Create Meal Plan
                       </a>
@@ -803,17 +970,17 @@ export default function Profile() {
                       {mealPlans.map((plan) => (
                         <div
                           key={plan._id}
-                          className="bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all p-6"
+                          className="bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-6"
                         >
                           {/* Header with Icon */}
                           <div className="flex items-start gap-4 mb-6">
-                            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                              <Utensils className="w-7 h-7 text-gray-600" />
+                            <div className="w-14 h-14 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-slate-200">
+                              <Utensils className="w-7 h-7 text-slate-600" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">Meal Plan</h3>
-                              <p className="text-sm text-gray-500 flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
+                              <h3 className="text-xl font-semibold text-slate-900 mb-1">Meal Plan</h3>
+                              <p className="text-sm text-slate-500 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
                                 Created {new Date(plan.createdAt).toLocaleDateString("en-US", {
                                   year: "numeric",
                                   month: "long",
@@ -827,51 +994,44 @@ export default function Profile() {
 
                           {/* Stats Grid */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                              <p className="text-xs text-gray-600 mb-1 font-medium">Daily Calories</p>
-                              <p className="text-2xl font-bold text-emerald-600">
+                            <div className="bg-slate-50 rounded-xl p-4 border-2 border-[#7ab530]">
+                              <p className="text-xs text-[#7ab530] mb-1.5 font-medium uppercase tracking-wide">Daily Calories</p>
+                              <p className="text-2xl font-semibold text-slate-900">
                                 {plan.calculatedStats?.tdee || 0}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">kcal</p>
+                              <p className="text-xs text-slate-400 mt-1">kcal</p>
                             </div>
-                            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-                              <p className="text-xs text-gray-600 mb-1 font-medium">Protein</p>
-                              <p className="text-2xl font-bold text-indigo-600">
+                            <div className="bg-slate-50 rounded-xl p-4 border-2 border-[#7ab530]">
+                              <p className="text-xs text-[#7ab530] mb-1.5 font-medium uppercase tracking-wide">Protein</p>
+                              <p className="text-2xl font-semibold text-slate-900">
                                 {plan.calculatedStats?.macros?.protein || 0}g
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                              <p className="text-xs text-slate-400 mt-1">per day</p>
                             </div>
-                            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                              <p className="text-xs text-gray-600 mb-1 font-medium">Carbs</p>
-                              <p className="text-2xl font-bold text-amber-600">
+                            <div className="bg-slate-50 rounded-xl p-4 border-2 border-[#7ab530]">
+                              <p className="text-xs text-[#7ab530] mb-1.5 font-medium uppercase tracking-wide">Carbs</p>
+                              <p className="text-2xl font-semibold text-slate-900">
                                 {plan.calculatedStats?.macros?.carbs || 0}g
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                              <p className="text-xs text-slate-400 mt-1">per day</p>
                             </div>
-                            <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-                              <p className="text-xs text-gray-600 mb-1 font-medium">Fats</p>
-                              <p className="text-2xl font-bold text-purple-600">
+                            <div className="bg-slate-50 rounded-xl p-4 border-2 border-[#7ab530]">
+                              <p className="text-xs text-[#7ab530] mb-1.5 font-medium uppercase tracking-wide">Fats</p>
+                              <p className="text-2xl font-semibold text-slate-900">
                                 {plan.calculatedStats?.macros?.fats || 0}g
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">per day</p>
+                              <p className="text-xs text-slate-400 mt-1">per day</p>
                             </div>
                           </div>
 
                           {/* Tags */}
                           <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full font-medium text-xs flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-slate-200">
                               <Calendar className="w-3.5 h-3.5" />
                               {plan.mealPlan?.length || 0} days
                             </span>
-                            <span className="px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-medium text-xs capitalize flex items-center gap-1.5">
-                              <TrendingUp className="w-3.5 h-3.5" />
-                              {plan.userProfile?.trainingActivity || 'N/A'}
-                            </span>
-                            {plan.userProfile?.gender && (
-                              <span className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full font-medium text-xs capitalize">
-                                {plan.userProfile.gender}
-                              </span>
-                            )}
+
+
                           </div>
 
                           {/* View Meals Button */}
@@ -880,16 +1040,16 @@ export default function Profile() {
                               ...prev,
                               [plan._id]: !prev[plan._id]
                             }))}
-                            className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-4 px-6 py-3 bg-slate-900 hover:bg-[#7ab530] text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
                           >
                             {expandedMealPlans[plan._id] ? (
                               <>
-                                <ChevronUp className="w-5 h-5" />
+                                <ChevronUp className="w-4 h-4" />
                                 Hide Meal Details
                               </>
                             ) : (
                               <>
-                                <ChevronDown className="w-5 h-5" />
+                                <ChevronDown className="w-4 h-4" />
                                 View Meal Details
                               </>
                             )}
@@ -897,33 +1057,39 @@ export default function Profile() {
 
                           {/* Expandable Meal Details */}
                           {expandedMealPlans[plan._id] && plan.mealPlan && (
-                            <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
-                              <h4 className="font-semibold text-gray-900 text-base mb-3">Daily Meal Plan</h4>
+                            <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                              <h4 className="font-semibold text-slate-900 text-base mb-3 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-[#7ab530] rounded-full"></span>
+                                Daily Meal Plan
+                              </h4>
                               {plan.mealPlan.map((dayPlan) => (
-                                <div key={dayPlan.day} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                  <p className="font-semibold text-gray-700 mb-3 text-sm">Day {dayPlan.day}</p>
+                                <div key={dayPlan.day} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                  <p className="font-semibold text-slate-700 mb-3 text-sm flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-[#7ab530] rounded-full"></span>
+                                    Day {dayPlan.day}
+                                  </p>
                                   <div className="space-y-2">
                                     {/* Breakfast */}
                                     {dayPlan.breakfast && (
-                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p className="font-medium text-gray-600 mb-1 text-xs">BREAKFAST</p>
-                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.breakfast.mealName}</p>
+                                      <div className="bg-white rounded-lg p-3 border-l-4 border-[#7ab530]">
+                                        <p className="font-medium text-[#7ab530] mb-1 text-xs uppercase tracking-wide">BREAKFAST</p>
+                                        <p className="font-semibold text-slate-900 mb-2 text-sm">{dayPlan.breakfast.mealName}</p>
                                         <div className="grid grid-cols-4 gap-2 text-xs">
                                           <div>
-                                            <p className="text-gray-500">Calories</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.calories}</p>
+                                            <p className="text-slate-500">Calories</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.breakfast.calories}</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Protein</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.protein}g</p>
+                                            <p className="text-slate-500">Protein</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.breakfast.protein}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Carbs</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.carbs}g</p>
+                                            <p className="text-slate-500">Carbs</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.breakfast.carbs}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Fats</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.breakfast.fats}g</p>
+                                            <p className="text-slate-500">Fats</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.breakfast.fats}g</p>
                                           </div>
                                         </div>
                                       </div>
@@ -931,25 +1097,25 @@ export default function Profile() {
 
                                     {/* Lunch */}
                                     {dayPlan.lunch && (
-                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p className="font-medium text-gray-600 mb-1 text-xs">LUNCH</p>
-                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.lunch.mealName}</p>
+                                      <div className="bg-white rounded-lg p-3 border-l-4 border-[#7ab530]">
+                                        <p className="font-medium text-[#7ab530] mb-1 text-xs uppercase tracking-wide">LUNCH</p>
+                                        <p className="font-semibold text-slate-900 mb-2 text-sm">{dayPlan.lunch.mealName}</p>
                                         <div className="grid grid-cols-4 gap-2 text-xs">
                                           <div>
-                                            <p className="text-gray-500">Calories</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.lunch.calories}</p>
+                                            <p className="text-slate-500">Calories</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.lunch.calories}</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Protein</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.lunch.protein}g</p>
+                                            <p className="text-slate-500">Protein</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.lunch.protein}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Carbs</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.lunch.carbs}g</p>
+                                            <p className="text-slate-500">Carbs</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.lunch.carbs}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Fats</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.lunch.fats}g</p>
+                                            <p className="text-slate-500">Fats</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.lunch.fats}g</p>
                                           </div>
                                         </div>
                                       </div>
@@ -957,25 +1123,25 @@ export default function Profile() {
 
                                     {/* Dinner */}
                                     {dayPlan.dinner && (
-                                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p className="font-medium text-gray-600 mb-1 text-xs">DINNER</p>
-                                        <p className="font-semibold text-gray-900 mb-2 text-sm">{dayPlan.dinner.mealName}</p>
+                                      <div className="bg-white rounded-lg p-3 border-l-4 border-[#7ab530]">
+                                        <p className="font-medium text-[#7ab530] mb-1 text-xs uppercase tracking-wide">DINNER</p>
+                                        <p className="font-semibold text-slate-900 mb-2 text-sm">{dayPlan.dinner.mealName}</p>
                                         <div className="grid grid-cols-4 gap-2 text-xs">
                                           <div>
-                                            <p className="text-gray-500">Calories</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.dinner.calories}</p>
+                                            <p className="text-slate-500">Calories</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.dinner.calories}</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Protein</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.dinner.protein}g</p>
+                                            <p className="text-slate-500">Protein</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.dinner.protein}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Carbs</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.dinner.carbs}g</p>
+                                            <p className="text-slate-500">Carbs</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.dinner.carbs}g</p>
                                           </div>
                                           <div>
-                                            <p className="text-gray-500">Fats</p>
-                                            <p className="font-medium text-gray-900">{dayPlan.dinner.fats}g</p>
+                                            <p className="text-slate-500">Fats</p>
+                                            <p className="font-medium text-slate-900">{dayPlan.dinner.fats}g</p>
                                           </div>
                                         </div>
                                       </div>
@@ -997,7 +1163,7 @@ export default function Profile() {
 
         {/* Activity Logs Section - Only for admins */}
         {isAdmin && (
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-6 overflow-hidden mt-8">
             <button
               onClick={() => toggleSection("activityLogs")}
               className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
@@ -1105,85 +1271,77 @@ export default function Profile() {
 
       {/* Order Detail Modal */}
       {showOrderModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={closeOrderModal}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeOrderModal}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#7ab530] rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#7ab530] rounded-lg flex items-center justify-center shadow-sm">
                   <Package className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-xl font-semibold text-slate-900">
                     Order #{selectedOrder._id.slice(-8).toUpperCase()}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-0.5">
                     {formatDate(selectedOrder.orderDate)}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeOrderModal}
-                className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition"
+                className="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {/* Order Summary */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-gray-900 capitalize">{selectedOrder.paymentStatus}</span>
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle className="w-5 h-5 text-[#7ab530]" />
+                      <span className="font-medium text-slate-900 capitalize">{selectedOrder.paymentStatus}</span>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-bold text-[#7ab530] flex items-center gap-2">
-                        <DollarSign className="w-7 h-7" />
+                      <p className="text-2xl font-semibold text-black">
                         {selectedOrder.totalAmount.toFixed(2)} TND
                       </p>
-                      <p className="text-sm text-gray-500 mt-1">{selectedOrder.items.length} item(s)</p>
+                      <p className="text-xs text-slate-500 mt-1">{selectedOrder.items.length} item(s)</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Order Items */}
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-600" />
                     Order Items
                   </h3>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-[#7ab530] transition">
+                      <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[#7ab530] transition-colors">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-gray-900 text-lg mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-slate-900 text-base mb-2.5">
                               {item.mealData?.mealName || "Unknown Meal"}
                             </h4>
-                            <div className="space-y-1 text-sm text-gray-600">
-                              <p className="flex items-center gap-2">
-                                <span className="font-medium">Type:</span>
-                                <span className="capitalize">{item.mealData?.mealType}</span>
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <span className="font-medium">Quantity:</span>
-                                <span>{item.quantity}</span>
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <span className="font-medium">Unit Price:</span>
-                                <span>{item.price.toFixed(2)} TND</span>
-                              </p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-600">
+                              <span className="capitalize">{item.mealData?.mealType}</span>
+                              <span className="text-slate-400">•</span>
+                              <span>Qty: {item.quantity}</span>
+                              <span className="text-slate-400">•</span>
+                              <span>{item.price.toFixed(2)} TND each</span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-[#7ab530]">
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-lg font-semibold text-[#7ab530]">
                               {(item.price * item.quantity).toFixed(2)} TND
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-400 mt-0.5">
                               {item.quantity} × {item.price.toFixed(2)}
                             </p>
                           </div>
@@ -1196,10 +1354,10 @@ export default function Profile() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="p-6 border-t border-slate-200">
               <button
                 onClick={closeOrderModal}
-                className="w-full bg-gradient-to-r from-[#7ab530] to-[#6aa02b] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="w-full bg-slate-900 hover:bg-[#7ab530] text-white py-3 rounded-xl font-medium transition-colors shadow-sm hover:shadow-md"
               >
                 Close
               </button>

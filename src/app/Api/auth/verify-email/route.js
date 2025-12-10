@@ -2,6 +2,7 @@ import { connectDB } from "../../../../../db.js";
 import Users from "../../../../../models/users.js";
 import { NextResponse } from "next/server";
 import { sendWelcomeEmail } from "../../../../../lib/email.js";
+import jwt from "jsonwebtoken";
 
 export async function POST(req) {
     try {
@@ -96,10 +97,28 @@ export async function POST(req) {
             console.error("Failed to send welcome email:", emailError);
         }
 
+        // Generate JWT token for auto-login
+        const authToken = jwt.sign(
+            {
+                id: user._id.toString(),
+                email: user.email,
+                name: user.name,
+                provider: user.provider || 'local'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "30m" }
+        );
+
         return NextResponse.json(
             {
                 message: "Email verified successfully! You can now sign in.",
-                success: true
+                success: true,
+                token: authToken,
+                user: {
+                    id: user._id?.toString() || "",
+                    email: user.email || "",
+                    name: user.name || "",
+                }
             },
             { status: 200, headers: { "Content-Type": "application/json" } }
         );

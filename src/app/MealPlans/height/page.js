@@ -166,7 +166,7 @@ export default function MealPlansHeight() {
         </div>
       </div>
 
-      <Footer />
+      
     </main>
   );
 }

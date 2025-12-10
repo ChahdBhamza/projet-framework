@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 import Header from "../Header";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +10,7 @@ import Link from "next/link";
 export default function VerifyEmail() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { login } = useAuth();
     const [status, setStatus] = useState("verifying"); // verifying, success, error
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(true);
@@ -37,10 +39,16 @@ export default function VerifyEmail() {
                 if (res.ok) {
                     setStatus("success");
                     setMessage(data.message || "Email verified successfully!");
-                    // Redirect to signin after 3 seconds
+
+                    // Auto-login: Use AuthContext login function for immediate session update
+                    if (data.token && data.user) {
+                        login(data.token, data.user);
+                    }
+
+                    // Redirect to home after 2 seconds
                     setTimeout(() => {
                         router.push("/");
-                    }, 3000);
+                    }, 2000);
                 } else {
                     setStatus("error");
                     setMessage(data.message || "Verification failed. Please try again.");
@@ -54,7 +62,7 @@ export default function VerifyEmail() {
         };
 
         verifyEmail();
-    }, [searchParams, router]);
+    }, [searchParams, router, login]);
 
     return (
         <main className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
@@ -81,7 +89,7 @@ export default function VerifyEmail() {
                             <div className="text-6xl mb-6">✅</div>
                             <h2 className="text-2xl font-bold text-gray-800 mb-4">Email Verified!</h2>
                             <p className="text-gray-600 mb-6">{message}</p>
-                            <p className="text-sm text-gray-500">Redirecting to sign in...</p>
+                            <p className="text-sm text-gray-500">Logging you in and redirecting to home...</p>
                         </>
                     ) : (
                         <>

@@ -140,8 +140,44 @@ export default function Purchases() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            <Header />
+        <main className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
+            {/* Floating Fruits / Decorations */}
+            <Image
+                src="/apple.png"
+                alt="Apple"
+                width={100}
+                height={100}
+                className="floating absolute top-24 left-10 opacity-80 drop-shadow-md z-0"
+            />
+            <Image
+                src="/strawberry.png"
+                alt="Strawberry"
+                width={110}
+                height={110}
+                className="floating absolute bottom-28 left-24 opacity-80 drop-shadow-md z-0"
+            />
+            <Image
+                src="/carrot.png"
+                alt="Carrot"
+                width={100}
+                height={100}
+                className="floating absolute top-32 right-20 opacity-80 drop-shadow-md z-0"
+            />
+            <Image
+                src="/broccoli.png"
+                alt="Broccoli"
+                width={90}
+                height={90}
+                className="floating absolute bottom-12 right-16 opacity-80 drop-shadow-md z-0"
+            />
+
+            {/* Soft translucent overlay */}
+            <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-0"></div>
+
+            {/* Header */}
+            <div className="relative z-10">
+                <Header />
+            </div>
 
             {/* Top Navigation */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
@@ -167,7 +203,7 @@ export default function Purchases() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
                 {purchases.length === 0 ? (
                     <div className="text-center py-20">
                         <div className="max-w-md mx-auto">
@@ -254,7 +290,7 @@ export default function Purchases() {
                 )}
             </div>
 
-            <Footer />
+
         </main >
     );
 }

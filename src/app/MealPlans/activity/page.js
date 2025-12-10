@@ -165,7 +165,6 @@ export default function MealPlansStep2() {
         </div>
       </div>
 
-      <Footer />
     </main>
   );
 }

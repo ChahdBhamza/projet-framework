@@ -750,32 +750,33 @@ export default function MealPlansResult() {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="mt-8 flex flex-wrap justify-center gap-3 md:gap-4">
           <button
             onClick={handleBack}
-            className="px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+            className="group relative px-6 py-3.5 rounded-xl font-medium text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2.5 bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-[0.98] font-poppins"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Create New Plan
+            <ArrowLeft className="w-4 h-4 text-slate-600 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            <span>Create New Plan</span>
           </button>
 
           <button
             onClick={sendToWebhook}
             disabled={isLoading || !stats}
-            className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${isLoading || !stats
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-              }`}
+            className={`group relative px-6 py-3.5 rounded-xl font-medium text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2.5 text-white shadow-sm hover:shadow-md active:scale-[0.98] font-poppins ${
+              isLoading || !stats
+                ? "bg-slate-300 cursor-not-allowed shadow-none"
+                : "bg-slate-700 hover:bg-slate-800"
+            }`}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Loading...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading...</span>
               </>
             ) : (
               <>
-                <Brain className="w-5 h-5" />
-                Get AI Recommendations
+                <Brain className="w-4 h-4" />
+                <span>Get AI Recommendations</span>
               </>
             )}
           </button>
@@ -785,25 +786,26 @@ export default function MealPlansResult() {
             <button
               onClick={saveMealPlan}
               disabled={savingMealPlan || saveSuccess}
-              className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-xl ${savingMealPlan || saveSuccess
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-purple-600 hover:bg-purple-700"
-                }`}
+              className={`group relative px-6 py-3.5 rounded-xl font-medium text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2.5 text-white shadow-sm hover:shadow-md active:scale-[0.98] font-poppins ${
+                savingMealPlan || saveSuccess
+                  ? "bg-slate-300 cursor-not-allowed shadow-none"
+                  : "bg-slate-600 hover:bg-slate-700"
+              }`}
             >
               {savingMealPlan ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Saving...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving...</span>
                 </>
               ) : saveSuccess ? (
                 <>
-                  <CheckCircle className="w-5 h-5" />
-                  Saved!
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Saved!</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5" />
-                  Save Meal Plan
+                  <Save className="w-4 h-4" />
+                  <span>Save Meal Plan</span>
                 </>
               )}
             </button>
@@ -811,14 +813,15 @@ export default function MealPlansResult() {
 
           <Link
             href="/Products"
-            className="px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 bg-[#7ab530] text-white hover:bg-[#6aa02a] shadow-lg hover:shadow-xl"
+            className="group relative px-6 py-3.5 rounded-xl font-medium text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2.5 bg-[#7ab530] hover:bg-[#6aa02a] text-white shadow-sm hover:shadow-md active:scale-[0.98] font-poppins"
+
           >
-            Browse Meals
+            <Utensils className="w-4 h-4" />
+            <span>Browse Meals</span>
           </Link>
         </div>
       </div>
 
-      <Footer />
     </main>
   );
 }
