@@ -88,7 +88,7 @@ export default function Analytics() {
 
   const fetchSummary = async () => {
     if (!user || !isAdmin) return;
-
+    
     setLoadingSummary(true);
     setError("");
     try {
@@ -106,12 +106,12 @@ export default function Analytics() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchSummary();
-
+      
       if (autoRefresh) {
         const interval = setInterval(() => {
           fetchSummary();
         }, 30000);
-
+        
         return () => clearInterval(interval);
       }
     }
@@ -142,26 +142,26 @@ export default function Analytics() {
   }
 
   const displayData = loadingSummary || !summary
-    ? {
-      userGrowth: [],
-      popularPlans: [],
-      orderTrends: [],
-      popularTags: [],
-      revenueData: [],
-      topSellingMeals: [],
-      priceDistribution: [],
-      calorieDistribution: []
-    }
+    ? { 
+        userGrowth: [],
+        popularPlans: [],
+        orderTrends: [],
+        popularTags: [],
+        revenueData: [],
+        topSellingMeals: [],
+        priceDistribution: [],
+        calorieDistribution: []
+      }
     : {
-      userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
-      popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
-      orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
-      popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
-      revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
-      topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
-      priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
-      calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
-    };
+        userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
+        popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
+        orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
+        popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
+        revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
+        topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
+        priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
+        calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
+      };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
@@ -228,7 +228,7 @@ export default function Analytics() {
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
-                      data={summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0
+                      data={summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0 
                         ? summary.mealTypeDistribution.map(item => ({ name: item.type, value: item.count }))
                         : [{ name: "No data", value: 1 }]}
                       cx="50%"
@@ -239,11 +239,11 @@ export default function Analytics() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {(summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0
+                      {(summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0 
                         ? summary.mealTypeDistribution.map(item => ({ name: item.type, value: item.count }))
                         : [{ name: "No data", value: 1 }]).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
