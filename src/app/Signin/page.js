@@ -3,14 +3,13 @@ import Link from "next/link";
 import Header from "../Header";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { useAuth } from "../context/AuthContext";
 
 export default function Signin() {
   const { login } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,9 +19,12 @@ export default function Signin() {
 
   // Show session-related messages and OAuth errors inline in the form
   useEffect(() => {
-    const reason = searchParams.get("reason");
-    const errorParam = searchParams.get("error");
-    const message = searchParams.get("message");
+    // Read params directly from URL to avoid useSearchParams Suspense requirement
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const reason = urlParams.get("reason");
+      const errorParam = urlParams.get("error");
+      const message = urlParams.get("message");
     
     if (reason === "sessionExpired") {
       setError("Your session has expired. Please sign in again.");
@@ -51,7 +53,8 @@ export default function Signin() {
         setError(decodedError);
       }
     }
-  }, [searchParams]);
+    }
+  }, []); // Empty dependency array since we read from URL directly
 
   const handleSubmit = async (e) => {
     e.preventDefault();

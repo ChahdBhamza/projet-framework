@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Header from "../../Header";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function ResetPasswordConfirm() {
-    const searchParams = useSearchParams();
     const router = useRouter();
 
     const [password, setPassword] = useState("");
@@ -21,14 +20,18 @@ export default function ResetPasswordConfirm() {
     const [token, setToken] = useState(null);
 
     useEffect(() => {
-        const tokenParam = searchParams.get("token");
+        // Read token directly from URL to avoid useSearchParams Suspense requirement
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenParam = urlParams.get("token");
 
-        if (!tokenParam) {
-            setError("Invalid reset link. No token provided.");
+            if (!tokenParam) {
+                setError("Invalid reset link. No token provided.");
+            }
+
+            setToken(tokenParam); // can be null or valid token
         }
-
-        setToken(tokenParam); // can be null or valid token
-    }, [searchParams]);
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
