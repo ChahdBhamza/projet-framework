@@ -1,6 +1,5 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GetFavorites, AddFavorites, RemoveFavorites } from "../../Utils/favorites";
@@ -10,11 +9,9 @@ import { ShoppingCart, Heart, ArrowLeft, Star, Check } from "lucide-react";
 import Header from "../../Header";
 import Footer from "../../Footer";
 
-export default function ProductDetail() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const id = params.id;
-  const fromSource = searchParams.get('from');
+export default function ProductDetail({ params, searchParams }) {
+  const id = params.id; 
+  const fromSource = searchParams?.from || null;  // ✅ FIXED
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [meal, setMeal] = useState(null);
@@ -25,7 +22,7 @@ export default function ProductDetail() {
     const fetchMeal = async () => {
       try {
         setLoading(true);
-        setImageError(false); // Reset image error when fetching new meal
+        setImageError(false);
         const res = await fetch(`/api/meals/${id}`);
         const data = await res.json();
         if (data.success) {
@@ -38,9 +35,7 @@ export default function ProductDetail() {
       }
     };
 
-    if (id) {
-      fetchMeal();
-    }
+    if (id) fetchMeal();
   }, [id]);
 
   useEffect(() => {
@@ -53,38 +48,33 @@ export default function ProductDetail() {
     checkFavorite();
   }, [meal]);
 
-  // Check for pending actions after login
   useEffect(() => {
     const executePendingAction = async () => {
-      const pendingActionStr = localStorage.getItem('pendingAction');
+      const pendingActionStr = localStorage.getItem("pendingAction");
       if (!pendingActionStr || !meal) return;
 
       try {
         const pendingAction = JSON.parse(pendingActionStr);
 
-        // Check if this action is for the current meal
         if (pendingAction.mealId === meal._id) {
-          if (pendingAction.action === 'addToCart') {
+          if (pendingAction.action === "addToCart") {
             await AddPurchase(meal._id, meal);
             alert(`${meal.mealName} added to cart!`);
-            localStorage.removeItem('pendingAction');
-          } else if (pendingAction.action === 'addFavorite') {
+            localStorage.removeItem("pendingAction");
+          } else if (pendingAction.action === "addFavorite") {
             await AddFavorites(meal._id);
             setIsFavorite(true);
-            localStorage.removeItem('pendingAction');
+            localStorage.removeItem("pendingAction");
           }
         }
       } catch (error) {
-        console.error('Error executing pending action:', error);
-        localStorage.removeItem('pendingAction');
+        console.error("Error executing pending action:", error);
+        localStorage.removeItem("pendingAction");
       }
     };
 
-    // Only execute if user is logged in
     const token = localStorage.getItem("token");
-    if (token && meal) {
-      executePendingAction();
-    }
+    if (token && meal) executePendingAction();
   }, [meal]);
 
   const handleFavoriteToggle = async () => {
@@ -99,22 +89,21 @@ export default function ProductDetail() {
         setIsFavorite(true);
       }
     } catch (error) {
-      // Error handling is done in AddFavorites/RemoveFavorites (redirects to sign-in)
       console.error("Error toggling favorite:", error);
     }
   };
 
   const handleAddToCart = async () => {
-    if (meal) {
-      try {
-        await AddPurchase(meal._id, meal);
-        alert(`${meal.mealName} added to cart!`);
-      } catch (error) {
-        // Error handling is done in AddToCart (redirects to sign-in)
-        console.error("Error adding to cart:", error);
-      }
+    if (!meal) return;
+    try {
+      await AddPurchase(meal._id, meal);
+      alert(`${meal.mealName} added to cart!`);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
     }
   };
+
+  // --- everything below stays the same ---
 
   if (loading) {
     return (

@@ -9,21 +9,25 @@ import Link from "next/link";
 export default function ResetPasswordConfirm() {
     const searchParams = useSearchParams();
     const router = useRouter();
+
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [token, setToken] = useState("");
+
+    // IMPORTANT FIX
+    const [token, setToken] = useState(null);
 
     useEffect(() => {
         const tokenParam = searchParams.get("token");
+
         if (!tokenParam) {
             setError("Invalid reset link. No token provided.");
-        } else {
-            setToken(tokenParam);
         }
+
+        setToken(tokenParam); // can be null or valid token
     }, [searchParams]);
 
     const handleSubmit = async (e) => {
@@ -31,13 +35,11 @@ export default function ResetPasswordConfirm() {
         setError("");
         setMessage("");
 
-        // Validate passwords match
         if (password !== confirmPassword) {
             setError("Passwords do not match");
             return;
         }
 
-        // Validate password length
         if (password.length < 6) {
             setError("Password must be at least 6 characters long");
             return;
@@ -57,7 +59,7 @@ export default function ResetPasswordConfirm() {
             if (res.ok) {
                 setMessage(data.message);
                 setSuccess(true);
-                // Redirect to signin after 3 seconds
+
                 setTimeout(() => {
                     router.push("/Signin");
                 }, 3000);
@@ -71,18 +73,30 @@ export default function ResetPasswordConfirm() {
         }
     };
 
+    // Show invalid page ONLY AFTER token is checked
+    if (token === null) {
+        return (
+            <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
+                <p className="text-gray-700 text-lg">Checking reset link…</p>
+            </main>
+        );
+    }
+
     if (!token) {
         return (
             <main className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
                 <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
+
                 <div className="relative z-10">
                     <Header />
                 </div>
+
                 <section className="flex-grow flex items-center justify-center py-16 relative z-10">
                     <div className="bg-white/90 backdrop-blur-md shadow-xl rounded-2xl p-10 w-full max-w-md border border-gray-100 text-center">
                         <div className="text-6xl mb-6">❌</div>
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">Invalid Link</h2>
                         <p className="text-gray-600 mb-6">{error}</p>
+
                         <Link
                             href="/reset-password"
                             className="inline-block px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-300 hover:bg-[#6aa02b]"
@@ -103,6 +117,7 @@ export default function ResetPasswordConfirm() {
             <Image src="/broccoli.png" alt="Broccoli" width={90} height={90} className="floating absolute bottom-12 right-16 opacity-80 drop-shadow-md" />
 
             <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
+
             <div className="relative z-10">
                 <Header />
             </div>
@@ -112,9 +127,7 @@ export default function ResetPasswordConfirm() {
                     {!success ? (
                         <>
                             <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Set New Password 🔐</h2>
-                            <p className="text-center text-gray-500 mb-8">
-                                Enter your new password below.
-                            </p>
+                            <p className="text-center text-gray-500 mb-8">Enter your new password below.</p>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {error && <p className="text-red-500 text-center">{error}</p>}

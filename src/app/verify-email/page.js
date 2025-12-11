@@ -1,22 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import Header from "../Header";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function VerifyEmail() {
-    const searchParams = useSearchParams();
     const router = useRouter();
     const { login } = useAuth();
+
     const [status, setStatus] = useState("verifying"); // verifying, success, error
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = searchParams.get("token");
+        // ----------- FIX: Read token manually from URL -----------
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        // ----------------------------------------------------------
 
         if (!token) {
             setStatus("error");
@@ -25,7 +28,6 @@ export default function VerifyEmail() {
             return;
         }
 
-        // Verify email
         const verifyEmail = async () => {
             try {
                 const res = await fetch("/api/auth/verify-email", {
@@ -40,12 +42,12 @@ export default function VerifyEmail() {
                     setStatus("success");
                     setMessage(data.message || "Email verified successfully!");
 
-                    // Auto-login: Use AuthContext login function for immediate session update
+                    // Auto-login
                     if (data.token && data.user) {
                         login(data.token, data.user);
                     }
 
-                    // Redirect to home after 2 seconds
+                    // Redirect home
                     setTimeout(() => {
                         router.push("/");
                     }, 2000);
@@ -62,7 +64,7 @@ export default function VerifyEmail() {
         };
 
         verifyEmail();
-    }, [searchParams, router, login]);
+    }, [router, login]);
 
     return (
         <main className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#e9fce2] via-[#f7fff3] to-[#d9f8cc]">
