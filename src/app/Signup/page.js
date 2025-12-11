@@ -233,15 +233,9 @@ export default function Signup() {
                   <br />
                   2. Click the verification link
                   <br />
-                  3. Sign in to your account
+                  3. Welcome to Dietopia!
                 </p>
               </div>
-              <Link
-                href="/Signin"
-                className="inline-block px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-300 hover:bg-[#6aa02b]"
-              >
-                Go to Sign In
-              </Link>
             </div>
           )}
         </div>

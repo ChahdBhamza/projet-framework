@@ -911,7 +911,7 @@ export default function Profile() {
           {/* Orders Section - Hidden for admins */}
           {
             !isAdmin && (
-              <div className="bg-white rounded-3xl shadow-xl border-2 border-[#7ab530] mb-6 overflow-hidden mt-8" style={{ borderImage: 'linear-gradient(135deg, #7ab530, #6aa02b, #8bc34a) 1' }}>
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200 mb-6 overflow-hidden mt-8">
                 <button
                   onClick={() => toggleSection("orders")}
                   className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
@@ -1021,7 +1021,7 @@ export default function Profile() {
           {/* Meal Plans Section - Hidden for admins */}
           {
             !isAdmin && (
-              <div className="bg-white rounded-2xl shadow-xl border-2 border-[#7ab530] mb-6 overflow-hidden mt-8" style={{ borderImage: 'linear-gradient(135deg, #7ab530, #6aa02b, #8bc34a) 1' }}>
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 mb-6 overflow-hidden mt-8">
                 <button
                   onClick={() => toggleSection("mealPlans")}
                   className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
