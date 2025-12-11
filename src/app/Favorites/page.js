@@ -26,7 +26,8 @@ export default function Favorites() {
         const data = await res.json();
         if (data.success) {
           const favorites = data.meals.filter(meal => ids.includes(meal._id));
-          setFavoriteMeals(favorites);
+          // Reverse to show most recently added favorites first
+          setFavoriteMeals(favorites.reverse());
         }
       } catch (error) {
         console.error('Error loading meals:', error);
@@ -154,9 +155,9 @@ export default function Favorites() {
           </div>
         )}
       </div>
-      
+
       <div className="relative z-10">
-        <Footer />
+  
       </div>
     </main>
   );

@@ -9,6 +9,9 @@ import {
   Calendar,
   User,
   Clock,
+  ChevronDown,
+  ChevronUp,
+
 } from "lucide-react";
 
 export default function AdminMealPlans() {
@@ -17,6 +20,14 @@ export default function AdminMealPlans() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mealPlans, setMealPlans] = useState([]);
   const [loadingMealPlans, setLoadingMealPlans] = useState(true);
+  const [expandedPlans, setExpandedPlans] = useState({});
+
+  const togglePlan = (planId) => {
+    setExpandedPlans(prev => ({
+      ...prev,
+      [planId]: !prev[planId]
+    }));
+  };
 
   const isAdmin = typeof window !== "undefined" && user && process.env.NEXT_PUBLIC_ADMIN_EMAIL
     ? user.email?.toLowerCase()?.trim() === process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()?.trim()
@@ -115,30 +126,30 @@ export default function AdminMealPlans() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-[#7ab530] to-[#6aa02a] rounded-2xl p-6 text-white shadow-lg">
+              <div className="bg-white rounded-2xl p-6 text-[#7ab530]shadow-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <Calendar className="w-8 h-8" />
                   <h3 className="text-sm font-medium opacity-90">Total Plans</h3>
                 </div>
-                <p className="text-4xl font-bold">{mealPlans.length}</p>
+                <p className="text-4xl  text-[#7ab530] font-bold">{mealPlans.length}</p>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <User className="w-8 h-8 text-blue-600" />
-                  <h3 className="text-sm font-medium text-gray-600">Active Users</h3>
+                  <User className="w-8 h-8 text-black-600" />
+                  <h3 className="text-sm  font-medium text-gray-600">Active Users</h3>
                 </div>
-                <p className="text-4xl font-bold text-gray-900">
+                <p className="text-4xl  text-[#7ab530] font-bold ">
                   {new Set(mealPlans.map(p => p.userId?._id)).size}
                 </p>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <Clock className="w-8 h-8 text-purple-600" />
+                  <Clock className="w-8 h-8 text-black-600" />
                   <h3 className="text-sm font-medium text-gray-600">Latest Plan</h3>
                 </div>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-[#7ab530]">
                   {mealPlans.length > 0 ? formatDate(mealPlans[0]?.createdAt) : "N/A"}
                 </p>
               </div>
@@ -174,96 +185,112 @@ export default function AdminMealPlans() {
                       </div>
 
                       <div className="space-y-4">
-                        {/* Header */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="p-2 bg-green-100 rounded-xl">
-                                <Calendar className="w-5 h-5 text-[#7ab530]" />
-                              </div>
-                              <div>
+                        {/* Compact Header: Title + User Info */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-100 rounded-xl flex-shrink-0">
+                              <Calendar className="w-5 h-5 text-[#7ab530]" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="text-xl font-bold text-gray-900">
                                   {plan.mealPlan?.length || 0} Day Meal Plan
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-0.5">
-                                  Created {formatDate(plan.createdAt)}
-                                </p>
+                                <span className="text-gray-400 font-medium hidden sm:inline">•</span>
+                                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                  <User className="w-3.5 h-3.5" />
+                                  <span className="font-medium">{plan.userId?.name || "Unknown User"}</span>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* User Info Card */}
-                        <div className="bg-white rounded-xl p-4 border border-gray-100">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
-                              <User className="w-6 h-6 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{plan.userId?.name || "Unknown User"}</p>
-                              <p className="text-sm text-gray-500">{plan.userId?.email || "N/A"}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Profile</p>
-                              <p className="text-sm font-medium text-gray-700 capitalize">
-                                {plan.userProfile?.gender || "N/A"}, {plan.calculatedStats?.age || "N/A"} years
+                              <p className="text-sm text-gray-500 mt-1">
+                                Created {formatDate(plan.createdAt)} • {plan.userProfile?.gender || "N/A"}, {plan.calculatedStats?.age || "N/A"} years
                               </p>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">TDEE</p>
-                            <p className="text-2xl font-bold text-blue-900">
-                              {plan.calculatedStats?.tdee || 0}
-                            </p>
-                            <p className="text-xs text-blue-600 mt-1">kcal/day</p>
-                          </div>
-
-                          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                            <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Protein</p>
-                            <p className="text-2xl font-bold text-green-900">
-                              {plan.calculatedStats?.macros?.protein || 0}
-                            </p>
-                            <p className="text-xs text-green-600 mt-1">grams</p>
-                          </div>
-
-                          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
-                            <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-1">Carbs</p>
-                            <p className="text-2xl font-bold text-orange-900">
-                              {plan.calculatedStats?.macros?.carbs || 0}
-                            </p>
-                            <p className="text-xs text-orange-600 mt-1">grams</p>
-                          </div>
-
-                          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                            <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Fats</p>
-                            <p className="text-2xl font-bold text-purple-900">
-                              {plan.calculatedStats?.macros?.fats || 0}
-                            </p>
-                            <p className="text-xs text-purple-600 mt-1">grams</p>
+                          {/* Toggle Button */}
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={() => togglePlan(plan._id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${expandedPlans[plan._id]
+                                ? "bg-green-50 text-[#7ab530]"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                            >
+                              {expandedPlans[plan._id] ? (
+                                <>
+                                  Hide Details
+                                  <ChevronUp className="w-4 h-4" />
+                                </>
+                              ) : (
+                                <>
+                                  View Details
+                                  <ChevronDown className="w-4 h-4" />
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
 
-                        {/* Physical Stats */}
-                        <div className="flex items-center gap-6 text-sm pt-3 border-t border-gray-100">
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-500">Weight:</span>
-                            <span className="font-semibold text-gray-900">{plan.userProfile?.weight || "N/A"} kg</span>
+                        {/* Collapsible Content */}
+                        {expandedPlans[plan._id] && (
+                          <div className="mt-6 pt-6 border-t border-gray-100 animate-slide-in">
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                              <div className="bg-white  rounded-xl p-4 border border-blue-200">
+                                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">TDEE</p>
+                                <p className="text-2xl font-bold text-blue-900">
+                                  {plan.calculatedStats?.tdee || 0}
+                                </p>
+                                <p className="text-xs text-blue-600 mt-1">kcal/day</p>
+                              </div>
+
+                              <div className="bg-white rounded-xl p-4 border border-green-200">
+                                <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Protein</p>
+                                <p className="text-2xl font-bold text-green-900">
+                                  {plan.calculatedStats?.macros?.protein || 0}
+                                </p>
+                                <p className="text-xs text-green-600 mt-1">grams</p>
+                              </div>
+
+                              <div className="bg-white rounded-xl p-4 border border-orange-200">
+                                <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-1">Carbs</p>
+                                <p className="text-2xl font-bold text-orange-900">
+                                  {plan.calculatedStats?.macros?.carbs || 0}
+                                </p>
+                                <p className="text-xs text-orange-600 mt-1">grams</p>
+                              </div>
+
+                              <div className="bg-white rounded-xl p-4 border border-purple-200">
+                                <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Fats</p>
+                                <p className="text-2xl font-bold text-purple-900">
+                                  {plan.calculatedStats?.macros?.fats || 0}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">grams</p>
+                              </div>
+                            </div>
+
+                            {/* Physical Stats */}
+                            <div className="flex items-center gap-6 text-sm mb-6 pb-6 border-b border-gray-100">
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500">Weight:</span>
+                                <span className="font-semibold text-gray-900">{plan.userProfile?.weight || "N/A"} kg</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500">Height:</span>
+                                <span className="font-semibold text-gray-900">{plan.userProfile?.height || "N/A"} cm</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500">Activity:</span>
+                                <span className="font-semibold text-gray-900 capitalize">
+                                  {plan.userProfile?.trainingActivity?.replace("-", " ") || "N/A"}
+                                </span>
+                              </div>
+                            </div>
+
+
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-500">Height:</span>
-                            <span className="font-semibold text-gray-900">{plan.userProfile?.height || "N/A"} cm</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-500">Activity:</span>
-                            <span className="font-semibold text-gray-900 capitalize">
-                              {plan.userProfile?.trainingActivity?.replace("-", " ") || "N/A"}
-                            </span>
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   ))}

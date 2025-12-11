@@ -18,6 +18,13 @@ import {
   CheckCircle,
   XCircle,
   Award,
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownRight,
+  MoreHorizontal,
+  Activity,
+  Zap,
+  LayoutGrid,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -107,12 +114,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchSummary();
-      
+
       if (autoRefresh) {
         const interval = setInterval(() => {
           fetchSummary();
         }, 30000);
-        
+
         return () => clearInterval(interval);
       }
     }
@@ -147,36 +154,36 @@ export default function Dashboard() {
 
   // Use real data from summary, fallback to defaults if loading or undefined
   const displayData = loadingSummary || !summary
-    ? { 
-        totalUsers: "…", 
-        activeUsersToday: "…", 
-        activePlans: "…", 
-        revenue: "…",
-        userGrowth: [],
-        popularPlans: [],
-        orderTrends: [],
-        popularTags: [],
-        recentOrders: []
-      }
+    ? {
+      totalUsers: "…",
+      activeUsersToday: "…",
+      activePlans: "…",
+      revenue: "…",
+      userGrowth: [],
+      popularPlans: [],
+      orderTrends: [],
+      popularTags: [],
+      recentOrders: []
+    }
     : {
-        totalUsers: summary.totalUsers ?? 0,
-        activeUsersToday: summary.activeUsersToday ?? 0,
-        activePlans: summary.totalMeals ?? 0,
-        revenue: summary.totalRevenue ?? 0,
-        userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
-        popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
-        orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
-        popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
-        recentOrders: Array.isArray(summary.recentOrders) ? summary.recentOrders : [],
-        revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
-        topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
-        priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
-        calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
-      };
+      totalUsers: summary.totalUsers ?? 0,
+      activeUsersToday: summary.activeUsersToday ?? 0,
+      activePlans: summary.totalMeals ?? 0,
+      revenue: summary.totalRevenue ?? 0,
+      userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
+      popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
+      orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
+      popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
+      recentOrders: Array.isArray(summary.recentOrders) ? summary.recentOrders : [],
+      revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
+      topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
+      priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
+      calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
+    };
 
   const fetchSummary = async () => {
     if (!user || !isAdmin) return;
-    
+
     setLoadingSummary(true);
     setError("");
     try {
@@ -207,10 +214,23 @@ export default function Dashboard() {
         />
 
         <main className="flex-1 p-4 lg:p-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-              <p className="text-gray-600 mt-1">Quick insights and recent activity</p>
+          <div className="max-w-7xl mx-auto space-y-8">
+
+            {/* Creative Welcome Hero */}
+            <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-100 p-8 sm:p-10">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-100 to-green-50 rounded-full blur-3xl opacity-60 -mr-16 -mt-16"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-50 to-purple-50 rounded-full blur-3xl opacity-60 -ml-10 -mb-10"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-2 flex items-center gap-3">
+                    Welcome back, Admin 
+                  </h1>
+                  <p className="text-lg text-gray-500 font-medium max-w-xl">
+                    Here's your daily overview. You have <span className="text-[#7ab530] font-bold">{summary?.ordersToday || 0} new orders</span> and <span className="text-blue-600 font-bold">{summary?.usersCreatedLast7Days || 0} new users</span> this week.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Quick Stats Cards */}
@@ -243,122 +263,157 @@ export default function Dashboard() {
                 change={summary?.totalOrders > 0 ? `${summary.totalOrders} orders` : "No orders"}
                 growth={summary?.revenueGrowth ? `${summary.revenueGrowth > 0 ? '+' : ''}${summary.revenueGrowth}%` : null}
                 icon={DollarSign}
-                color="bg-orange-500"
+                color="bg-green-500"
               />
             </div>
 
             {/* Secondary Metrics Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-              <MetricCard
-                label="Conversion Rate"
-                value={summary?.conversionRate ? `${summary.conversionRate}%` : "0%"}
-                icon={Target}
-              />
-              <MetricCard
-                label="Avg Order Value"
-                value={summary?.averageOrderValue ? `${summary.averageOrderValue} TND` : "0 TND"}
-                icon={DollarSign}
-                    />
-              <MetricCard
-                label="Repeat Customers"
-                value={summary?.repeatCustomersCount || 0}
-                subtitle={`${summary?.repeatCustomerRate || 0}% rate`}
-                icon={Repeat}
-              />
-              <MetricCard
-                label="Total Favorites"
-                value={summary?.totalFavorites || 0}
-                subtitle={`${summary?.avgFavoritesPerUser || 0} per user`}
-                icon={Award}
-              />
-              <MetricCard
-                label="Verified Users"
-                value={summary?.verifiedUsers || 0}
-                subtitle={`${summary?.totalUsers > 0 ? Math.round((summary.verifiedUsers / summary.totalUsers) * 100) : 0}%`}
-                icon={CheckCircle}
-              />
-              <MetricCard
-                label="Orders Growth"
-                value={summary?.ordersGrowth ? `${summary.ordersGrowth > 0 ? '+' : ''}${summary.ordersGrowth}%` : "0%"}
-                icon={TrendingUp}
-              />
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-gray-400" />
+                Key Performance Indicators
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <MetricCard
+                  label="Conversion Rate"
+                  value={summary?.conversionRate ? `${summary.conversionRate}%` : "0%"}
+                  icon={Target}
+                />
+                <MetricCard
+                  label="Avg Order Value"
+                  value={summary?.averageOrderValue ? `${summary.averageOrderValue} TND` : "0 TND"}
+                  icon={DollarSign}
+                />
+                <MetricCard
+                  label="Repeat Customers"
+                  value={summary?.repeatCustomersCount || 0}
+                  subtitle={`${summary?.repeatCustomerRate || 0}% rate`}
+                  icon={Repeat}
+                />
+                <MetricCard
+                  label="Total Favorites"
+                  value={summary?.totalFavorites || 0}
+                  subtitle={`${summary?.avgFavoritesPerUser || 0} per user`}
+                  icon={Award}
+                />
+                <MetricCard
+                  label="Verified Users"
+                  value={summary?.verifiedUsers || 0}
+                  subtitle={`${summary?.totalUsers > 0 ? Math.round((summary.verifiedUsers / summary.totalUsers) * 100) : 0}%`}
+                  icon={CheckCircle}
+                />
+                <MetricCard
+                  label="Orders Growth"
+                  value={summary?.ordersGrowth ? `${summary.ordersGrowth > 0 ? '+' : ''}${summary.ordersGrowth}%` : "0%"}
+                  icon={TrendingUp}
+                />
+              </div>
             </div>
 
             {/* Recent Activity Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Recent Orders */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-[#7ab530]" />
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col h-full">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <Clock className="w-5 h-5 text-[#7ab530]" />
+                  </div>
                   Recent Orders
                 </h3>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+                <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                   {displayData.recentOrders && displayData.recentOrders.length > 0 ? (
                     displayData.recentOrders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="p-3 border border-gray-200 rounded-lg hover:border-[#7ab530] transition">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm truncate">{order.userName || order.userEmail || "Unknown User"}</h4>
-                            <p className="text-xs text-gray-600">{order.itemsCount} items • {new Date(order.orderDate).toLocaleDateString()}</p>
+                      <div key={order.id} className="group flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-[#7ab530] font-bold text-sm shrink-0">
+                          {order.userName ? order.userName.charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm truncate">{order.userName || "Unknown User"}</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                              {order.itemsCount} items
+                            </span>
+                            <span className="text-xs text-gray-400">{new Date(order.orderDate).toLocaleDateString()}</span>
                           </div>
-                          <span className="text-sm font-bold text-[#7ab530] ml-2">{(order.totalAmount || 0).toFixed(2)} TND</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="block font-bold text-[#7ab530] text-sm">{(order.totalAmount || 0).toFixed(2)}</span>
+                          <span className="text-[10px] text-gray-400 font-medium">TND</span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500 text-sm">No recent orders</div>
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                      <Clock className="w-12 h-12 mb-3 opacity-20" />
+                      <p className="text-sm font-medium">No recent orders found</p>
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Recent Users */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  Recent Signups
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col h-full">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <Users className="w-5 h-5 text-blue-500" />
+                  </div>
+                  New Members
                 </h3>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+                <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                   {summary?.recentUsers && summary.recentUsers.length > 0 ? (
                     summary.recentUsers.map((user, idx) => (
-                      <div key={idx} className="p-3 border border-gray-200 rounded-lg hover:border-blue-500 transition">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm truncate">{user.name}</h4>
-                            <p className="text-xs text-gray-600 truncate">{user.email}</p>
-                            <p className="text-xs text-gray-500 mt-1">{new Date(user.createdAt).toLocaleDateString()}</p>
-                      </div>
-                          {user.isEmailVerified ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-gray-400" />
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm shrink-0 relative">
+                          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                          {user.isEmailVerified && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                              <CheckCircle className="w-3 h-3 text-green-500 fill-current" />
+                            </div>
                           )}
-                      </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm truncate">{user.name}</h4>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        <div className="text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                          {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
                       </div>
                     ))
                   ) : (
                     <div className="text-center py-8 text-gray-500 text-sm">No recent signups</div>
                   )}
+                </div>
               </div>
-            </div>
 
               {/* Recent Uploads */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Send className="w-5 h-5 text-purple-500" />
-                  Recent Uploads
-              </h3>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col h-full">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <Send className="w-5 h-5 text-purple-500" />
+                  </div>
+                  Latest Uploads
+                </h3>
+                <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                   {summary?.recentUploads && summary.recentUploads.length > 0 ? (
                     summary.recentUploads.map((upload, idx) => (
-                      <div key={idx} className="p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm truncate">{upload.fileName}</h4>
-                            <p className="text-xs text-gray-600">{upload.importedCount}/{upload.totalRows} imported</p>
-                            <p className="text-xs text-gray-500 mt-1">{new Date(upload.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                  </div>
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm truncate">{upload.fileName}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="h-1.5 w-16 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min((upload.importedCount / upload.totalRows) * 100, 100)}%` }}></div>
+                            </div>
+                            <span className="text-[10px] text-gray-500 font-medium">{upload.importedCount}/{upload.totalRows}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
                     ))
                   ) : (
                     <div className="text-center py-8 text-gray-500 text-sm">No recent uploads</div>
@@ -381,39 +436,58 @@ export default function Dashboard() {
 }
 
 function StatCard({ title, value, change, growth, icon: Icon, color }) {
+  const isPositive = growth && parseFloat(growth) > 0;
+  const isNegative = growth && parseFloat(growth) < 0;
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${color} bg-opacity-10`}>
-          <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
+    <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${color.replace('bg-', 'bg-opacity-10 bg-')} blur-2xl group-hover:scale-150 transition-transform duration-500`}></div>
+
+      <div className="relative">
+        <div className="flex items-start justify-between mb-4">
+          <div className={`p-3.5 rounded-xl ${color} bg-opacity-10 text-white group-hover:scale-110 transition-transform duration-300`}>
+            <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
+          </div>
+          {growth && (
+            <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${isPositive ? 'bg-green-100 text-green-700' : isNegative ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+              }`}>
+              {isPositive ? <ArrowUpRight className="w-3 h-3" /> : isNegative ? <ArrowDownRight className="w-3 h-3" /> : null}
+              {growth}
+            </span>
+          )}
         </div>
-        {growth && (
-          <span className={`text-xs font-semibold flex items-center gap-1 ${
-            parseFloat(growth) > 0 ? 'text-green-600' : parseFloat(growth) < 0 ? 'text-red-600' : 'text-gray-600'
-          }`}>
-            <TrendingUp className={`w-3 h-3 ${parseFloat(growth) < 0 ? 'rotate-180' : ''}`} />
-            {growth}
-        </span>
-        )}
+
+        <div>
+          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+          <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{value}</h3>
+          {change && (
+            <p className="text-xs text-gray-400 mt-2 font-medium flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+              {change}
+            </p>
+          )}
+        </div>
       </div>
-      <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      {change && (
-        <p className="text-xs text-gray-500 mt-2">{change}</p>
-      )}
     </div>
   );
 }
 
 function MetricCard({ label, value, subtitle, icon: Icon }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-2 mb-2">
-        {Icon && <Icon className="w-4 h-4 text-gray-400" />}
-        <p className="text-xs font-medium text-gray-600">{label}</p>
+    <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:border-[#7ab530] hover:shadow-md transition-all duration-200">
+      <div className="flex flex-col h-full justify-between">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-gray-50 rounded-lg group-hover:bg-[#7ab530]/10 transition-colors">
+            {Icon && <Icon className="w-4 h-4 text-gray-400 group-hover:text-[#7ab530] transition-colors" />}
+          </div>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</p>
+        </div>
+        <div>
+          <p className="text-lg font-bold text-gray-900">{value}</p>
+          {subtitle && <p className="text-[10px] text-gray-400 font-medium mt-0.5">{subtitle}</p>}
+        </div>
       </div>
-      <p className="text-xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
     </div>
   );
 }
