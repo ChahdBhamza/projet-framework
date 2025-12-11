@@ -188,9 +188,28 @@ export default function Products() {
                 const url = `/api/meals${queryString ? `?${queryString}` : ''}`;
 
                 const res = await fetch(url);
+                
+                // Check if response is OK
+                if (!res.ok) {
+                    console.error(`API error: ${res.status} ${res.statusText}`);
+                    setMeals([]);
+                    return;
+                }
+                
+                // Check if response is JSON
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    console.error("Response is not JSON:", contentType);
+                    setMeals([]);
+                    return;
+                }
+                
                 const data = await res.json();
-                if (data.success) {
+                if (data.success && Array.isArray(data.meals)) {
                     setMeals(data.meals);
+                } else {
+                    console.error('Invalid response format:', data);
+                    setMeals([]);
                 }
 
                 // Restore scroll position after a brief delay to allow DOM update
@@ -199,6 +218,7 @@ export default function Products() {
                 }, 0);
             } catch (error) {
                 console.error('Failed to fetch meals:', error);
+                setMeals([]);
             } finally {
                 setLoading(false);
             }

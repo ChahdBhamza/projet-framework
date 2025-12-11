@@ -127,7 +127,11 @@ export default function Signin() {
         const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
         
         // Check if there's a return URL to redirect back to
-        const returnUrl = searchParams.get("returnUrl");
+        let returnUrl = null;
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          returnUrl = urlParams.get("returnUrl");
+        }
         if (returnUrl) {
           const decodedUrl = decodeURIComponent(returnUrl);
           router.push(decodedUrl);
@@ -256,7 +260,11 @@ export default function Signin() {
             <button
               type="button"
               onClick={() => {
-                const returnUrl = searchParams.get("returnUrl");
+                let returnUrl = null;
+                if (typeof window !== 'undefined') {
+                  const urlParams = new URLSearchParams(window.location.search);
+                  returnUrl = urlParams.get("returnUrl");
+                }
                 const googleAuthUrl = returnUrl 
                   ? `/api/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`
                   : "/api/auth/google";

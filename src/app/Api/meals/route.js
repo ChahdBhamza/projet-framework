@@ -53,11 +53,20 @@ export async function GET(request) {
 
         const allMeals = await meals.find(query).lean();
 
-        return NextResponse.json({
-            success: true,
-            meals: allMeals,
-            count: allMeals.length
-        });
+        return NextResponse.json(
+            {
+                success: true,
+                meals: allMeals || [],
+                count: allMeals?.length || 0
+            },
+            {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                }
+            }
+        );
     } catch (error) {
         console.error('Error fetching meals:', error);
         return NextResponse.json(
@@ -67,7 +76,12 @@ export async function GET(request) {
                 meals: [],
                 count: 0
             },
-            { status: 500 }
+            { 
+                status: 500,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }
         );
     }
 }

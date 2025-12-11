@@ -24,12 +24,32 @@ export default function ProductDetail({ params, searchParams }) {
         setLoading(true);
         setImageError(false);
         const res = await fetch(`/api/meals/${id}`);
+        
+        // Check if response is OK
+        if (!res.ok) {
+          console.error(`API error: ${res.status} ${res.statusText}`);
+          setMeal(null);
+          return;
+        }
+        
+        // Check if response is JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("Response is not JSON:", contentType);
+          setMeal(null);
+          return;
+        }
+        
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.meal) {
           setMeal(data.meal);
+        } else {
+          console.error('Invalid response format or meal not found:', data);
+          setMeal(null);
         }
       } catch (error) {
         console.error("Failed to fetch meal:", error);
+        setMeal(null);
       } finally {
         setLoading(false);
       }
