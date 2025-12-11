@@ -2,6 +2,10 @@ import { connectDB } from '../../../../db.js';
 import meals from '../../../../models/meals.js';
 import { NextResponse } from 'next/server';
 
+// Ensure this route is handled as a dynamic route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request) {
     try {
         await connectDB();
@@ -57,7 +61,12 @@ export async function GET(request) {
     } catch (error) {
         console.error('Error fetching meals:', error);
         return NextResponse.json(
-            { success: false, error: error.message },
+            { 
+                success: false, 
+                error: error.message || 'Failed to fetch meals',
+                meals: [],
+                count: 0
+            },
             { status: 500 }
         );
     }

@@ -57,6 +57,21 @@ export default function PopularMeals() {
       try {
         setLoading(true);
         const res = await fetch("/api/meals");
+        
+        // Check if response is OK and is JSON
+        if (!res.ok) {
+          console.error(`API error: ${res.status} ${res.statusText}`);
+          setMeals([]);
+          return;
+        }
+        
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("Response is not JSON:", contentType);
+          setMeals([]);
+          return;
+        }
+        
         const data = await res.json();
         if (data.success && Array.isArray(data.meals)) {
           // Pick 4 "popular" meals – for now just take the first 4
