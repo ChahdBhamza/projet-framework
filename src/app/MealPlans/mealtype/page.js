@@ -75,7 +75,7 @@ export default function MealPlansMealType() {
     { label: "Low Carb", value: "low-carb", icon: Apple },
     { label: "Gluten Free", value: "gluten-free", icon: Wheat },
     { label: "High Protein", value: "high-protein", icon: Zap },
-    { label: "Low Fat", value: "low-fat", icon: Droplet},
+
     { label: "Vegetarian", value: "vegetarian", icon: Leaf },
     
   ];

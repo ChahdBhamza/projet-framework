@@ -29,7 +29,34 @@ import {
   XCircle,
 } from "lucide-react";
 
-const COLORS = ["#7ab530", "#34d399", "#60a5fa", "#f97316", "#a78bfa"];
+const THEME = {
+  primary: "#7ab530",
+  primaryDark: "#5a8c24",
+  primaryLight: "#b7e183",
+  accent: "#3f6212",
+  neutral: "#6b7280",
+};
+
+const THEME_MIX_COLORS = {
+  primaryGreen: "#7ab530",
+  darkGreen: "#5a8c24",
+  skyBlue: "#60a5fa",
+  sunnyYellow: "#facc15",
+  citrusOrange: "#fb923c",
+  softCoral: "#f87171",
+};
+
+const COLORS = [
+  THEME_MIX_COLORS.primaryGreen,
+  THEME_MIX_COLORS.skyBlue,
+  THEME_MIX_COLORS.sunnyYellow,
+  THEME_MIX_COLORS.citrusOrange,
+  THEME_MIX_COLORS.softCoral,
+  THEME_MIX_COLORS.darkGreen,
+];
+
+const cardClass =
+  "bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 p-4";
 
 export default function Analytics() {
   const { user, loading, logout } = useAuth();
@@ -61,7 +88,7 @@ export default function Analytics() {
 
   const fetchSummary = async () => {
     if (!user || !isAdmin) return;
-    
+
     setLoadingSummary(true);
     setError("");
     try {
@@ -79,12 +106,12 @@ export default function Analytics() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchSummary();
-      
+
       if (autoRefresh) {
         const interval = setInterval(() => {
           fetchSummary();
         }, 30000);
-        
+
         return () => clearInterval(interval);
       }
     }
@@ -115,26 +142,26 @@ export default function Analytics() {
   }
 
   const displayData = loadingSummary || !summary
-    ? { 
-        userGrowth: [],
-        popularPlans: [],
-        orderTrends: [],
-        popularTags: [],
-        revenueData: [],
-        topSellingMeals: [],
-        priceDistribution: [],
-        calorieDistribution: []
-      }
+    ? {
+      userGrowth: [],
+      popularPlans: [],
+      orderTrends: [],
+      popularTags: [],
+      revenueData: [],
+      topSellingMeals: [],
+      priceDistribution: [],
+      calorieDistribution: []
+    }
     : {
-        userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
-        popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
-        orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
-        popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
-        revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
-        topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
-        priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
-        calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
-      };
+      userGrowth: Array.isArray(summary.userGrowth) ? summary.userGrowth : [],
+      popularPlans: Array.isArray(summary.popularPlans) ? summary.popularPlans : [],
+      orderTrends: Array.isArray(summary.orderTrends) ? summary.orderTrends : [],
+      popularTags: Array.isArray(summary.popularTags) ? summary.popularTags : [],
+      revenueData: Array.isArray(summary.revenueData) ? summary.revenueData : [],
+      topSellingMeals: Array.isArray(summary.topSellingMeals) ? summary.topSellingMeals : [],
+      priceDistribution: Array.isArray(summary.priceDistribution) ? summary.priceDistribution : [],
+      calorieDistribution: Array.isArray(summary.calorieDistribution) ? summary.calorieDistribution : []
+    };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
@@ -153,7 +180,7 @@ export default function Analytics() {
         />
 
         <main className="flex-1 p-4 lg:p-6 xl:p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-8">
             {/* Page Header */}
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Analytics Dashboard</h1>
@@ -161,18 +188,18 @@ export default function Analytics() {
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {/* User Growth Line Chart */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">User Growth</h3>
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 14 Days</span>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={displayData.userGrowth && displayData.userGrowth.length > 0 ? displayData.userGrowth : [{ day: "No data", users: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <XAxis dataKey="day" stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
+                    <YAxis stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -186,22 +213,22 @@ export default function Analytics() {
                     <Line
                       type="monotone"
                       dataKey="users"
-                      stroke="#7ab530"
+                      stroke={THEME_MIX_COLORS.primaryGreen}
                       strokeWidth={3}
-                      dot={{ fill: "#7ab530", r: 5, strokeWidth: 2, stroke: '#fff' }}
-                      activeDot={{ r: 7, stroke: '#7ab530', strokeWidth: 2 }}
+                      dot={{ fill: THEME_MIX_COLORS.primaryGreen, r: 5, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 7, stroke: THEME_MIX_COLORS.primaryGreen, strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Meal Type Distribution */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Meal Type Distribution</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
-                      data={summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0 
+                      data={summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0
                         ? summary.mealTypeDistribution.map(item => ({ name: item.type, value: item.count }))
                         : [{ name: "No data", value: 1 }]}
                       cx="50%"
@@ -212,11 +239,11 @@ export default function Analytics() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {(summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0 
+                      {(summary?.mealTypeDistribution && summary.mealTypeDistribution.length > 0
                         ? summary.mealTypeDistribution.map(item => ({ name: item.type, value: item.count }))
                         : [{ name: "No data", value: 1 }]).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
@@ -233,18 +260,18 @@ export default function Analytics() {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {/* Revenue Trends */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Revenue Trends</h3>
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 14 Days</span>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={displayData.revenueData && displayData.revenueData.length > 0 ? displayData.revenueData : [{ day: "No data", revenue: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <XAxis dataKey="day" stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
+                    <YAxis stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -259,26 +286,26 @@ export default function Analytics() {
                     <Line
                       type="monotone"
                       dataKey="revenue"
-                      stroke="#f97316"
+                      stroke={THEME_MIX_COLORS.skyBlue}
                       strokeWidth={3}
-                      dot={{ fill: "#f97316", r: 5, strokeWidth: 2, stroke: '#fff' }}
-                      activeDot={{ r: 7, stroke: '#f97316', strokeWidth: 2 }}
+                      dot={{ fill: THEME_MIX_COLORS.skyBlue, r: 5, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 7, stroke: THEME_MIX_COLORS.skyBlue, strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Order Trends */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Order Trends</h3>
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 7 Days</span>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 14 Days</span>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={displayData.orderTrends && displayData.orderTrends.length > 0 ? displayData.orderTrends : [{ day: "No data", orders: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
+                    <XAxis dataKey="day" stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
+                    <YAxis stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -289,136 +316,26 @@ export default function Analytics() {
                       }}
                       labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
-                    <Bar dataKey="orders" fill="#7ab530" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="orders" fill={THEME_MIX_COLORS.sunnyYellow} radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Charts Row 3 - Price Distribution */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50 mb-4">
-              <h3 className="text-base font-semibold text-gray-900 mb-4">Meal Price Distribution</h3>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={displayData.priceDistribution && displayData.priceDistribution.length > 0 ? displayData.priceDistribution : [{ range: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="range" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        padding: "12px",
-                      }}
-                      labelStyle={{ color: '#374151', fontWeight: 600 }}
-                    />
-                    <Bar dataKey="count" fill="#a78bfa" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
 
-            {/* Charts Row 4 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-              {/* Peak Ordering Hours */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-900">Peak Ordering Hours</h3>
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Last 30 Days</span>
-                </div>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={summary?.ordersByHour && summary.ordersByHour.length > 0 
-                    ? summary.ordersByHour.map(item => ({ hour: `${item.hour}:00`, count: item.count }))
-                    : [{ hour: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="hour" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        padding: "12px",
-                      }}
-                      labelStyle={{ color: '#374151', fontWeight: 600 }}
-                    />
-                    <Bar dataKey="count" fill="#7ab530" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* User Verification Status */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">User Verification Status</h3>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={summary && summary.totalUsers > 0 ? [
-                        { name: "Verified", value: summary.verifiedUsers || 0 },
-                        { name: "Unverified", value: (summary.totalUsers - (summary.verifiedUsers || 0)) }
-                      ] : [{ name: "No data", value: 1 }]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {summary && summary.totalUsers > 0 ? [
-                        <Cell key="verified" fill="#34d399" />,
-                        <Cell key="unverified" fill="#f87171" />
-                      ] : <Cell key="no-data" fill="#9ca3af" />}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        padding: "12px",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
 
             {/* Charts Row 5 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-              {/* Calorie Distribution */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">Calorie Distribution</h3>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={displayData.calorieDistribution && displayData.calorieDistribution.length > 0 ? displayData.calorieDistribution : [{ range: "No data", count: 0 }]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis dataKey="range" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        padding: "12px",
-                      }}
-                      labelStyle={{ color: '#374151', fontWeight: 600 }}
-                    />
-                    <Bar dataKey="count" fill="#60a5fa" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="grid grid-cols-1 gap-8">
+
 
               {/* Popular Meal Tags */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Popular Meal Tags</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={displayData.popularTags && displayData.popularTags.length > 0 ? displayData.popularTags : [{ name: "No data", usage: 0 }]} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-                    <XAxis type="number" stroke="#6b7280" fontSize={11} tick={{ fill: '#6b7280' }} />
-                    <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={11} width={100} tick={{ fill: '#6b7280' }} />
+                    <XAxis type="number" stroke={THEME.neutral} fontSize={11} tick={{ fill: THEME.neutral }} />
+                    <YAxis dataKey="name" type="category" stroke={THEME.neutral} fontSize={11} width={100} tick={{ fill: THEME.neutral }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -429,16 +346,16 @@ export default function Analytics() {
                       }}
                       labelStyle={{ color: '#374151', fontWeight: 600 }}
                     />
-                    <Bar dataKey="usage" fill="#34d399" radius={[0, 8, 8, 0]} />
+                    <Bar dataKey="usage" fill={THEME_MIX_COLORS.citrusOrange} radius={[0, 8, 8, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Tables Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {/* Top Selling Meals */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <div className="p-1.5 bg-green-100 rounded-lg">
                     <ShoppingCart className="w-4 h-4 text-[#7ab530]" />
@@ -472,7 +389,7 @@ export default function Analytics() {
               </div>
 
               {/* Most Favorited Meals */}
-              <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50">
+              <div className={cardClass}>
                 <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <div className="p-1.5 bg-green-100 rounded-lg">
                     <Award className="w-4 h-4 text-[#7ab530]" />
@@ -507,7 +424,7 @@ export default function Analytics() {
             </div>
 
             {/* Order Statistics */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-100/50 mb-4">
+            <div className={`${cardClass} mb-5`}>
               <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="p-1.5 bg-green-100 rounded-lg">
                   <Clock className="w-4 h-4 text-[#7ab530]" />

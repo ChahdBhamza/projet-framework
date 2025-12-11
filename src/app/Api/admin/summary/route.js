@@ -29,7 +29,6 @@ export async function GET(request) {
 
     const userEmail = authResult.email?.toLowerCase()?.trim();
     const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
-    
     if (userEmail !== adminEmail) {
       return NextResponse.json(
         { message: "Forbidden", error: "Admin access required" },
@@ -46,6 +45,8 @@ export async function GET(request) {
     yesterday.setDate(yesterday.getDate() - 1);
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const fourteenDaysAgo = new Date(today);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     // User Statistics
     const totalUsers = await Users.countDocuments({});
@@ -93,9 +94,15 @@ export async function GET(request) {
     ]);
     const revenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
 
-    // Revenue over last 7 days
+    const formatLabel = (date) => {
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      return `${m}/${d}`;
+    };
+
+    // Revenue over last 14 days
     const revenueData = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 13; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const startOfDay = new Date(date);
@@ -118,7 +125,7 @@ export async function GET(request) {
       ]);
       
       revenueData.push({
-        day: dayNames[date.getDay()],
+        day: formatLabel(date),
         revenue: dayRevenue.length > 0 ? dayRevenue[0].total : 0
       });
     }
@@ -189,11 +196,31 @@ export async function GET(request) {
       .lean();
 
     // Popular meal tags
+    const normalizeTag = (tag) => {
+      if (!tag || typeof tag !== "string") return null;
+      return tag
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-");
+    };
+
     const tagCounts = {};
     const allMeals = await meals.find({}).lean();
     allMeals.forEach(meal => {
       if (meal.tags && Array.isArray(meal.tags)) {
-        meal.tags.forEach(tag => {
+        // Normalize and de-duplicate tags per meal
+        const normalized = meal.tags
+          .map(normalizeTag)
+          .filter(Boolean);
+        const uniqueTags = Array.from(new Set(normalized));
+        uniqueTags.forEach(tag => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      } else if (typeof meal.tags === "string" && meal.tags.trim().length > 0) {
+        // Handle legacy string tags
+        const splitTags = meal.tags.split(",").map(normalizeTag).filter(Boolean);
+        const uniqueTags = Array.from(new Set(splitTags));
+        uniqueTags.forEach(tag => {
           tagCounts[tag] = (tagCounts[tag] || 0) + 1;
         });
       }
@@ -229,7 +256,7 @@ export async function GET(request) {
 
     // Order trends (orders per day for last 7 days)
     const orderTrends = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 13; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const startOfDay = new Date(date);
@@ -242,7 +269,7 @@ export async function GET(request) {
       });
       
       orderTrends.push({
-        day: dayNames[date.getDay()],
+        day: formatLabel(date),
         orders: count
       });
     }
@@ -346,9 +373,6 @@ export async function GET(request) {
     const avgOrdersPerUser = usersWithOrders.length > 0 ? (totalOrders / usersWithOrders.length).toFixed(1) : 0;
 
     // Growth calculations (comparing last 7 days to previous 7 days)
-    const fourteenDaysAgo = new Date(today);
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-    
     const previousWeekRevenue = await orders.aggregate([
       {
         $match: {
@@ -363,6 +387,7 @@ export async function GET(request) {
       }
     ]);
     const prevRevenue = previousWeekRevenue.length > 0 ? previousWeekRevenue[0].total : 0;
+    // last 14 days revenue total
     const lastWeekRevenue = revenueData.reduce((sum, day) => sum + (day.revenue || 0), 0);
     const revenueGrowth = prevRevenue > 0 ? (((lastWeekRevenue - prevRevenue) / prevRevenue) * 100).toFixed(1) : 0;
 
