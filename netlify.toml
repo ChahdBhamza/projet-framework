@@ -7,3 +7,15 @@
   [build.environment]
   MONGO_URI = "mongodb+srv://cbhhamleton15_db_user:chahd123@cluster0.vspw0dt.mongodb.net/dietapp?retryWrites=true&w=majority&appName=Cluster0"
 
+[context.production.environment]
+  MONGO_URI = "mongodb+srv://cbhhamleton15_db_user:chahd123@cluster0.vspw0dt.mongodb.net/dietapp?retryWrites=true&w=majority&appName=Cluster0"
+  JWT_SECRET = "set-a-strong-secret"
+  NEXT_PUBLIC_BASE_URL = "https://keen-moxie-07a041.netlify.app"
+  NEXT_PUBLIC_ADMIN_EMAIL = "admin@example.com"
+  APP_URL = "https://keen-moxie-07a041.netlify.app"
+  # Optional: configure if you want real emails/OAuth in production
+  # GMAIL_USER = "your-gmail@example.com"
+  # GMAIL_APP_PASSWORD = "your-app-password"
+  # GOOGLE_CLIENT_ID = "your-google-client-id"
+  # GOOGLE_CLIENT_SECRET = "your-google-client-secret"
+
