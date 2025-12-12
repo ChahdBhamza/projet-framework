@@ -1,9 +1,0 @@
-[build]
-  command = "npm run build"
-  publish = ".next"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [build.environment]
-  MONGO_URI = "mongodb+srv://cbhhamleton15_db_user:chahd123@cluster0.vspw0dt.mongodb.net/dietapp?retryWrites=true&w=majority&appName=Cluster0"
-
