@@ -23,7 +23,7 @@ export default function ProductDetail({ params, searchParams }) {
       try {
         setLoading(true);
         setImageError(false);
-        const res = await fetch(`/api/meals/${id}`);
+        const res = await fetch(`/Api/meals/${id}`);
         
         // Check if response is OK
         if (!res.ok) {

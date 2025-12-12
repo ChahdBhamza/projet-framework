@@ -62,7 +62,7 @@ export default function Signin() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/signin", {
+      const res = await fetch("/Api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -156,7 +156,7 @@ export default function Signin() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/resend-verification", {
+      const res = await fetch("/Api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -266,8 +266,8 @@ export default function Signin() {
                   returnUrl = urlParams.get("returnUrl");
                 }
                 const googleAuthUrl = returnUrl 
-                  ? `/api/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`
-                  : "/api/auth/google";
+                  ? `/Api/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`
+                  : "/Api/auth/google";
                 window.location.href = googleAuthUrl;
               }}
               className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-50 transition"

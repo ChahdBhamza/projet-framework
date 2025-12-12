@@ -52,7 +52,7 @@ export default function AdminOrders() {
     try {
       setLoadingOrders(true);
       const { apiJson } = await import("../../Utils/api");
-      const data = await apiJson("/api/admin/orders");
+      const data = await apiJson("/Api/admin/orders");
       if (data.success) {
         setOrders(data.orders || []);
       }

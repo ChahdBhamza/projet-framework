@@ -22,7 +22,7 @@ export default function Favorites() {
       const ids = await GetFavorites();
       setFavoriteIds(ids);
       try {
-        const res = await fetch('/api/meals');
+        const res = await fetch('/Api/meals');
         const data = await res.json();
         if (data.success) {
           const favorites = data.meals.filter(meal => ids.includes(meal._id));

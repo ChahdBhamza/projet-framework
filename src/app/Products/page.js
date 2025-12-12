@@ -185,7 +185,7 @@ export default function Products() {
                 }
 
                 const queryString = params.toString();
-                const url = `/api/meals${queryString ? `?${queryString}` : ''}`;
+                const url = `/Api/meals${queryString ? `?${queryString}` : ''}`;
 
                 const res = await fetch(url);
                 

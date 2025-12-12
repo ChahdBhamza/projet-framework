@@ -47,7 +47,7 @@ export default function Header() {
         }
 
         // Fetch from API using the apiJson utility (handles errors gracefully)
-        const data = await apiJson('/api/user/profile');
+        const data = await apiJson('/Api/user/profile');
 
         if (isMounted && data.success && data.user?.profilePicture) {
           setProfilePicture(data.user.profilePicture);

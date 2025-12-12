@@ -57,7 +57,7 @@ export default function MealPlansResult() {
     const details = {};
     const fetchPromises = Array.from(mealNames).map(async (mealName) => {
       try {
-        const res = await fetch(`/api/meals?search=${encodeURIComponent(mealName)}`);
+        const res = await fetch(`/Api/meals?search=${encodeURIComponent(mealName)}`);
         const data = await res.json();
         if (data.success && data.meals && data.meals.length > 0) {
           // Find the best match (exact or closest match)
@@ -255,7 +255,7 @@ export default function MealPlansResult() {
         aiResponse: aiResponse,
       };
 
-      const res = await fetch("/api/meal-plans", {
+      const res = await fetch("/Api/meal-plans", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

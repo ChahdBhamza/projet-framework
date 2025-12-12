@@ -92,7 +92,7 @@ export default function Profile() {
   const fetchOrders = useCallback(async () => {
     try {
       setLoadingOrders(true);
-      const data = await apiJson("/api/orders");
+      const data = await apiJson("/Api/orders");
       if (data.success) {
         setOrders(data.orders || []);
       }
@@ -107,7 +107,7 @@ export default function Profile() {
   const fetchActivityLogs = useCallback(async () => {
     try {
       setLoadingActivityLogs(true);
-      const data = await apiJson("/api/admin/activity-logs?limit=50");
+      const data = await apiJson("/Api/admin/activity-logs?limit=50");
       if (data.success) {
         setActivityLogs(data.logs || []);
       }
@@ -122,7 +122,7 @@ export default function Profile() {
   const fetchAdminOrders = useCallback(async () => {
     try {
       setLoadingAdminOrders(true);
-      const data = await apiJson("/api/admin/orders");
+      const data = await apiJson("/Api/admin/orders");
       if (data.success) {
         setAdminOrders(data.orders || []);
       }
@@ -138,7 +138,7 @@ export default function Profile() {
   const fetchMealPlans = useCallback(async () => {
     try {
       setLoadingMealPlans(true);
-      const data = await apiJson("/api/meal-plans");
+      const data = await apiJson("/Api/meal-plans");
       if (data.success) {
         setMealPlans(data.mealPlans || []);
       }
@@ -153,7 +153,7 @@ export default function Profile() {
   // Fetch user profile data including profile picture
   const fetchUserProfile = useCallback(async () => {
     try {
-      const data = await apiJson("/api/user/profile");
+      const data = await apiJson("/Api/user/profile");
       if (data.success && data.user) {
         setProfilePicture(data.user.profilePicture || null);
         if (updateUser) {
@@ -232,7 +232,7 @@ export default function Profile() {
 
     try {
       setUpdatingName(true);
-      const data = await apiJson("/api/user/update-profile", {
+      const data = await apiJson("/Api/user/update-profile", {
         method: "PUT",
         body: JSON.stringify({
           name: editedName.trim(),
@@ -292,7 +292,7 @@ export default function Profile() {
         return;
       }
 
-      const response = await fetch('/api/user/profile-picture', {
+      const response = await fetch('/Api/user/profile-picture', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -371,7 +371,7 @@ export default function Profile() {
 
     try {
       setChangingPassword(true);
-      const data = await apiJson("/api/user/change-password", {
+      const data = await apiJson("/Api/user/change-password", {
         method: "POST",
         body: JSON.stringify({
           currentPassword,

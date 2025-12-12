@@ -56,7 +56,7 @@ export default function PopularMeals() {
     const fetchMeals = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/meals");
+        const res = await fetch("/Api/meals");
         
         // Check if response is OK and is JSON
         if (!res.ok) {

@@ -13,7 +13,7 @@ export async function GET(request) {
     }
 
     // Use a fixed redirect URI (no query params)
-    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/auth/google/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/Api/auth/google/callback`;
 
     // Store returnUrl in state parameter instead of callback URL
     const state = returnUrl ? encodeURIComponent(returnUrl) : "";

@@ -43,7 +43,7 @@ export async function CreateOrder(items, totalAmount) {
     }
 
     try {
-        const data = await apiJson("/api/orders", {
+        const data = await apiJson("/Api/orders", {
             method: "POST",
             body: JSON.stringify({ items, totalAmount })
         });

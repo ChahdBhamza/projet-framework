@@ -64,7 +64,7 @@ export default function AdminProducts() {
     try {
       setLoadingStats(true);
       const { apiJson } = await import("../../Utils/api");
-      const data = await apiJson("/api/admin/summary");
+      const data = await apiJson("/Api/admin/summary");
       if (data) {
         setStats({
           totalMeals: data.totalMeals || 0,
@@ -82,7 +82,7 @@ export default function AdminProducts() {
   const fetchRecentUploads = async () => {
     try {
       const { apiJson } = await import("../../Utils/api");
-      const data = await apiJson("/api/admin/uploads?limit=5");
+      const data = await apiJson("/Api/admin/uploads?limit=5");
       if (data.success) {
         setRecentUploads(data.uploads || []);
       }
@@ -157,7 +157,7 @@ export default function AdminProducts() {
       formData.append("file", selectedFile);
 
       const { apiRequest } = await import("../../Utils/api");
-      const res = await apiRequest("/api/meals/import", {
+      const res = await apiRequest("/Api/meals/import", {
         method: "POST",
         body: formData
       });

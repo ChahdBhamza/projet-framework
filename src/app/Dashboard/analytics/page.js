@@ -93,7 +93,7 @@ export default function Analytics() {
     setError("");
     try {
       const { apiJson } = await import("../../Utils/api");
-      const data = await apiJson("/api/admin/summary");
+      const data = await apiJson("/Api/admin/summary");
       setSummary(data);
       setLastUpdated(new Date());
     } catch (err) {

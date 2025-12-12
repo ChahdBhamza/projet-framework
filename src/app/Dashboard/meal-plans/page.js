@@ -62,7 +62,7 @@ export default function AdminMealPlans() {
         return;
       }
 
-      const response = await fetch("/api/meal-plans", {
+      const response = await fetch("/Api/meal-plans", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

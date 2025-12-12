@@ -8,7 +8,7 @@ export async function GetFavorites() {
     if (!token) return [];
 
     try {
-        const data = await apiJson("/api/favorites");
+        const data = await apiJson("/Api/favorites");
 
         return data.success ? data.favorites : [];
     } catch (error) {
@@ -38,7 +38,7 @@ export async function AddFavorites(id) {
     }
 
     try {
-        await apiJson("/api/favorites", {
+        await apiJson("/Api/favorites", {
             method: "POST",
             body: JSON.stringify({ mealId: id })
         });
@@ -65,7 +65,7 @@ export async function RemoveFavorites(id) {
     }
 
     try {
-        await apiJson(`/api/favorites?mealId=${id}`, {
+        await apiJson(`/Api/favorites?mealId=${id}`, {
             method: "DELETE"
         });
     } catch (error) {
