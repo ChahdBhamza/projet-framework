@@ -6,6 +6,7 @@ import WhyChooseUs from "./WhyChooseUs";
 import MealPlanCTA from "./MealPlanCTA";
 import Aboutblock from "./Aboutblock"
 import PopularMeals from "./PopularMeals";
+import DebugEnv from "./DebugEnv";
 
 
 import Image from "next/image";
@@ -54,6 +55,7 @@ export default function Home() {
 
       <Footer/>
       </div>
+      <DebugEnv />
     </main>
   );
 }
