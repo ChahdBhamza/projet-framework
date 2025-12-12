@@ -18,51 +18,96 @@ export default function ProductDetail({ params, searchParams }) {
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
+  // Log component mount
+  useEffect(() => {
+    console.log(`[ProductDetail] Component mounted with ID: ${id}, fromSource: ${fromSource}`);
+    const mountTime = performance.now();
+    console.log(`[ProductDetail] Mount time: ${mountTime.toFixed(2)}ms`);
+  }, []);
+
   useEffect(() => {
     const fetchMeal = async () => {
+      const startTime = Date.now();
+      console.log(`[ProductDetail] Starting fetch for meal ID: ${id}`);
+      
       try {
         setLoading(true);
         setImageError(false);
+        
+        // Step 1: Start fetch
+        const fetchStart = Date.now();
+        console.log(`[ProductDetail] Initiating fetch to /Api/meals/${id}`);
         const res = await fetch(`/Api/meals/${id}`);
+        const fetchTime = Date.now() - fetchStart;
+        console.log(`[ProductDetail] Fetch completed in ${fetchTime}ms, Status: ${res.status}`);
         
         // Check if response is OK
         if (!res.ok) {
-          console.error(`API error: ${res.status} ${res.statusText}`);
+          console.error(`[ProductDetail] API error: ${res.status} ${res.statusText}`);
           setMeal(null);
           return;
         }
         
-        // Check if response is JSON
+        // Step 2: Check content type
+        const contentTypeStart = Date.now();
         const contentType = res.headers.get("content-type");
+        const contentTypeTime = Date.now() - contentTypeStart;
+        console.log(`[ProductDetail] Content type check: ${contentType} (${contentTypeTime}ms)`);
+        
         if (!contentType || !contentType.includes("application/json")) {
-          console.error("Response is not JSON:", contentType);
+          console.error(`[ProductDetail] Response is not JSON: ${contentType}`);
           setMeal(null);
           return;
         }
         
+        // Step 3: Parse JSON
+        const jsonStart = Date.now();
         const data = await res.json();
+        const jsonTime = Date.now() - jsonStart;
+        console.log(`[ProductDetail] JSON parsed in ${jsonTime}ms`);
+        
         if (data.success && data.meal) {
+          const setMealStart = Date.now();
+          console.log(`[ProductDetail] Meal data received: ${data.meal.mealName}`);
           setMeal(data.meal);
+          const setMealTime = Date.now() - setMealStart;
+          console.log(`[ProductDetail] setMeal() called (${setMealTime}ms), component should re-render`);
         } else {
-          console.error('Invalid response format or meal not found:', data);
+          console.error('[ProductDetail] Invalid response format or meal not found:', data);
           setMeal(null);
         }
+        
+        const totalTime = Date.now() - startTime;
+        console.log(`[ProductDetail] Total fetch time: ${totalTime}ms (Fetch: ${fetchTime}ms, Parse: ${jsonTime}ms)`);
       } catch (error) {
-        console.error("Failed to fetch meal:", error);
+        const totalTime = Date.now() - startTime;
+        console.error(`[ProductDetail] Failed to fetch meal after ${totalTime}ms:`, error);
         setMeal(null);
       } finally {
         setLoading(false);
+        const totalTime = Date.now() - startTime;
+        console.log(`[ProductDetail] Loading state set to false after ${totalTime}ms total`);
       }
     };
 
-    if (id) fetchMeal();
+    if (id) {
+      console.log(`[ProductDetail] useEffect triggered with ID: ${id}`);
+      fetchMeal();
+    } else {
+      console.warn('[ProductDetail] No ID provided, skipping fetch');
+    }
   }, [id]);
 
   useEffect(() => {
     const checkFavorite = async () => {
       if (meal) {
+        const startTime = Date.now();
+        console.log(`[ProductDetail] Checking favorites for meal: ${meal._id}`);
         const favorites = await GetFavorites();
-        setIsFavorite(favorites.includes(meal._id));
+        const favoriteTime = Date.now() - startTime;
+        const isFav = favorites.includes(meal._id);
+        console.log(`[ProductDetail] Favorite check completed in ${favoriteTime}ms, isFavorite: ${isFav}`);
+        setIsFavorite(isFav);
       }
     };
     checkFavorite();
@@ -126,9 +171,14 @@ export default function ProductDetail({ params, searchParams }) {
   // --- everything below stays the same ---
 
   if (loading) {
+    console.log('[ProductDetail] Rendering loading state');
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7ab530]"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7ab530] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading meal details...</p>
+          <p className="text-sm text-gray-400 mt-2">ID: {id}</p>
+        </div>
       </main>
     );
   }
@@ -179,13 +229,19 @@ export default function ProductDetail({ params, searchParams }) {
                     unoptimized
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
                     onError={() => {
+                      console.log(`[ProductDetail] Image error for: ${meal.mealName}.jpg`);
                       setImageError(true);
                     }}
                     onLoad={(e) => {
+                      const loadTime = performance.now();
+                      console.log(`[ProductDetail] Image loaded: ${meal.mealName}.jpg`);
                       // Check if image actually loaded
                       const img = e.target;
                       if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                        console.log(`[ProductDetail] Image has invalid dimensions, setting error`);
                         setImageError(true);
+                      } else {
+                        console.log(`[ProductDetail] Image dimensions: ${img.naturalWidth}x${img.naturalHeight}`);
                       }
                     }}
                   />
