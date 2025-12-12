@@ -1,6 +1,6 @@
-import { connectDB } from '../../../../../db.js';
-import orders from '../../../../../models/orders.js';
-import Users from '../../../../../models/users.js';
+import { connectDB } from '@/backend/db.js';
+import orders from '@/backend/models/orders.js';
+import Users from '@/backend/models/users.js';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '../../utils/auth.js';
 
@@ -67,4 +67,5 @@ export async function GET(request) {
         );
     }
 }
+
 

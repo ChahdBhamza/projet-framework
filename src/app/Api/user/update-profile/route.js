@@ -1,6 +1,6 @@
-import { connectDB } from '../../../../../db.js';
-import Users from '../../../../../models/users.js';
-import ActivityLog from '../../../../../models/activityLog.js';
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
+import ActivityLog from '@/backend/models/activityLog.js';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '../../utils/auth.js';
 import jwt from 'jsonwebtoken';
@@ -105,4 +105,5 @@ export async function PUT(request) {
         );
     }
 }
+
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
-import { connectDB } from "../../../../../../db";
-import Users from "../../../../../../models/users";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
 import jwt from "jsonwebtoken";
 
 export async function GET(request) {
@@ -122,4 +122,5 @@ export async function GET(request) {
     );
   }
 }
+
 

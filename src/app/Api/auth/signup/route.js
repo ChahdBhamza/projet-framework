@@ -1,5 +1,5 @@
-import { connectDB } from "../../../../../db";
-import Users from "../../../../../models/users";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { generateSecureToken, generateTokenExpiration } from "../../../../../lib/tokens.js";
@@ -170,3 +170,4 @@ export async function POST(req) {
     );
   }
 }
+

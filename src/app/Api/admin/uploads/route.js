@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "../../../../../db.js";
-import UploadHistory from "../../../../../models/uploadHistory.js";
+import { connectDB } from '@/backend/db.js';
+import UploadHistory from '@/backend/models/uploadHistory.js';
 import { verifyToken } from "../../utils/auth.js";
 
 export async function GET(request) {
@@ -84,4 +84,5 @@ export async function GET(request) {
     );
   }
 }
+
 

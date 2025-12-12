@@ -1,5 +1,5 @@
-import { connectDB } from "../../../../../db.js";
-import Users from "../../../../../models/users.js";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
 import { NextResponse } from "next/server";
 import { sendVerificationEmail } from "../../../../../lib/email.js";
 import { generateSecureToken, generateTokenExpiration } from "../../../../../lib/tokens.js";
@@ -112,3 +112,4 @@ export async function POST(req) {
         );
     }
 }
+

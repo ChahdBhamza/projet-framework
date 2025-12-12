@@ -1,5 +1,5 @@
-import { connectDB } from '../../../../db.js';
-import orders from '../../../../models/orders.js';
+import { connectDB } from '@/backend/db.js';
+import orders from '@/backend/models/orders.js';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '../utils/auth.js';
 
@@ -103,4 +103,5 @@ export async function GET(request) {
         );
     }
 }
+
 

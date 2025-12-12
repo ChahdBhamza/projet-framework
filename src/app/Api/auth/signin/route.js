@@ -1,6 +1,6 @@
-﻿import { connectDB } from "../../../../../db";
-import Users from "../../../../../models/users";
-import ActivityLog from "../../../../../models/activityLog.js";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
+import ActivityLog from '@/backend/models/activityLog.js';
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -200,3 +200,4 @@ export async function POST(req) {
     );
   }
 }
+

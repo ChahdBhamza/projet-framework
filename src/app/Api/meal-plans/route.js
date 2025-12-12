@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { connectDB } from "../../../../db";
-import MealPlans from "../../../../models/mealPlans";
-import users from "../../../../models/users";
+import { connectDB } from '@/backend/db.js';
+import MealPlans from '@/backend/models/mealPlans.js';
+import users from '@/backend/models/users.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -128,3 +128,4 @@ export async function GET(request) {
         );
     }
 }
+

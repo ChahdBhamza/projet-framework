@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // Only report presence of sensitive server-side vars, do NOT return their values
@@ -10,7 +12,7 @@ export async function GET(request) {
       GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
       GMAIL_USER: !!process.env.GMAIL_USER,
       GMAIL_APP_PASSWORD: !!process.env.GMAIL_APP_PASSWORD,
-    
+
       APP_URL: process.env.APP_URL || null,
     };
 
@@ -29,8 +31,8 @@ export async function GET(request) {
     ];
     const criticalCount = criticalVars.filter(v => v).length;
 
-    return NextResponse.json({ 
-      server, 
+    return NextResponse.json({
+      server,
       public: pub,
       status: criticalCount === 4 ? "✓ ready" : "⚠ incomplete",
       timestamp: new Date().toISOString(),
@@ -40,3 +42,4 @@ export async function GET(request) {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }
+

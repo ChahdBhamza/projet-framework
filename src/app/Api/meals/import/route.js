@@ -1,7 +1,7 @@
-import { connectDB } from '../../../../../db.js';
-import meals from '../../../../../models/meals.js';
-import UploadHistory from '../../../../../models/uploadHistory.js';
-import ActivityLog from '../../../../../models/activityLog.js';
+import { connectDB } from '@/backend/db.js';
+import meals from '@/backend/models/meals.js';
+import UploadHistory from '@/backend/models/uploadHistory.js';
+import ActivityLog from '@/backend/models/activityLog.js';
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import { verifyToken } from '../../utils/auth.js';
@@ -277,4 +277,5 @@ export async function POST(request) {
         );
     }
 }
+
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "../../../../../db.js";
-import ActivityLog from "../../../../../models/activityLog.js";
+import { connectDB } from '@/backend/db.js';
+import ActivityLog from '@/backend/models/activityLog.js';
 import { verifyToken } from "../../utils/auth.js";
 
 // GET - Get activity logs for admin
@@ -126,4 +126,5 @@ export async function POST(request) {
         );
     }
 }
+
 

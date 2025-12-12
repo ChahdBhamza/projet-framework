@@ -1,5 +1,5 @@
-import { connectDB } from '../../../../../db.js';
-import meals from '../../../../../models/meals.js';
+import { connectDB } from '@/backend/db.js';
+import meals from '@/backend/models/meals.js';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {

@@ -1,5 +1,5 @@
-import { connectDB } from '../../../../../db.js';
-import meals from '../../../../../models/meals.js';
+import { connectDB } from '@/backend/db.js';
+import meals from '@/backend/models/meals.js';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -104,3 +104,4 @@ export async function POST(request) {
         );
     }
 }
+

@@ -1,5 +1,5 @@
-import { connectDB } from "../../../../../../db.js";
-import Users from "../../../../../../models/users.js";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -116,3 +116,4 @@ export async function POST(req) {
         );
     }
 }
+

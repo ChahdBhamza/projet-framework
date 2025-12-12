@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "../../../../../db.js";
-import Users from "../../../../../models/users.js";
-import orders from "../../../../../models/orders.js";
-import meals from "../../../../../models/meals.js";
-import favorites from "../../../../../models/favorites.js";
-import UploadHistory from "../../../../../models/uploadHistory.js";
+import { connectDB } from '@/backend/db.js';
+import Users from '@/backend/models/users.js';
+import orders from '@/backend/models/orders.js';
+import meals from '@/backend/models/meals.js';
+import favorites from '@/backend/models/favorites.js';
+import UploadHistory from '@/backend/models/uploadHistory.js';
 import { verifyToken } from "../../utils/auth.js";
 
 export async function GET(request) {
@@ -534,5 +534,6 @@ export async function GET(request) {
     );
   }
 }
+
 
 
