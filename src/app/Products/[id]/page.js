@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useParams, useSearchParams } from "next/navigation";
 import { GetFavorites, AddFavorites, RemoveFavorites } from "../../Utils/favorites";
 import { AddPurchase } from "../../Utils/purchases";
 import { useState, useEffect } from "react";
@@ -9,23 +10,35 @@ import { ShoppingCart, Heart, ArrowLeft, Star, Check } from "lucide-react";
 import Header from "../../Header";
 import Footer from "../../Footer";
 
-export default function ProductDetail({ params, searchParams }) {
-  const id = params.id; 
-  const fromSource = searchParams?.from || null;  // ✅ FIXED
+export default function ProductDetail() {
+  // Use Next.js hooks for client components
+  const params = useParams();
+  const searchParams = useSearchParams();
+  
+  const id = params?.id;
+  const fromSource = searchParams?.get('from') || null;
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [meal, setMeal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
-  // Log component mount
+  // Log component mount and params
   useEffect(() => {
-    console.log(`[ProductDetail] Component mounted with ID: ${id}, fromSource: ${fromSource}`);
+    console.log(`[ProductDetail] Component mounted`);
+    console.log(`[ProductDetail] Params:`, params);
+    console.log(`[ProductDetail] ID from params:`, id);
+    console.log(`[ProductDetail] From source:`, fromSource);
     const mountTime = performance.now();
     console.log(`[ProductDetail] Mount time: ${mountTime.toFixed(2)}ms`);
   }, []);
 
   useEffect(() => {
+    if (!id) {
+      console.log('[ProductDetail] Waiting for ID to be extracted from params...');
+      return;
+    }
+
     const fetchMeal = async () => {
       const startTime = Date.now();
       console.log(`[ProductDetail] Starting fetch for meal ID: ${id}`);
@@ -90,12 +103,8 @@ export default function ProductDetail({ params, searchParams }) {
       }
     };
 
-    if (id) {
-      console.log(`[ProductDetail] useEffect triggered with ID: ${id}`);
-      fetchMeal();
-    } else {
-      console.warn('[ProductDetail] No ID provided, skipping fetch');
-    }
+    console.log(`[ProductDetail] useEffect triggered with ID: ${id}`);
+    fetchMeal();
   }, [id]);
 
   useEffect(() => {
@@ -170,14 +179,18 @@ export default function ProductDetail({ params, searchParams }) {
 
   // --- everything below stays the same ---
 
-  if (loading) {
-    console.log('[ProductDetail] Rendering loading state');
+  if (!id || loading) {
+    console.log(`[ProductDetail] Rendering loading state - ID: ${id}, Loading: ${loading}`);
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7ab530] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading meal details...</p>
-          <p className="text-sm text-gray-400 mt-2">ID: {id}</p>
+          {id ? (
+            <p className="text-sm text-gray-400 mt-2">ID: {id}</p>
+          ) : (
+            <p className="text-sm text-gray-400 mt-2">Extracting ID from URL...</p>
+          )}
         </div>
       </main>
     );
