@@ -21,8 +21,17 @@ export default function GoogleAuthSuccessContent() {
         // Store token and user info
         login(token, { name, email });
 
-        // Redirect to returnUrl or dashboard
-        const redirectTo = returnUrl || "/Dashboard";
+        // Check if user is admin
+        const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const userEmail = email?.toLowerCase()?.trim();
+        const adminEmail = ADMIN_EMAIL?.toLowerCase()?.trim();
+        const isAdmin = ADMIN_EMAIL && userEmail === adminEmail;
+
+        // Redirect to returnUrl, or Dashboard for admin, or home for non-admin
+        let redirectTo = returnUrl;
+        if (!redirectTo) {
+          redirectTo = isAdmin ? "/Dashboard" : "/";
+        }
         router.push(redirectTo);
       } else {
         // If missing params, redirect to signin

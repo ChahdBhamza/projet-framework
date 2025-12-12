@@ -40,7 +40,7 @@ export default function AdminMealPlans() {
       return;
     }
     if (!isAdmin) {
-      router.push("/Dashboard");
+      router.push("/");
       return;
     }
   }, [user, loading, router, isAdmin]);

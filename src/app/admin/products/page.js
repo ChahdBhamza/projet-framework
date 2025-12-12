@@ -48,7 +48,7 @@ export default function AdminProducts() {
       return;
     }
     if (!isAdmin) {
-      router.push("/Dashboard");
+      router.push("/");
       return;
     }
   }, [user, loading, router, isAdmin]);

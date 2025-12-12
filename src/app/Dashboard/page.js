@@ -136,17 +136,18 @@ export default function Dashboard() {
     );
   }
 
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.push("/");
+    }
+  }, [user, isAdmin, router]);
+
   if (user && !isAdmin) {
     return (
-      <main className="min-h-screen flex flex-col bg-gray-50">
-        <div className="flex-grow flex items-center justify-center px-4">
-          <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-2">Restricted Area</h1>
-            <p className="text-gray-600 mb-4">This dashboard is only accessible to admin users.</p>
-            <Link href="/" className="inline-block mt-4 px-6 py-2 bg-[#7ab530] text-white rounded-lg hover:bg-[#6aa02b] transition">
-              Go Home
-            </Link>
-          </div>
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#7ab530] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </main>
     );

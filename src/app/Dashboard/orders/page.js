@@ -37,7 +37,7 @@ export default function AdminOrders() {
       return;
     }
     if (!isAdmin) {
-      router.push("/Dashboard");
+      router.push("/");
       return;
     }
   }, [user, loading, router, isAdmin]);
