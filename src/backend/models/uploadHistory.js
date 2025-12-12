@@ -26,7 +26,7 @@ const UploadHistorySchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        errors: [{
+        uploadErrors: [{
             type: String
         }],
         summary: {

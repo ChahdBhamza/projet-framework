@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(request) {
+    console.log("🟢 /api/meals hit!");
     try {
         await connectDB();
 
@@ -70,13 +71,13 @@ export async function GET(request) {
     } catch (error) {
         console.error('Error fetching meals:', error);
         return NextResponse.json(
-            { 
-                success: false, 
+            {
+                success: false,
                 error: error.message || 'Failed to fetch meals',
                 meals: [],
                 count: 0
             },
-            { 
+            {
                 status: 500,
                 headers: {
                     'Content-Type': 'application/json',
