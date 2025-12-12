@@ -10,8 +10,7 @@ export async function GET(request) {
       GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
       GMAIL_USER: !!process.env.GMAIL_USER,
       GMAIL_APP_PASSWORD: !!process.env.GMAIL_APP_PASSWORD,
-      SPOONACULAR_API_KEY: !!process.env.SPOONACULAR_API_KEY,
-      RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+    
       APP_URL: process.env.APP_URL || null,
     };
 
