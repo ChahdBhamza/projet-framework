@@ -32,9 +32,11 @@ export default function Home() {
             Discover personalized meal plans crafted just for your goals — powered by smart nutrition.
           </p>
 
-          <button className="px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-700 hover:bg-transparent hover:text-[#7ab530]">
-            Get Started
-          </button>
+          <Link href="/MealPlans">
+            <button className="px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-700 hover:bg-transparent hover:text-[#7ab530] hover:border-2 hover:border-[#7ab530] font-semibold">
+              Get Started 
+            </button>
+          </Link>
         </div>
       </section>
       <Aboutblock />

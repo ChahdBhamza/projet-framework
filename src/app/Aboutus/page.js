@@ -24,9 +24,11 @@ export default function Aboutus() {
             Discover personalized meal plans crafted just for your goals — powered by smart nutrition.
           </p>
 
-          <button className="px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-700 hover:bg-transparent hover:text-[#7ab530]">
-            Get Started
-          </button>
+          <Link href="/MealPlans">
+            <button className="px-8 py-3 rounded-full bg-[#7ab530] text-white transition-colors duration-700 hover:bg-transparent hover:text-[#7ab530] hover:border-2 hover:border-[#7ab530] font-semibold">
+              Get Started 
+            </button>
+          </Link>
         </div>
       </section>
       {/* Founder's Story */}
@@ -170,9 +172,11 @@ export default function Aboutus() {
             <p className="text-lg text-green-50 mb-8 leading-relaxed">
               Pick your preferences, set your goals, and we'll do the planning.
             </p>
-            <button className="px-8 py-4 rounded-full bg-white text-[#7ab530] font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-              Get started
-            </button>
+            <Link href="/MealPlans">
+              <button className="px-8 py-4 rounded-full bg-white text-[#7ab530] font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                Get Started - Generate My Meal Plans
+              </button>
+            </Link>
           </div>
         </div>
       </section>
